@@ -2,9 +2,8 @@
 Base class for image pair datasets defined for test, train and validate models.
 """
 
-__author__ = ""
-__credits__ = [""]
-__license__ = "GPL-3.0"
+__author__ = "Marc Bermejo"
+__license__ = "MIT"
 __version__ = "0.1.0"
 __status__ = "Development"
 
@@ -19,7 +18,7 @@ from typing import Dict, List, Tuple
 from torch.utils.data import Dataset
 from albumentations.pytorch import ToTensorV2
 
-from .transforms import PairedRandomCrop
+from .transforms import PairedRandomCrop, PairedCenterCrop, SimpleNormalize
 from ..utils.path_iter import images_in_dir
 
 
@@ -29,10 +28,6 @@ class ImagePairDataset(Dataset, ABC):
 
     Args:
         TODO
-
-    .. note::
-
-        :attr:`transforms` and the combination of :attr:`transform` and :attr:`target_transform` are mutually exclusive.
     """
 
     def __init__(self, scale_factor: int = 2, train: bool = False, patch_size: Tuple[int, int] = (96, 96),
@@ -43,37 +38,45 @@ class ImagePairDataset(Dataset, ABC):
         self.base_dir = base_dir
         self.hr_img_dir = os.path.join(base_dir, hr_img_dir)
         self.img_list: List[Dict[str, str]] = []
+
         # Check if user provided directories for HR and LR images
         if lr_img_dir:
             self.lr_img_dir = os.path.join(base_dir, lr_img_dir)
         else:
             self.lr_img_dir = None
+
         # Initialize image pair data dictionary
         self.data: List[Dict[str, str]] = []
-        # Set transform pipeline
-        # Define user requested transformation pipeline
-        user_transforms = A.Compose(
-            transforms,
-            additional_targets={"scaled_image": "image"}
-        ),
+
+        # Initialize transform pipeline
+        transform_pipeline = []
+        # Define pre-processing transform depending on if it is a train dataset or not and if a patch size was given
+        if patch_size:
+            if train:
+                # Perform a random crop to both HR and LR images during training
+                paired_crop = PairedRandomCrop(*patch_size, paired_img_scale=scale_factor, always_apply=True)
+            else:
+                # Perform a center crop to both HR and LR images during test/validation
+                paired_crop = PairedCenterCrop(*patch_size, paired_img_scale=scale_factor, always_apply=True)
+            # Append to full pipeline
+            transform_pipeline.append(paired_crop)
+        # Define user requested transformation pipeline (if any)
+        if transforms:
+            user_transforms = A.Compose(
+                transforms,
+                additional_targets={"scaled_image": "image"}
+            )
+            # Append to full pipeline
+            transform_pipeline.append(user_transforms)
         # Define post-processing transforms (normalize image and convert it to Tensor)
         post_transforms = A.Compose(
-            [
-                A.Normalize(mean=0, std=1),
-                ToTensorV2()
-            ],
+            [SimpleNormalize(), ToTensorV2()],
             additional_targets={"scaled_image": "image"}
         )
-        # Define transformation pipeline depending if it is a train dataset or not
-        if train:
-            # Always perform a random crop to both HR and LR images during training
-            paired_rand_crop = PairedRandomCrop(*patch_size, paired_img_scale=scale_factor, always_apply=True)
-            # Set test transformation pipeline
-            transform_pipeline = [paired_rand_crop, user_transforms, post_transforms]
-        else:
-            # Set test/validation pipeline
-            transform_pipeline = [user_transforms, post_transforms]
-        # Define composed transform
+        # Append to full pipeline
+        transform_pipeline.append(post_transforms)
+
+        # Define complete transformation pipeline
         self.transform = A.ReplayCompose([transform_pipeline])
 
     def _set_img_paths_from_folder(self):
