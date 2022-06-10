@@ -17,6 +17,7 @@ from abc import ABC
 from typing import Dict, List, Tuple
 from torch.utils.data import Dataset
 from albumentations.pytorch import ToTensorV2
+from albumentations.augmentations.crops import functional as cr_func
 
 from .transforms import PairedRandomCrop, PairedCenterCrop, SimpleNormalize
 from ..utils.path_iter import images_in_dir
@@ -54,10 +55,10 @@ class ImagePairDataset(Dataset, ABC):
         if patch_size:
             if train:
                 # Perform a random crop to both HR and LR images during training
-                paired_crop = PairedRandomCrop(*patch_size, paired_img_scale=scale_factor, always_apply=True)
+                paired_crop = PairedRandomCrop(patch_size, paired_img_scale=scale_factor, always_apply=True)
             else:
                 # Perform a center crop to both HR and LR images during test/validation
-                paired_crop = PairedCenterCrop(*patch_size, paired_img_scale=scale_factor, always_apply=True)
+                paired_crop = PairedCenterCrop(patch_size, paired_img_scale=scale_factor, always_apply=True)
             # Append to full pipeline
             transform_pipeline.append(paired_crop)
         # Define user requested transformation pipeline (if any)
@@ -77,9 +78,9 @@ class ImagePairDataset(Dataset, ABC):
         transform_pipeline.append(post_transforms)
 
         # Define complete transformation pipeline
-        self.transform = A.ReplayCompose([transform_pipeline])
+        self.transform = A.ReplayCompose(transform_pipeline)
 
-    def _set_img_paths_from_folder(self):
+        # Set image paths from given folder(s)
         # Retrieve HR images from configured directory
         hr_images = images_in_dir(self.hr_img_dir)
         # Populate data array with HR images
@@ -101,10 +102,15 @@ class ImagePairDataset(Dataset, ABC):
         hr_image = cv2.imread(img_pair["hr"], cv2.IMREAD_UNCHANGED).astype(np.float32)
         # Check if LR image was found in dataset
         if not img_pair.get("lr", None):
+            # Crop HR image first to ensure that its size is multiple of scale
+            hr_img_h, hr_img_w = hr_image.shape[:2]
+            hr_img_h -= hr_img_h % self.scale_factor
+            hr_img_w -= hr_img_w % self.scale_factor
+            hr_image = cr_func.center_crop(hr_image, hr_img_h, hr_img_w)
             # Calculate LR image resize scaling factor
-            lr_resize_scale = 1.0 / float(self.scale_factor)
+            lr_img_size = (hr_img_w // self.scale_factor, hr_img_h // self.scale_factor)
             # Resize HR image to produce an LR image
-            lr_image = cv2.resize(hr_image, None, fx=lr_resize_scale, fy=lr_resize_scale, interpolation=cv2.INTER_AREA)
+            lr_image = cv2.resize(hr_image, lr_img_size, interpolation=cv2.INTER_AREA)
         else:
             # Read LR image from disk
             lr_image = cv2.imread(img_pair["lr"], cv2.IMREAD_UNCHANGED).astype(np.float32)

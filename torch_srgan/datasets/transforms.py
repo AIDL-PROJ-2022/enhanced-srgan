@@ -21,7 +21,7 @@ class PairedTransform(BasicTransform):
     Both input images should be the same with different scale.
 
     Args:
-        paired_img_scale (float): scale relation between image and scaled image.
+        paired_img_scale (int): scale relation between image and scaled image. Must be an integer >= 1.
         always_apply (bool): always apply transform. Default: False.
         p (float): probability of applying the transform. Default: 1.
 
@@ -32,9 +32,11 @@ class PairedTransform(BasicTransform):
         uint8, float32
     """
 
-    def __init__(self, paired_img_scale: float, always_apply: bool = False, p: float = 1.0):
+    def __init__(self, paired_img_scale: int, always_apply: bool = False, p: float = 1.0):
         super(PairedTransform, self).__init__(always_apply, p)
-        self.paired_img_scale = paired_img_scale
+        self.paired_img_scale = int(paired_img_scale)
+        if self.paired_img_scale < 1:
+            raise ValueError("Paired image scale must be an integer equal or bigger than 1.")
 
     @property
     def targets(self) -> Dict[str, Callable]:
@@ -52,7 +54,7 @@ class PairedTransform(BasicTransform):
         # Retrieve both images dimensions
         img_size = kwargs["image"].shape[:2]
         scaled_img_size = kwargs["scaled_image"].shape[:2]
-        exp_scaled_img_size = tuple([round(v * self.paired_img_scale) for v in img_size])
+        exp_scaled_img_size = tuple([int(dim * self.paired_img_scale) for dim in img_size])
         # Check that scaled image match expected dimensions
         if scaled_img_size != exp_scaled_img_size:
             raise ValueError(f"Input scaled image dimensions {scaled_img_size} aren't {self.paired_img_scale}x "
@@ -65,16 +67,63 @@ class PairedTransform(BasicTransform):
         return {}
 
 
-class PairedRandomCrop(PairedTransform):
+class PairedCrop(PairedTransform):
+    """
+    Base transform for paired image cropping tasks.
+    Both images should be the same with different scale.
+    Output cropped scaled image will be scale times the size of the configured crop size.
+
+    Args:
+        scaled_cr_size (tuple): Size of the scaled crop. Must be a (height, width) tuple.
+        paired_img_scale (int): scale relation between image and scaled image. Must be an integer >= 1.
+        always_apply (bool): always apply transform. Default: False.
+        p (float): probability of applying the transform. Default: 1.
+
+    Targets:
+        image, scaled_image
+
+    Image types:
+        uint8, float32
+    """
+    def __init__(self, scaled_cr_size: Tuple[int, int], paired_img_scale: int,
+                 always_apply: bool = False, p: float = 1.0):
+        super(PairedCrop, self).__init__(paired_img_scale, always_apply, p)
+        self._check_and_set_scaled_cr_size(scaled_cr_size)
+
+    def _check_and_set_scaled_cr_size(self, scaled_cr_size: Tuple[int, int]):
+        # Check that scaled crop size is multiple of given scale
+        if scaled_cr_size[0] % self.paired_img_scale != 0 or scaled_cr_size[1] % self.paired_img_scale != 0:
+            raise ValueError(
+                f"Given scaled image crop size {scaled_cr_size} isn't a multiple of "
+                f"paired image scale {self.paired_img_scale}."
+            )
+        # Set scaled crop size and low resolution image crop size
+        self.scaled_cr_size = scaled_cr_size
+        self.cr_size = tuple(dim // self.paired_img_scale for dim in self.scaled_cr_size)
+
+    def _get_scaled_crop_coords(self, x_min: int, y_min: int, crop_h: int, crop_w: int) -> Tuple[int, int, int, int]:
+        # If scaled crop was requested, calculate its coordinates ensuring that these will be multiple of the scale to
+        # ensure equivalent position between the two crops.
+        y_min -= y_min % self.paired_img_scale
+        y_max = y_min + crop_h
+        x_min -= x_min % self.paired_img_scale
+        x_max = x_min + crop_w
+        # Return calculated values
+        return x_min, y_min, x_max, y_max
+
+    def get_transform_init_args_names(self) -> Tuple[str, str, str]:
+        return "cr_size", "scaled_cr_size", "paired_img_scale"
+
+
+class PairedRandomCrop(PairedCrop):
     """
     Crop a random part of an input image and a scaled version of it.
     Both images should be the same with different scale.
     Output cropped scaled image will be scale times the size of the configured crop size.
 
     Args:
-        height (int): height of the crop.
-        width (int): width of the crop.
-        paired_img_scale (float): scale relation between image and scaled image.
+        scaled_cr_size (tuple): Size of the scaled crop. Must be a (height, width) tuple.
+        paired_img_scale (int): scale relation between image and scaled image. Must be an integer >= 1.
         always_apply (bool): always apply transform. Default: False.
         p (float): probability of applying the transform. Default: 1.
 
@@ -84,41 +133,42 @@ class PairedRandomCrop(PairedTransform):
     Image types:
         uint8, float32
     """
-
-    def __init__(self, height: int, width: int, paired_img_scale: float, always_apply: bool = False, p: float = 1.0):
-        super(PairedRandomCrop, self).__init__(paired_img_scale, always_apply, p)
-        self.height = height
-        self.width = width
-        self._cr_size = (height, width)
-        self._scaled_cr_size = (round(height * paired_img_scale), round(width * paired_img_scale))
-
-    @staticmethod
-    def _apply_rand_crop(img: np.ndarray, size: Tuple[int, int], h_start: float = 0, w_start: float = 0) -> np.ndarray:
-        return cr_func.random_crop(img, *size, h_start=h_start, w_start=w_start)
+    def __init__(self, scaled_cr_size: Tuple[int, int], paired_img_scale: int,
+                 always_apply: bool = False, p: float = 1.0):
+        super(PairedRandomCrop, self).__init__(scaled_cr_size, paired_img_scale, always_apply, p)
 
     def apply(self, img: np.ndarray, h_start: float = 0, w_start: float = 0, **_params) -> np.ndarray:
-        return self._apply_rand_crop(img, self._cr_size, h_start, w_start)
+        # Get scaled crop height and width from its size
+        crop_h, crop_w = self.cr_size
+        # Return cropped image
+        return cr_func.random_crop(img, crop_h, crop_w, h_start, w_start)
 
     def apply_scaled(self, img: np.ndarray, h_start: float = 0, w_start: float = 0, **_params) -> np.ndarray:
-        return self._apply_rand_crop(img, self._scaled_cr_size, h_start, w_start)
+        # Get image height and width
+        img_h, img_w = img.shape[:2]
+        # Get scaled crop height and width from its size
+        crop_h, crop_w = self.scaled_cr_size
+        # Calculate X and Y start position
+        y_min = int((img_h - crop_h) * h_start)
+        x_min = int((img_w - crop_w) * w_start)
+        # Calculate crop coordinates
+        crop_coords = self._get_scaled_crop_coords(x_min, y_min, crop_h, crop_w)
+        # Return cropped image
+        return cr_func.crop(img, *crop_coords)
 
     def get_params(self) -> Dict[str, Any]:
         return {"h_start": random.random(), "w_start": random.random()}
 
-    def get_transform_init_args_names(self) -> Tuple[str, str, str]:
-        return "height", "width", "paired_img_scale"
 
-
-class PairedCenterCrop(PairedTransform):
+class PairedCenterCrop(PairedCrop):
     """
     Crop a center part of an input image and a scaled version of it.
     Both images should be the same with different scale.
     Output cropped scaled image will be scale times the size of the configured crop size.
 
     Args:
-        height (int): height of the crop.
-        width (int): width of the crop.
-        paired_img_scale (float): scale relation between image and scaled image.
+        scaled_cr_size (tuple): Size of the scaled crop. Must be a (height, width) tuple.
+        paired_img_scale (int): scale relation between image and scaled image. Must be an integer >= 1.
         always_apply (bool): always apply transform. Default: False.
         p (float): probability of applying the transform. Default: 1.
 
@@ -128,26 +178,28 @@ class PairedCenterCrop(PairedTransform):
     Image types:
         uint8, float32
     """
-
-    def __init__(self, height: int, width: int, paired_img_scale: float, always_apply: bool = False, p: float = 1.0):
-        super(PairedCenterCrop, self).__init__(paired_img_scale, always_apply, p)
-        self.height = height
-        self.width = width
-        self._cr_size = (height, width)
-        self._scaled_cr_size = (round(height * paired_img_scale), round(width * paired_img_scale))
-
-    @staticmethod
-    def _apply_center_crop(img: np.ndarray, size: Tuple[int, int]) -> np.ndarray:
-        return cr_func.center_crop(img, *size)
+    def __init__(self, scaled_cr_size: Tuple[int, int], paired_img_scale: int,
+                 always_apply: bool = False, p: float = 1.0):
+        super(PairedCenterCrop, self).__init__(scaled_cr_size, paired_img_scale, always_apply, p)
 
     def apply(self, img: np.ndarray, **_params) -> np.ndarray:
-        return self._apply_center_crop(img, self._cr_size)
+        # Get scaled crop height and width from its size
+        crop_h, crop_w = self.cr_size
+        # Return cropped image
+        return cr_func.center_crop(img, crop_h, crop_w)
 
     def apply_scaled(self, img: np.ndarray, **_params) -> np.ndarray:
-        return self._apply_center_crop(img, self._scaled_cr_size)
-
-    def get_transform_init_args_names(self) -> Tuple[str, str, str]:
-        return "height", "width", "paired_img_scale"
+        # Get image height and width
+        img_h, img_w = img.shape[:2]
+        # Get scaled crop height and width from its size
+        crop_h, crop_w = self.scaled_cr_size
+        # Calculate X and Y start position
+        y_min = (img_h - crop_h) // 2
+        x_min = (img_w - crop_w) // 2
+        # Calculate crop coordinates
+        crop_coords = self._get_scaled_crop_coords(x_min, y_min, crop_h, crop_w)
+        # Return cropped image
+        return cr_func.crop(img, *crop_coords)
 
 
 class SimpleNormalize(ImageOnlyTransform):
@@ -173,8 +225,8 @@ class SimpleNormalize(ImageOnlyTransform):
     def apply(self, img: np.ndarray, **_params) -> np.ndarray:
         return img / self.max_pixel_value
 
-    def get_transform_init_args_names(self) -> Tuple[str, str, str]:
-        return "mean", "std", "max_pixel_value"
+    def get_transform_init_args_names(self) -> Tuple[str]:
+        return "max_pixel_value",
 
     def get_params_dependent_on_targets(self, params: Dict[str, Any]) -> Dict[str, Any]:
         return {}
