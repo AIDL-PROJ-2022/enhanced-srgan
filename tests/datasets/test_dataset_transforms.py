@@ -1,63 +1,83 @@
-import random
-
 import cv2
 import numpy as np
 import pytest
+import matplotlib.pyplot as plt
+import os
 
+from PIL import Image
+from albumentations.augmentations.crops import functional as F
 from torch_srgan.datasets.transforms import PairedRandomCrop, PairedCenterCrop, SimpleNormalize
 
 
-def get_gradient_2d(start, stop, width, height, is_horizontal):
-    if is_horizontal:
-        return np.tile(np.linspace(start, stop, width), (height, 1))
-    else:
-        return np.tile(np.linspace(start, stop, height), (width, 1)).T
+def open_test_image(image_name="test_image.png"):
+    base_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../assets")
+    img_path = os.path.join(base_path, image_name)
+    img = cv2.imread(img_path)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    return img
 
 
-def get_gradient_3d(width=512, height=512, start_list=(0, 0, 0),
-                    stop_list=(random.randrange(128, 255), random.randrange(128, 255), random.randrange(128, 255)),
-                    is_horizontal_list=(True, False, False)):
-    result = np.zeros((height, width, len(start_list)), dtype=np.uint8)
-
-    for i, (start, stop, is_horizontal) in enumerate(zip(start_list, stop_list, is_horizontal_list)):
-        result[:, :, i] = get_gradient_2d(start, stop, width, height, is_horizontal)
-
-    return result
+def adj_image_size(image, scale):
+    img_h, img_w = image.shape[:2]
+    img_h -= img_h % scale
+    img_w -= img_w % scale
+    return F.center_crop(image, img_h, img_w)
 
 
 def check_crop_and_scaled_crop(scale, patch_size, cr_image, cr_scaled_image, interpolation):
-    assert cr_image.shape[:2] == patch_size
-    assert cr_scaled_image.shape[:2] == (round(patch_size[0] * scale), round(patch_size[1] * scale))
-    rescaled_cr_image = cv2.resize(cr_image, None, fx=scale, fy=scale, interpolation=interpolation)
-    difference = cv2.subtract(cr_scaled_image, rescaled_cr_image)
+    lr_patch_size = ((patch_size[0] // scale), (patch_size[1] // scale))
+    assert cr_image.shape[:2] == lr_patch_size
+    assert cr_scaled_image.shape[:2] == patch_size
+    visualize(cr_image)
+    visualize(cr_scaled_image)
+    rescaled_cr_image = cv2.resize(cr_scaled_image, dsize=lr_patch_size, interpolation=interpolation)
+    difference = cv2.subtract(cr_image, rescaled_cr_image)
     b, g, r = cv2.split(difference)
-    assert (b > 3).sum() == 0 and (g > 3).sum() == 0 and (r > 3).sum() == 0
+    assert cv2.countNonZero(b) == 0 and cv2.countNonZero(g) == 0 and cv2.countNonZero(r) == 0
 
 
-@pytest.mark.parametrize("interpolation", [cv2.INTER_NEAREST, cv2.INTER_LINEAR, cv2.INTER_CUBIC])
-@pytest.mark.parametrize("scale", [2, 4, 1/2, 1/4])
-@pytest.mark.parametrize("patch_size", [(32, 32), (64, 64), (128, 128)])
+def visualize(image):
+    plt.figure()
+    plt.axis('off')
+    plt.imshow(image)
+    plt.show()
+
+
+@pytest.mark.parametrize("interpolation", [cv2.INTER_CUBIC])
+#@pytest.mark.parametrize("scale", [2, 4, 8])
+@pytest.mark.parametrize("scale", [3])
+# @pytest.mark.parametrize("patch_size", [(96, 96), (128, 128), (192, 192)])
+@pytest.mark.parametrize("patch_size", [(128, 128)])
 def test_paired_random_crop(interpolation, scale, patch_size: tuple):
-    image = get_gradient_3d()
-    scaled_image = cv2.resize(image, dsize=(0, 0), fx=scale, fy=scale, interpolation=interpolation)
-    aug = PairedRandomCrop(*patch_size, scale)
-    data = aug(image=image, scaled_image=scaled_image)
+    image = open_test_image()
+    image = adj_image_size(image, scale)
+    hr_img_h, hr_img_w = image.shape[:2]
+    print(image.shape[:2])
+    lr_img_size = (hr_img_w // scale, hr_img_h // scale)
+    print(lr_img_size)
+    lr_image = cv2.resize(image, lr_img_size, interpolation=interpolation)
+    aug = PairedRandomCrop(patch_size, scale)
+    data = aug(image=lr_image, scaled_image=image)
     check_crop_and_scaled_crop(scale, patch_size, data["image"], data["scaled_image"], interpolation)
 
 
-@pytest.mark.parametrize("interpolation", [cv2.INTER_NEAREST, cv2.INTER_LINEAR, cv2.INTER_CUBIC])
-@pytest.mark.parametrize("scale", [2, 4, 1/2, 1/4])
-@pytest.mark.parametrize("patch_size", [(32, 32), (64, 64), (128, 128)])
+@pytest.mark.parametrize("interpolation", [cv2.INTER_AREA])
+#@pytest.mark.parametrize("scale", [2, 4, 8])
+@pytest.mark.parametrize("scale", [3])
+# @pytest.mark.parametrize("patch_size", [(96, 96), (128, 128), (192, 192)])
+@pytest.mark.parametrize("patch_size", [(129, 129)])
 def test_paired_center_crop(interpolation, scale, patch_size: tuple):
-    image = get_gradient_3d()
-    scaled_image = cv2.resize(image, dsize=(0, 0), fx=scale, fy=scale, interpolation=interpolation)
-    aug = PairedCenterCrop(*patch_size, scale)
-    data = aug(image=image, scaled_image=scaled_image)
+    image = open_test_image()
+    image = adj_image_size(image, scale)
+    lr_resize_scale = 1.0 / float(scale)
+    lr_image = cv2.resize(image, None, fx=lr_resize_scale, fy=lr_resize_scale, interpolation=interpolation)
+    aug = PairedCenterCrop(patch_size, scale)
+    data = aug(image=lr_image, scaled_image=image)
     check_crop_and_scaled_crop(scale, patch_size, data["image"], data["scaled_image"], interpolation)
 
 
 def test_simple_normalize():
-    image = get_gradient_2d(0, 255, 512, 512, True)
+    image = open_test_image()
     aug = SimpleNormalize()
     data = aug(image=image)
     assert np.min(data["image"]) >= 0 and np.max(data["image"]) <= 1
