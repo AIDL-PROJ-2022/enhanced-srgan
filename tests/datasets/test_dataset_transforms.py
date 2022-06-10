@@ -4,7 +4,6 @@ import pytest
 import matplotlib.pyplot as plt
 import os
 
-from PIL import Image
 from albumentations.augmentations.crops import functional as F
 from torch_srgan.datasets.transforms import PairedRandomCrop, PairedCenterCrop, SimpleNormalize
 
@@ -43,11 +42,9 @@ def visualize(image):
     plt.show()
 
 
-@pytest.mark.parametrize("interpolation", [cv2.INTER_CUBIC])
-#@pytest.mark.parametrize("scale", [2, 4, 8])
-@pytest.mark.parametrize("scale", [3])
-# @pytest.mark.parametrize("patch_size", [(96, 96), (128, 128), (192, 192)])
-@pytest.mark.parametrize("patch_size", [(128, 128)])
+@pytest.mark.parametrize("interpolation", [cv2.INTER_AREA])
+@pytest.mark.parametrize("scale", [2, 4, 8])
+@pytest.mark.parametrize("patch_size", [(96, 96), (128, 128), (192, 192)])
 def test_paired_random_crop(interpolation, scale, patch_size: tuple):
     image = open_test_image()
     image = adj_image_size(image, scale)
@@ -62,10 +59,8 @@ def test_paired_random_crop(interpolation, scale, patch_size: tuple):
 
 
 @pytest.mark.parametrize("interpolation", [cv2.INTER_AREA])
-#@pytest.mark.parametrize("scale", [2, 4, 8])
-@pytest.mark.parametrize("scale", [3])
-# @pytest.mark.parametrize("patch_size", [(96, 96), (128, 128), (192, 192)])
-@pytest.mark.parametrize("patch_size", [(129, 129)])
+@pytest.mark.parametrize("scale", [2, 4, 8])
+@pytest.mark.parametrize("patch_size", [(96, 96), (128, 128), (192, 192)])
 def test_paired_center_crop(interpolation, scale, patch_size: tuple):
     image = open_test_image()
     image = adj_image_size(image, scale)
