@@ -11,7 +11,7 @@ import os
 import albumentations as A
 
 from typing import List, Tuple
-from torchvision.datasets.utils import download_and_extract_archive
+from ..utils.datasets import download_and_extract_archive
 
 from .base_class import ImagePairDataset
 
