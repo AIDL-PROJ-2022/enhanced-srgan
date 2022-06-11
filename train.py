@@ -27,7 +27,7 @@ import torch.nn.functional as F
 import torch
 
 from torch_srgan.datasets import BSDS500
-from torch_srgan.datasets.datasets import ImageDataset
+from torch_srgan.datasets.datasets import ImageDataset, denormalize
 from torch_srgan.models.discriminator import Discriminator
 from torch_srgan.models.feature_extractor import FeatureExtractor
 from torch_srgan.models.generator_rrdb import GeneratorRRDB
