@@ -16,6 +16,8 @@ import numpy as np
 import math
 import itertools
 import sys
+import time
+from datetime import timedelta
 
 import torchvision.transforms as transforms
 from torchvision.utils import save_image, make_grid
@@ -120,6 +122,7 @@ if __name__ == '__main__':
     # ----------
 
     for epoch in range(opt.epoch, opt.n_epochs):
+        start = time.time()
         for i, imgs in enumerate(dataloader):
 
             batches_done = epoch * len(dataloader) + i
@@ -131,8 +134,8 @@ if __name__ == '__main__':
                 imgs_lr = Variable(imgs["lr"].type(Tensor))
                 imgs_hr = Variable(imgs["hr"].type(Tensor))
 
-            print("imgs_lr.shape", imgs_lr.shape)
-            print("imgs_hr.shape", imgs_hr.shape)
+            if epoch == 0 and i == 0: print("imgs_lr.shape", imgs_lr.shape)
+            if epoch == 0 and i == 0: print("imgs_hr.shape", imgs_hr.shape)
 
             # Adversarial ground truths
             # TODO: Lo de Variable no fa falta ja crec? no esta deprecated?
@@ -147,14 +150,12 @@ if __name__ == '__main__':
 
             # Generate a high resolution image from low resolution input
             gen_hr = generator(imgs_lr)
-            print("gen_hr.shape", gen_hr.shape)
-            # exit(1)
+            if epoch == 0 and i == 0: print("gen_hr.shape", gen_hr.shape)
 
             # Measure pixel-wise loss against ground truth
             loss_pixel = criterion_pixel(gen_hr, imgs_hr)
 
             if batches_done < opt.warmup_batches:
-                print("entramos en warmpup", batches_done, opt.warmup_batches)
                 # Warm-up (pixel-wise loss only)
                 loss_pixel.backward()
                 optimizer_G.step()
@@ -227,7 +228,7 @@ if __name__ == '__main__':
 
             if batches_done % opt.sample_interval == 0:
                 # Save image grid with upsampled inputs and ESRGAN outputs
-                imgs_lr = nn.functional.interpolate(imgs_lr, scale_factor=4)
+                imgs_lr = nn.functional.interpolate(imgs_lr, scale_factor=(num_upsample*2))
                 img_grid = denormalize(torch.cat((imgs_lr, gen_hr), -1))
                 save_image(img_grid, "images/training/%d.png" % batches_done, nrow=1, normalize=False)
 
@@ -235,3 +236,8 @@ if __name__ == '__main__':
                 # Save model checkpoints
                 torch.save(generator.state_dict(), "saved_models/generator_%d.pth" % epoch)
                 torch.save(discriminator.state_dict(), "saved_models/discriminator_%d.pth" %epoch)
+        end = time.time()
+        total_time = end-start
+        remaining=opt.n_epochs-epoch
+        print(f"Time epoch({epoch}): '{round(total_time, 4)}' seconds")
+        print("Time to finish: {:0>8}".format(str(timedelta(seconds=(total_time*remaining)))))
