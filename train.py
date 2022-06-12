@@ -9,6 +9,8 @@ Instrustion on running the script:
 """
 
 import argparse
+from email.policy import default
+from optparse import OptionError
 import os
 import numpy as np
 import math
@@ -32,38 +34,43 @@ from torch_srgan.models.discriminator import Discriminator
 from torch_srgan.models.feature_extractor import FeatureExtractor
 from torch_srgan.models.generator_rrdb import GeneratorRRDB
 
-os.makedirs("images/training", exist_ok=True)
-os.makedirs("saved_models", exist_ok=True)
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--epoch", type=int, default=0, help="epoch to start training from")
-parser.add_argument("--n_epochs", type=int, default=200, help="number of epochs of training")
-parser.add_argument("--dataset_name", type=str, default="img_align_celeba", help="name of the dataset")
-parser.add_argument("--batch_size", type=int, default=4, help="size of the batches")
-parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
-parser.add_argument("--b1", type=float, default=0.9, help="adam: decay of first order momentum of gradient")
-parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient")
-parser.add_argument("--decay_epoch", type=int, default=100, help="epoch from which to start lr decay")
-parser.add_argument("--n_cpu", type=int, default=8, help="number of cpu threads to use during batch generation")
-parser.add_argument("--hr_height", type=int, default=256, help="high res. image height")
-parser.add_argument("--hr_width", type=int, default=256, help="high res. image width")
-parser.add_argument("--channels", type=int, default=3, help="number of image channels")
-parser.add_argument("--sample_interval", type=int, default=100, help="interval between saving image samples")
-parser.add_argument("--checkpoint_interval", type=int, default=5000, help="batch interval between model checkpoints")
-parser.add_argument("--residual_blocks", type=int, default=23, help="number of residual blocks in the generator")
-parser.add_argument("--warmup_batches", type=int, default=500, help="number of batches with pixel-wise loss only")
-parser.add_argument("--lambda_adv", type=float, default=5e-3, help="adversarial loss weight")
-parser.add_argument("--lambda_pixel", type=float, default=1e-2, help="pixel-wise loss weight")
-opt = parser.parse_args()
-print(opt)
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-hr_shape = (opt.hr_height, opt.hr_width)
 
 if __name__ == '__main__':
+    os.makedirs("images/training", exist_ok=True)
+    os.makedirs("saved_models", exist_ok=True)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--epoch", type=int, default=0, help="epoch to start training from")
+    parser.add_argument("--n_epochs", type=int, default=200, help="number of epochs of training")
+    parser.add_argument("--dataset_name", type=str, default="img_align_celeba", help="name of the dataset")
+    parser.add_argument("--batch_size", type=int, default=4, help="size of the batches")
+    parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
+    parser.add_argument("--b1", type=float, default=0.9, help="adam: decay of first order momentum of gradient")
+    parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient")
+    parser.add_argument("--decay_epoch", type=int, default=100, help="epoch from which to start lr decay")
+    parser.add_argument("--n_cpu", type=int, default=8, help="number of cpu threads to use during batch generation")
+    parser.add_argument("--hr_height", type=int, default=256, help="high res. image height")
+    parser.add_argument("--hr_width", type=int, default=256, help="high res. image width")
+    parser.add_argument("--channels", type=int, default=3, help="number of image channels")
+    parser.add_argument("--sample_interval", type=int, default=100, help="interval between saving image samples")
+    parser.add_argument("--checkpoint_interval", type=int, default=5000, help="batch interval between model checkpoints")
+    parser.add_argument("--residual_blocks", type=int, default=23, help="number of residual blocks in the generator")
+    parser.add_argument("--warmup_batches", type=int, default=500, help="number of batches with pixel-wise loss only")
+    parser.add_argument("--lambda_adv", type=float, default=5e-3, help="adversarial loss weight")
+    parser.add_argument("--lambda_pixel", type=float, default=1e-2, help="pixel-wise loss weight")
+    parser.add_argument("--img_dataset", type=str, default="BSDS500", help="Img dataset 'BSDS500', 'LSCA'")
+    opt = parser.parse_args()
+
+    print(opt)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    #device = "cpu"
+
+    hr_shape = (opt.hr_height, opt.hr_width)
     # Initialize generator and discriminator
-    generator = GeneratorRRDB(opt.channels, filters=64, num_res_blocks=opt.residual_blocks).to(device)
+    num_upsample = 2 if opt.img_dataset == 'LSCA' else 1
+    generator = GeneratorRRDB(opt.channels, filters=64, num_res_blocks=opt.residual_blocks, num_upsample=num_upsample).to(device)
+
     discriminator = Discriminator(input_shape=(opt.channels, *hr_shape)).to(device)
     feature_extractor = FeatureExtractor().to(device)
 
@@ -87,11 +94,22 @@ if __name__ == '__main__':
 
     # TODO: For perfomance?
     Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.Tensor
+    #Tensor = torch.Tensor
+
+    ImgDataset = None
+
+    if opt.img_dataset == 'BSDS500':
+        ImgDataSet = BSDS500(target='train', patch_size=hr_shape)
+    elif opt.img_dataset == 'LSCA':
+        ImgDataSet = ImageDataset("data/%s" % opt.dataset_name, hr_shape=hr_shape)
+    else:
+        raise TypeError(f'dataset {opt.img_dataset} doesnt exist')
+
+    print(f'Using dataset \'{opt.img_dataset}\'')
+    print("dataset items", len(ImgDataSet))
 
     dataloader = DataLoader(
-        # TODO: Hauria de ser hr_shape o un lr_shape?
-        BSDS500(target='train', patch_size=hr_shape),
-        # ImageDataset("data/%s" % opt.dataset_name, hr_shape=hr_shape),
+        ImgDataSet,
         batch_size=opt.batch_size,
         shuffle=True,
         num_workers=opt.n_cpu,
@@ -106,14 +124,15 @@ if __name__ == '__main__':
 
             batches_done = epoch * len(dataloader) + i
 
-            #print(imgs)
+            if opt.img_dataset == 'BSDS500':
+                imgs_lr = Variable(imgs[0].type(Tensor))
+                imgs_hr = Variable(imgs[1].type(Tensor))
+            else:
+                imgs_lr = Variable(imgs["lr"].type(Tensor))
+                imgs_hr = Variable(imgs["hr"].type(Tensor))
 
-            # Configure model input
-            # imgs_lr = Variable(imgs["lr"].type(Tensor))
-            # imgs_hr = Variable(imgs["hr"].type(Tensor))
-            imgs_lr = Variable(imgs[0].type(Tensor))
-            imgs_hr = Variable(imgs[1].type(Tensor))
-
+            print("imgs_lr.shape", imgs_lr.shape)
+            print("imgs_hr.shape", imgs_hr.shape)
 
             # Adversarial ground truths
             # TODO: Lo de Variable no fa falta ja crec? no esta deprecated?
@@ -128,11 +147,14 @@ if __name__ == '__main__':
 
             # Generate a high resolution image from low resolution input
             gen_hr = generator(imgs_lr)
+            print("gen_hr.shape", gen_hr.shape)
+            # exit(1)
 
             # Measure pixel-wise loss against ground truth
             loss_pixel = criterion_pixel(gen_hr, imgs_hr)
 
             if batches_done < opt.warmup_batches:
+                print("entramos en warmpup", batches_done, opt.warmup_batches)
                 # Warm-up (pixel-wise loss only)
                 loss_pixel.backward()
                 optimizer_G.step()
@@ -141,6 +163,10 @@ if __name__ == '__main__':
                     % (epoch, opt.n_epochs, i, len(dataloader), loss_pixel.item())
                 )
                 continue
+
+
+            # TODO: has to be removed
+            exit(1)
 
 
             # Extract validity predictions from discriminator
