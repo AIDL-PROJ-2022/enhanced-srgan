@@ -36,9 +36,14 @@ class ImagePairDataset(Dataset, ABC):
                  transforms: List[A.BasicTransform] = None):
         # Define class member variables from input parameters
         self.scale_factor = scale_factor
+        self.patch_size = patch_size
+        self.train_mode = train
         self.base_dir = base_dir
         self.hr_img_dir = os.path.join(base_dir, hr_img_dir)
         self.img_list: List[Dict[str, str]] = []
+        self.transform: A.ReplayCompose = A.ReplayCompose([])
+        # Initialize transform pipeline
+        self.set_dataset_transforms(transforms)
 
         # Check if user provided directories for HR and LR images
         if lr_img_dir:
@@ -48,17 +53,32 @@ class ImagePairDataset(Dataset, ABC):
 
         # Initialize image pair data dictionary
         self.data: List[Dict[str, str]] = []
+        # Set image paths from given folder(s)
+        # Retrieve HR images from configured directory
+        hr_images = images_in_dir(self.hr_img_dir)
+        # Populate data array with HR images
+        self.data = [{"hr": image} for image in hr_images]
+        # If LR image directory is given, read also paired images from there
+        if self.lr_img_dir:
+            # Retrieve LR images from configured directory
+            lr_images = images_in_dir(self.lr_img_dir)
+            # Check that LR images array size matches HR size
+            assert len(hr_images) == len(lr_images)
+            # Populate data array with HR images
+            for i in range(len(lr_images)):
+                self.data[i].update({"lr": lr_images[i]})
 
+    def set_dataset_transforms(self, transforms: List[A.BasicTransform] = None):
         # Initialize transform pipeline
         transform_pipeline = []
         # Define pre-processing transform depending on if it is a train dataset or not and if a patch size was given
-        if patch_size:
-            if train:
+        if self.patch_size:
+            if self.train_mode:
                 # Perform a random crop to both HR and LR images during training
-                paired_crop = PairedRandomCrop(patch_size, paired_img_scale=scale_factor, always_apply=True)
+                paired_crop = PairedRandomCrop(self.patch_size, paired_img_scale=self.scale_factor, always_apply=True)
             else:
                 # Perform a center crop to both HR and LR images during test/validation
-                paired_crop = PairedCenterCrop(patch_size, paired_img_scale=scale_factor, always_apply=True)
+                paired_crop = PairedCenterCrop(self.patch_size, paired_img_scale=self.scale_factor, always_apply=True)
             # Append to full pipeline
             transform_pipeline.append(paired_crop)
         # Define user requested transformation pipeline (if any)
@@ -79,21 +99,6 @@ class ImagePairDataset(Dataset, ABC):
 
         # Define complete transformation pipeline
         self.transform = A.ReplayCompose(transform_pipeline)
-
-        # Set image paths from given folder(s)
-        # Retrieve HR images from configured directory
-        hr_images = images_in_dir(self.hr_img_dir)
-        # Populate data array with HR images
-        self.data = [{"hr": image} for image in hr_images]
-        # If LR image directory is given, read also paired images from there
-        if self.lr_img_dir:
-            # Retrieve LR images from configured directory
-            lr_images = images_in_dir(self.lr_img_dir)
-            # Check that LR images array size matches HR size
-            assert len(hr_images) == len(lr_images)
-            # Populate data array with HR images
-            for i in range(len(lr_images)):
-                self.data[i].update({"lr": lr_images[i]})
 
     def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor]:
         # Retrieve image pair from data array
