@@ -16,6 +16,8 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from torch_srgan.datasets import BSDS500
+from torch_srgan.loggers.base_class import Logger
+from torch_srgan.loggers.wandb import WandbLogger
 from torch_srgan.models.esrgan import GeneratorESRGAN
 
 
@@ -47,9 +49,10 @@ class AverageMeter(object):
         return fmtstr.format(**self.__dict__)
 
 
-def supervised_stage_train(loss_f: nn.Module, optimizer: torch.optim.Optimizer, train_losses: AverageMeter):
+def supervised_stage_train(loss_f: nn.Module, optimizer: torch.optim.Optimizer, train_losses: AverageMeter, logger: Logger, epoch: int):
     # Switch generator model to train mode
     generator.train()
+
 
     # Iterate over train image batches for this epoch
     for i, (lr_images, hr_images) in enumerate(tqdm(train_dataloader, desc="[TRAINING]", leave=False, ascii=True)):
@@ -57,6 +60,9 @@ def supervised_stage_train(loss_f: nn.Module, optimizer: torch.optim.Optimizer, 
         # Move images to device
         lr_images = lr_images.to(device)
         hr_images = hr_images.to(device)
+
+        # TODO: Make sense model graph?, only in Tensorboard
+
 
         # Set optimizer gradients to zero
         optimizer.zero_grad()
@@ -66,11 +72,14 @@ def supervised_stage_train(loss_f: nn.Module, optimizer: torch.optim.Optimizer, 
 
         # Measure pixel-wise content loss against ground truth image
         loss = loss_f(out_images, hr_images)
+        #train_losses.update(loss.item(), lr_images.size(0))
         train_losses.update(loss.item(), lr_images.size(0))
 
         # Backpropagate gradients and go to next optimizer step
         loss.backward()
         optimizer.step()
+
+        logger.log_generator_train_image(epoch,out_images, lr_images, hr_images)
 
 
 def supervised_stage_validate(val_losses: AverageMeter, psnr_metric: AverageMeter, ssim_metric: AverageMeter):
@@ -126,13 +135,12 @@ def exec_supervised_stage(num_epoch: int, lr: float, sched_step: int, sched_gamm
         optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
 
-    print()
 
     # Train model for specified number of epoch
     for epoch in tqdm(range(start_epoch+1, num_epoch+1), desc="[STAGE 1]"):
 
         # Train model
-        supervised_stage_train(loss_f, optimizer, train_losses)
+        supervised_stage_train(loss_f, optimizer, train_losses, logger, epoch)
         # Validate model
         supervised_stage_validate(val_losses, psnr_metric, ssim_metric)
 
@@ -144,6 +152,9 @@ def exec_supervised_stage(num_epoch: int, lr: float, sched_step: int, sched_gamm
             f"  - {str(psnr_metric)}\r\n"
             f"  - {str(ssim_metric)}\r\n"
         )
+
+        # log stage
+        logger.log_stage('stage-1', epoch, train_losses, val_losses, psnr_metric, ssim_metric)
 
         # Perform scheduler step
         scheduler.step()
@@ -159,8 +170,6 @@ def exec_supervised_stage(num_epoch: int, lr: float, sched_step: int, sched_gamm
 
 
 if __name__ == '__main__':
-    os.makedirs("saved_models", exist_ok=True)
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--start-epoch", type=int, default=0, help="epoch to start training from")
     opt = parser.parse_args()
@@ -236,6 +245,9 @@ if __name__ == '__main__':
         img_channels=hparams["img_channels"], scale_factor=hparams["scale_factor"], **hparams["generator"]
     ).to(device)
     # TODO: DEFINE DISCRIMINATOR
+
+    # Logger initialize
+    logger = WandbLogger(name_wandb_project='ESRGAN-test-1', name_wandb_entity="esrgan-aidl-2022", task='enhanced-srgan', model=generator)
 
     # Define loss functions
     content_loss = nn.L1Loss().to(device)
