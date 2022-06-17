@@ -1,1 +1,0 @@
-{"Generator/train_loss": 0.06706287673115731, "epoch": 10, "_timestamp": 1655466321, "_runtime": 48, "_step": 259, "Generator/val_loss": 0.049874402582645416, "_wandb": {"runtime": 50}}
