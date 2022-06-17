@@ -14,7 +14,7 @@ import albumentations as A
 import torch
 
 from abc import ABC
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional, Union
 from torch.utils.data import Dataset
 from albumentations.pytorch import ToTensorV2
 from albumentations.augmentations.crops import functional as cr_func
@@ -33,7 +33,7 @@ class ImagePairDataset(Dataset, ABC):
 
     def __init__(self, scale_factor: int = 2, train: bool = False, patch_size: Tuple[int, int] = (96, 96),
                  base_dir: str = "data", hr_img_dir: str = "./", lr_img_dir: str = None,
-                 transforms: List[A.BasicTransform] = None):
+                 transforms: List[A.BasicTransform] = None, retrieve_transforms_info: bool = False):
         # Define class member variables from input parameters
         self.scale_factor = scale_factor
         self.patch_size = patch_size
@@ -42,6 +42,7 @@ class ImagePairDataset(Dataset, ABC):
         self.hr_img_dir = os.path.join(base_dir, hr_img_dir)
         self.img_list: List[Dict[str, str]] = []
         self.transform: A.ReplayCompose = A.ReplayCompose([])
+        self.retrieve_transforms_info = retrieve_transforms_info
         # Initialize transform pipeline
         self.set_dataset_transforms(transforms)
 
@@ -100,7 +101,8 @@ class ImagePairDataset(Dataset, ABC):
         # Define complete transformation pipeline
         self.transform = A.ReplayCompose(transform_pipeline)
 
-    def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor]:
+    def __getitem__(self, index: int) -> \
+            Union[Tuple[torch.Tensor, torch.Tensor], Tuple[torch.Tensor, torch.Tensor, dict]]:
         # Retrieve image pair from data array
         img_pair = self.data[index]
         # Read HR image from disk
@@ -125,8 +127,10 @@ class ImagePairDataset(Dataset, ABC):
         hr_image = cv2.cvtColor(hr_image, cv2.COLOR_BGR2RGB)
 
         # Apply transformation pipeline to both images
-        # TODO: Log applied image transformations
         transformed = self.transform(image=lr_image, scaled_image=hr_image)
+
+        if self.retrieve_transforms_info:
+            return transformed["image"], transformed["scaled_image"], transformed["replay"]
 
         return transformed["image"], transformed["scaled_image"]
 
