@@ -1,0 +1,24 @@
+{
+    "os": "Linux-5.15.0-35-generic-x86_64-with-glibc2.35",
+    "python": "3.9.13",
+    "heartbeatAt": "2022-06-17T15:12:16.527217",
+    "startedAt": "2022-06-17T15:12:15.826374",
+    "docker": null,
+    "gpu": "NVIDIA GeForce RTX 3070",
+    "gpu_count": 1,
+    "cpu_count": 20,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/home/rpuente/tests/enhanced-srgan/train.py",
+    "codePath": "train.py",
+    "git": {
+        "remote": "https://github.com/AIDL-PROJ-2022/enhanced-srgan",
+        "commit": "5c8003f7a849bf5b9731e4e2457d510b6f4dba2d"
+    },
+    "email": "raulpuente@gmail.com",
+    "root": "/home/rpuente/tests/enhanced-srgan",
+    "host": "gpuserver",
+    "username": "rpuente",
+    "executable": "/home/rpuente/anaconda3/envs/prueba/bin/python"
+}
