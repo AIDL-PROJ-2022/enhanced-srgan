@@ -16,6 +16,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from torch_srgan.datasets import BSDS500
+from torch_srgan.loggers.wandb import WandbLogger
 from torch_srgan.models.esrgan import GeneratorESRGAN
 
 
@@ -47,7 +48,7 @@ class AverageMeter(object):
         return fmtstr.format(**self.__dict__)
 
 
-def supervised_stage_train(loss_f: nn.Module, optimizer: torch.optim.Optimizer, train_losses: AverageMeter):
+def supervised_stage_train(loss_f: nn.Module, optimizer: torch.optim.Optimizer, train_losses: AverageMeter, epoch: int):
     # Switch generator model to train mode
     generator.train()
 
@@ -72,8 +73,14 @@ def supervised_stage_train(loss_f: nn.Module, optimizer: torch.optim.Optimizer, 
         loss.backward()
         optimizer.step()
 
+        # Log processed images and results
+        if epoch % 10 == 0:
+            # logger.log_image_transforms(epoch, "train", transforms)
+            logger.log_images(epoch, "train", lr_images, out_images, hr_images)
 
-def supervised_stage_validate(val_losses: AverageMeter, psnr_metric: AverageMeter, ssim_metric: AverageMeter):
+
+def supervised_stage_validate(val_losses: AverageMeter, psnr_metric: AverageMeter, ssim_metric: AverageMeter,
+                              epoch: int):
     # Switch generator model to evaluation mode
     generator.eval()
 
@@ -102,6 +109,10 @@ def supervised_stage_validate(val_losses: AverageMeter, psnr_metric: AverageMete
             )
             ssim_metric.update(ssim.item(), lr_images.size(0))
 
+            # Log processed images and results
+            if epoch % 10 == 0:
+                logger.log_images(epoch, "validation", lr_images, out_images, hr_images)
+
 
 def exec_supervised_stage(num_epoch: int, lr: float, sched_step: int, sched_gamma: float, train_aug_transforms: List,
                           loss_f: nn.Module = nn.L1Loss, start_epoch: int = 0, store_checkpoint: bool = True):
@@ -126,15 +137,19 @@ def exec_supervised_stage(num_epoch: int, lr: float, sched_step: int, sched_gamm
         optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
 
-    print()
-
     # Train model for specified number of epoch
     for epoch in tqdm(range(start_epoch+1, num_epoch+1), desc="[STAGE 1]"):
 
+        # Reset metrics
+        train_losses.reset()
+        val_losses.reset()
+        psnr_metric.reset()
+        ssim_metric.reset()
+
         # Train model
-        supervised_stage_train(loss_f, optimizer, train_losses)
+        supervised_stage_train(loss_f, optimizer, train_losses, epoch)
         # Validate model
-        supervised_stage_validate(val_losses, psnr_metric, ssim_metric)
+        supervised_stage_validate(val_losses, psnr_metric, ssim_metric, epoch)
 
         # Print metrics after this epoch
         tqdm.write(
@@ -144,6 +159,9 @@ def exec_supervised_stage(num_epoch: int, lr: float, sched_step: int, sched_gamm
             f"  - {str(psnr_metric)}\r\n"
             f"  - {str(ssim_metric)}\r\n"
         )
+
+        # log stage
+        logger.log_stage('stage-1', epoch, train_losses.avg, val_losses.avg, psnr_metric.avg, ssim_metric.avg)
 
         # Perform scheduler step
         scheduler.step()
@@ -159,14 +177,16 @@ def exec_supervised_stage(num_epoch: int, lr: float, sched_step: int, sched_gamm
 
 
 if __name__ == '__main__':
-    os.makedirs("saved_models", exist_ok=True)
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--start-epoch", type=int, default=0, help="epoch to start training from")
     opt = parser.parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     n_cpu = os.cpu_count()
+
+    # Enable cudnn benchmarking if available
+    if torch.backends.cudnn.is_available():
+        torch.backends.cudnn.benchmark = True
 
     # Create saved models directory if not exist
     os.makedirs("saved_models", exist_ok=True)
@@ -217,7 +237,8 @@ if __name__ == '__main__':
     dataset_class = BSDS500
     # Define train, validation and test datasets to use
     train_img_dataset = dataset_class(
-        target='train', scale_factor=hparams["scale_factor"], patch_size=hparams["cr_patch_size"]
+        target='train', scale_factor=hparams["scale_factor"], patch_size=hparams["cr_patch_size"],
+        # retrieve_transforms_info=True
     )
     val_img_dataset = dataset_class(
         target='val', scale_factor=hparams["scale_factor"], patch_size=hparams["cr_patch_size"], download=False
@@ -226,16 +247,26 @@ if __name__ == '__main__':
         target='test', scale_factor=hparams["scale_factor"], patch_size=hparams["cr_patch_size"], download=False
     )
     # Define also the dataloaders
-    # TODO: WHEN WE NEED SHUFFLING THE INPUT?
-    train_dataloader = DataLoader(train_img_dataset, batch_size=hparams["batch_size"], shuffle=True, num_workers=n_cpu)
-    val_dataloader = DataLoader(val_img_dataset, batch_size=hparams["batch_size"], num_workers=n_cpu)
-    test_dataloader = DataLoader(test_img_dataset, batch_size=hparams["batch_size"], num_workers=n_cpu)
+    train_dataloader = DataLoader(
+        train_img_dataset, batch_size=hparams["batch_size"], shuffle=True, num_workers=n_cpu, pin_memory=True
+    )
+    val_dataloader = DataLoader(
+        val_img_dataset, batch_size=hparams["batch_size"], num_workers=n_cpu, pin_memory=True
+    )
+    test_dataloader = DataLoader(
+        test_img_dataset, batch_size=hparams["batch_size"], num_workers=n_cpu, pin_memory=True
+    )
 
     # Initialize generator and discriminator models
     generator = GeneratorESRGAN(
         img_channels=hparams["img_channels"], scale_factor=hparams["scale_factor"], **hparams["generator"]
     ).to(device)
     # TODO: DEFINE DISCRIMINATOR
+
+    # Logger initialize
+    logger = WandbLogger(
+        proj_name='ESRGAN', entity_name="esrgan-aidl-2022", task='training', generator=generator
+    )
 
     # Define loss functions
     content_loss = nn.L1Loss().to(device)
@@ -244,6 +275,10 @@ if __name__ == '__main__':
     #  Training (STAGE 1) #
     #######################
 
+    # Write empty newline
+    print()
+
+    # Execute supervised pre-training stage
     exec_supervised_stage(
         **hparams["training"][0], train_aug_transforms=(spatial_transforms + hard_transforms), loss_f=content_loss,
         start_epoch=opt.start_epoch
