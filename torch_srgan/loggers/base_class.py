@@ -1,8 +1,15 @@
+from abc import ABC
+
 from torch import Tensor
 
 
-class Logger:
-    def log_stage(self, stage, epoch, train_losses, val_losses, psnr_metric, ssim_metric):
+class Logger(ABC):
+    def log_stage(self, stage: str, epoch: int, train_losses: float, val_losses: float,
+                  psnr_metric: float, ssim_metric: float):
         raise NotImplementedError
-    def log_generator_train_image(self, epoch:int, out_images: Tensor):
+
+    def log_image_transforms(self, epoch: int, dataset_target: str, img_transforms: dict):
+        raise NotImplementedError
+
+    def log_images(self, epoch: int, target: str, lr_images: Tensor, out_images: Tensor, gt_images: Tensor):
         raise NotImplementedError
