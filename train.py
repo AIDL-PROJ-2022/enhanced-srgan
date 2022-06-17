@@ -1,243 +1,250 @@
 """
-Super-resolution of CelebA using Generative Adversarial Networks.
-The dataset can be downloaded from: https://www.dropbox.com/sh/8oqt9vytwxb3s4r/AADIKlz8PR9zr6Y20qbkunrba/Img/img_align_celeba.zip?dl=0
-(if not available there see if options are listed at http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html)
-Instrustion on running the script:
-1. Download the dataset from the provided link
-2. Save the folder 'img_align_celeba' to '../../data/'
-4. Run the sript using command 'python3 esrgan.py'
+ESRGAN Network training script.
 """
 
 import argparse
-from email.policy import default
-from optparse import OptionError
 import os
-import numpy as np
-import math
-import itertools
-import sys
-import time
-from datetime import timedelta
+import warnings
+from typing import List
 
-import torchvision.transforms as transforms
-from torchvision.utils import save_image, make_grid
+import albumentations
+import torch.nn as nn
+import torch
+import piq
 
 from torch.utils.data import DataLoader
-from torch.autograd import Variable
-
-
-import torch.nn as nn
-import torch.nn.functional as F
-import torch
+from tqdm import tqdm
 
 from torch_srgan.datasets import BSDS500
-from torch_srgan.datasets.datasets import ImageDataset, denormalize
-from torch_srgan.models.discriminator import Discriminator
-from torch_srgan.models.feature_extractor import FeatureExtractor
-from torch_srgan.models.generator_rrdb import GeneratorRRDB
+from torch_srgan.models.esrgan import GeneratorESRGAN
 
+
+class AverageMeter(object):
+    """Computes and stores the average and current value"""
+
+    def __init__(self, name, fmt=":f"):
+        self.name = name
+        self.fmt = fmt
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def reset(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count
+
+    def __str__(self):
+        fmtstr = "{name} {val" + self.fmt + "} ({avg" + self.fmt + "})"
+        return fmtstr.format(**self.__dict__)
+
+
+def supervised_stage_train(loss_f: nn.Module, optimizer: torch.optim.Optimizer, train_losses: AverageMeter):
+    # Switch generator model to train mode
+    generator.train()
+
+    # Iterate over train image batches for this epoch
+    for i, (lr_images, hr_images) in enumerate(tqdm(train_dataloader, desc="[TRAINING]", leave=False, ascii=True)):
+
+        # Move images to device
+        lr_images = lr_images.to(device)
+        hr_images = hr_images.to(device)
+
+        # Set optimizer gradients to zero
+        optimizer.zero_grad()
+
+        # Generate a high resolution images from low resolution input
+        out_images = generator(lr_images)
+
+        # Measure pixel-wise content loss against ground truth image
+        loss = loss_f(out_images, hr_images)
+        train_losses.update(loss.item(), lr_images.size(0))
+
+        # Backpropagate gradients and go to next optimizer step
+        loss.backward()
+        optimizer.step()
+
+
+def supervised_stage_validate(val_losses: AverageMeter, psnr_metric: AverageMeter, ssim_metric: AverageMeter):
+    # Switch generator model to evaluation mode
+    generator.eval()
+
+    # Disable gradient propagation
+    with torch.no_grad():
+        # Iterate over validation image batches for this epoch
+        for i, (lr_images, hr_images) in enumerate(tqdm(val_dataloader, desc="[VALIDATION]", leave=False, ascii=True)):
+
+            # Move images to device
+            lr_images = lr_images.to(device)
+            hr_images = hr_images.to(device)
+
+            # Generate a high resolution images from low resolution input
+            out_images = generator(lr_images)
+
+            # Measure pixel-wise content loss against ground truth image
+            loss = content_loss(out_images, hr_images)
+            val_losses.update(loss.item(), lr_images.size(0))
+            # Measure PSNR metric against ground truth image
+            psnr = piq.psnr(hr_images, out_images, data_range=1.0, reduction="mean", convert_to_greyscale=False)
+            psnr_metric.update(psnr.item(), lr_images.size(0))
+            # Measure SSIM metric against ground truth image
+            ssim, _ = piq.ssim(
+                hr_images, out_images, kernel_size=11, kernel_sigma=1.5, k1=0.01, k2=0.03,
+                data_range=1.0, reduction="mean", full=True
+            )
+            ssim_metric.update(ssim.item(), lr_images.size(0))
+
+
+def exec_supervised_stage(num_epoch: int, lr: float, sched_step: int, sched_gamma: float, train_aug_transforms: List,
+                          loss_f: nn.Module = nn.L1Loss, start_epoch: int = 0, store_checkpoint: bool = True):
+
+    # Define optimizer and scheduler for supervised training stage
+    optimizer = torch.optim.Adam(generator.parameters(), lr=lr, weight_decay=0.0)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=sched_step, gamma=sched_gamma)
+
+    # Set train dataset transforms
+    train_img_dataset.set_dataset_transforms(train_aug_transforms)
+
+    # Define metrics
+    train_losses = AverageMeter("Content loss [Train]:", ":.4e")
+    val_losses = AverageMeter("Content loss [Valid]:", ":.4e")
+    psnr_metric = AverageMeter("PSNR:", ":.4f")
+    ssim_metric = AverageMeter("SSIM:", ":.4f")
+
+    # If start epoch is bigger than 0, load model state from local storage
+    if start_epoch > 0:
+        checkpoint = torch.load(f"saved_models/generator_1_{start_epoch}.pt")
+        generator.load_state_dict(checkpoint["model_state_dict"])
+        optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
+
+    print()
+
+    # Train model for specified number of epoch
+    for epoch in tqdm(range(start_epoch+1, num_epoch+1), desc="[STAGE 1]"):
+
+        # Train model
+        supervised_stage_train(loss_f, optimizer, train_losses)
+        # Validate model
+        supervised_stage_validate(val_losses, psnr_metric, ssim_metric)
+
+        # Print metrics after this epoch
+        tqdm.write(
+            f"[Epoch {epoch}/{num_epoch}] METRICS:\r\n"
+            f"  - {str(train_losses)}\r\n"
+            f"  - {str(val_losses)}\r\n"
+            f"  - {str(psnr_metric)}\r\n"
+            f"  - {str(ssim_metric)}\r\n"
+        )
+
+        # Perform scheduler step
+        scheduler.step()
+
+        # Store model parameters
+        if store_checkpoint:
+            checkpoint = {
+                "model_state_dict": generator.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict(),
+                "scheduler_state_dict": scheduler.state_dict()
+            }
+            torch.save(checkpoint, f"saved_models/generator_1_{epoch}.pt")
 
 
 if __name__ == '__main__':
-    os.makedirs("images/training", exist_ok=True)
     os.makedirs("saved_models", exist_ok=True)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--epoch", type=int, default=0, help="epoch to start training from")
-    parser.add_argument("--n_epochs", type=int, default=200, help="number of epochs of training")
-    parser.add_argument("--dataset_name", type=str, default="img_align_celeba", help="name of the dataset")
-    parser.add_argument("--batch_size", type=int, default=4, help="size of the batches")
-    parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
-    parser.add_argument("--b1", type=float, default=0.9, help="adam: decay of first order momentum of gradient")
-    parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient")
-    parser.add_argument("--decay_epoch", type=int, default=100, help="epoch from which to start lr decay")
-    parser.add_argument("--n_cpu", type=int, default=8, help="number of cpu threads to use during batch generation")
-    parser.add_argument("--hr_height", type=int, default=256, help="high res. image height")
-    parser.add_argument("--hr_width", type=int, default=256, help="high res. image width")
-    parser.add_argument("--channels", type=int, default=3, help="number of image channels")
-    parser.add_argument("--sample_interval", type=int, default=100, help="interval between saving image samples")
-    parser.add_argument("--checkpoint_interval", type=int, default=5000, help="batch interval between model checkpoints")
-    parser.add_argument("--residual_blocks", type=int, default=23, help="number of residual blocks in the generator")
-    parser.add_argument("--warmup_batches", type=int, default=500, help="number of batches with pixel-wise loss only")
-    parser.add_argument("--lambda_adv", type=float, default=5e-3, help="adversarial loss weight")
-    parser.add_argument("--lambda_pixel", type=float, default=1e-2, help="pixel-wise loss weight")
-    parser.add_argument("--img_dataset", type=str, default="BSDS500", help="Img dataset 'BSDS500', 'LSCA'")
+    parser.add_argument("--start-epoch", type=int, default=0, help="epoch to start training from")
     opt = parser.parse_args()
 
-    print(opt)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    #device = "cpu"
+    n_cpu = os.cpu_count()
 
-    hr_shape = (opt.hr_height, opt.hr_width)
-    # Initialize generator and discriminator
-    num_upsample = 2 if opt.img_dataset == 'LSCA' else 1
-    generator = GeneratorRRDB(opt.channels, filters=64, num_res_blocks=opt.residual_blocks, num_upsample=num_upsample).to(device)
+    # Create saved models directory if not exist
+    os.makedirs("saved_models", exist_ok=True)
 
-    discriminator = Discriminator(input_shape=(opt.channels, *hr_shape)).to(device)
-    feature_extractor = FeatureExtractor().to(device)
+    # Ignore warnings
+    warnings.filterwarnings('ignore')
 
-    # Set feature extractor to inference mode
-    feature_extractor.eval()
+    # Define hyper-parameters
+    hparams = {
+        "scale_factor": 4,
+        "cr_patch_size": (128, 128),
+        "batch_size": 16,
+        "img_channels": 3,
+        "training": [
+            {
+                "num_epoch": 10,
+                "lr": 0.0002,
+                "sched_step": 500,
+                "sched_gamma": 0.5
+            }
+        ],
+        "generator": {
+            "rrdb_channels": 64,
+            "growth_channels": 32,
+            "num_basic_blocks": 16,
+            "num_dense_blocks": 3,
+            "num_residual_blocks": 5,
+            "residual_scaling": 0.2
+        }
+    }
 
-    # Losses
-    criterion_GAN = torch.nn.BCEWithLogitsLoss().to(device)
-    criterion_content = torch.nn.L1Loss().to(device)
-    criterion_pixel = torch.nn.L1Loss().to(device)
+    # Define train dataset augmentation transforms
+    spatial_transforms: List = [
+        albumentations.OneOf(
+            [
+                albumentations.Flip(p=0.75),        # p = 1/4 (vflip) + 1/4 (hflip) + 1/4 (flip)
+                albumentations.Transpose(p=0.25)    # p = 1/4
+            ],
+            p=0.5
+        )
+    ]
+    hard_transforms: List = [
+        albumentations.CoarseDropout(max_holes=8, max_height=2, max_width=2, p=0.5),
+        albumentations.ImageCompression(quality_lower=65, p=0.25)
+    ]
 
-    if opt.epoch != 0:
-        # Load pretrained models
-        generator.load_state_dict(torch.load("saved_models/generator_%d.pth" % opt.epoch))
-        discriminator.load_state_dict(torch.load("saved_models/discriminator_%d.pth" % opt.epoch))
-
-    # Optimizers
-    # TODO: betas? adam decay?
-    optimizer_G = torch.optim.Adam(generator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
-    optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
-
-    # TODO: For perfomance?
-    Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.Tensor
-    #Tensor = torch.Tensor
-
-    ImgDataset = None
-
-    if opt.img_dataset == 'BSDS500':
-        ImgDataSet = BSDS500(target='train', patch_size=hr_shape)
-    elif opt.img_dataset == 'LSCA':
-        ImgDataSet = ImageDataset("data/%s" % opt.dataset_name, hr_shape=hr_shape)
-    else:
-        raise TypeError(f'dataset {opt.img_dataset} doesnt exist')
-
-    print(f'Using dataset \'{opt.img_dataset}\'')
-    print("dataset items", len(ImgDataSet))
-
-    dataloader = DataLoader(
-        ImgDataSet,
-        batch_size=opt.batch_size,
-        shuffle=True,
-        num_workers=opt.n_cpu,
+    # Define dataset class
+    dataset_class = BSDS500
+    # Define train, validation and test datasets to use
+    train_img_dataset = dataset_class(
+        target='train', scale_factor=hparams["scale_factor"], patch_size=hparams["cr_patch_size"]
     )
+    val_img_dataset = dataset_class(
+        target='val', scale_factor=hparams["scale_factor"], patch_size=hparams["cr_patch_size"], download=False
+    )
+    test_img_dataset = dataset_class(
+        target='test', scale_factor=hparams["scale_factor"], patch_size=hparams["cr_patch_size"], download=False
+    )
+    # Define also the dataloaders
+    # TODO: WHEN WE NEED SHUFFLING THE INPUT?
+    train_dataloader = DataLoader(train_img_dataset, batch_size=hparams["batch_size"], shuffle=True, num_workers=n_cpu)
+    val_dataloader = DataLoader(val_img_dataset, batch_size=hparams["batch_size"], num_workers=n_cpu)
+    test_dataloader = DataLoader(test_img_dataset, batch_size=hparams["batch_size"], num_workers=n_cpu)
 
-    # ----------
-    #  Training
-    # ----------
+    # Initialize generator and discriminator models
+    generator = GeneratorESRGAN(
+        img_channels=hparams["img_channels"], scale_factor=hparams["scale_factor"], **hparams["generator"]
+    ).to(device)
+    # TODO: DEFINE DISCRIMINATOR
 
-    for epoch in range(opt.epoch, opt.n_epochs):
-        start = time.time()
-        for i, imgs in enumerate(dataloader):
+    # Define loss functions
+    content_loss = nn.L1Loss().to(device)
 
-            batches_done = epoch * len(dataloader) + i
+    #######################
+    #  Training (STAGE 1) #
+    #######################
 
-            if opt.img_dataset == 'BSDS500':
-                imgs_lr = Variable(imgs[0].type(Tensor))
-                imgs_hr = Variable(imgs[1].type(Tensor))
-            else:
-                imgs_lr = Variable(imgs["lr"].type(Tensor))
-                imgs_hr = Variable(imgs["hr"].type(Tensor))
-
-            if epoch == 0 and i == 0: print("imgs_lr.shape", imgs_lr.shape)
-            if epoch == 0 and i == 0: print("imgs_hr.shape", imgs_hr.shape)
-
-            # Adversarial ground truths
-            # TODO: Lo de Variable no fa falta ja crec? no esta deprecated?
-            valid = Variable(Tensor(np.ones((imgs_lr.size(0), *discriminator.output_shape))), requires_grad=False)
-            fake = Variable(Tensor(np.zeros((imgs_lr.size(0), *discriminator.output_shape))), requires_grad=False)
-
-            # ------------------
-            #  Train Generators
-            # ------------------
-
-            optimizer_G.zero_grad()
-
-            # Generate a high resolution image from low resolution input
-            gen_hr = generator(imgs_lr)
-            if epoch == 0 and i == 0: print("gen_hr.shape", gen_hr.shape)
-
-            # Measure pixel-wise loss against ground truth
-            loss_pixel = criterion_pixel(gen_hr, imgs_hr)
-
-            if batches_done < opt.warmup_batches:
-                # Warm-up (pixel-wise loss only)
-                loss_pixel.backward()
-                optimizer_G.step()
-                print(
-                    "[Epoch %d/%d] [Batch %d/%d] [G pixel: %f]"
-                    % (epoch, opt.n_epochs, i, len(dataloader), loss_pixel.item())
-                )
-                continue
-
-
-            # TODO: has to be removed
-            exit(1)
-
-
-            # Extract validity predictions from discriminator
-            pred_real = discriminator(imgs_hr).detach()
-            pred_fake = discriminator(gen_hr)
-
-            # Adversarial loss (relativistic average GAN)
-            loss_GAN = criterion_GAN(pred_fake - pred_real.mean(0, keepdim=True), valid)
-
-            # Content loss
-            gen_features = feature_extractor(gen_hr)
-            real_features = feature_extractor(imgs_hr).detach()
-            loss_content = criterion_content(gen_features, real_features)
-
-            # Total generator loss
-            loss_G = loss_content + opt.lambda_adv * loss_GAN + opt.lambda_pixel * loss_pixel
-
-            loss_G.backward()
-            optimizer_G.step()
-
-            # ---------------------
-            #  Train Discriminator
-            # ---------------------
-
-            optimizer_D.zero_grad()
-
-            pred_real = discriminator(imgs_hr)
-            pred_fake = discriminator(gen_hr.detach())
-
-            # Adversarial loss for real and fake images (relativistic average GAN)
-            loss_real = criterion_GAN(pred_real - pred_fake.mean(0, keepdim=True), valid)
-            loss_fake = criterion_GAN(pred_fake - pred_real.mean(0, keepdim=True), fake)
-
-            # Total loss
-            loss_D = (loss_real + loss_fake) / 2
-
-            loss_D.backward()
-            optimizer_D.step()
-
-            # --------------
-            #  Log Progress
-            # --------------
-
-            print(
-                "[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f, content: %f, adv: %f, pixel: %f]"
-                % (
-                    epoch,
-                    opt.n_epochs,
-                    i,
-                    len(dataloader),
-                    loss_D.item(),
-                    loss_G.item(),
-                    loss_content.item(),
-                    loss_GAN.item(),
-                    loss_pixel.item(),
-                )
-            )
-
-            if batches_done % opt.sample_interval == 0:
-                # Save image grid with upsampled inputs and ESRGAN outputs
-                imgs_lr = nn.functional.interpolate(imgs_lr, scale_factor=(num_upsample*2))
-                img_grid = denormalize(torch.cat((imgs_lr, gen_hr), -1))
-                save_image(img_grid, "images/training/%d.png" % batches_done, nrow=1, normalize=False)
-
-            if batches_done % opt.checkpoint_interval == 0:
-                # Save model checkpoints
-                torch.save(generator.state_dict(), "saved_models/generator_%d.pth" % epoch)
-                torch.save(discriminator.state_dict(), "saved_models/discriminator_%d.pth" %epoch)
-        end = time.time()
-        total_time = end-start
-        remaining=opt.n_epochs-epoch
-        print(f"Time epoch({epoch}): '{round(total_time, 4)}' seconds")
-        print("Time to finish: {:0>8}".format(str(timedelta(seconds=(total_time*remaining)))))
+    exec_supervised_stage(
+        **hparams["training"][0], train_aug_transforms=(spatial_transforms + hard_transforms), loss_f=content_loss,
+        start_epoch=opt.start_epoch
+    )
