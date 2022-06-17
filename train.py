@@ -247,7 +247,7 @@ if __name__ == '__main__':
     # TODO: DEFINE DISCRIMINATOR
 
     # Logger initialize
-    logger = WandbLogger(name_wandb_project='ESRGAN-test-1', name_wandb_entity="esrgan-aidl-2022", task='enhanced-srgan', model=generator)
+    logger = WandbLogger(name_wandb_project='ESRGAN', name_wandb_entity="esrgan-aidl-2022", task='enhanced-srgan', model=generator)
 
     # Define loss functions
     content_loss = nn.L1Loss().to(device)
