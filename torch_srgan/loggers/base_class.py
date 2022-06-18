@@ -13,3 +13,6 @@ class Logger(ABC):
 
     def log_images(self, epoch: int, target: str, lr_images: Tensor, out_images: Tensor, gt_images: Tensor):
         raise NotImplementedError
+
+    def log_model_graph(self, model, train_loader):
+        raise NotImplementedError

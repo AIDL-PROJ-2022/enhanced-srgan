@@ -17,6 +17,7 @@ from tqdm import tqdm
 
 from torch_srgan.datasets import BSDS500
 from torch_srgan.loggers.wandb import WandbLogger
+from torch_srgan.loggers.tensorboard import TensorboardLogger
 from torch_srgan.models.esrgan import GeneratorESRGAN
 
 
@@ -74,7 +75,7 @@ def supervised_stage_train(loss_f: nn.Module, optimizer: torch.optim.Optimizer, 
         optimizer.step()
 
         # Log processed images and results
-        if epoch % 10 == 0:
+        if epoch == 1 or epoch % 10 == 0:
             # logger.log_image_transforms(epoch, "train", transforms)
             logger.log_images(epoch, "train", lr_images, out_images, hr_images)
 
@@ -110,7 +111,7 @@ def supervised_stage_validate(val_losses: AverageMeter, psnr_metric: AverageMete
             ssim_metric.update(ssim.item(), lr_images.size(0))
 
             # Log processed images and results
-            if epoch % 10 == 0:
+            if epoch == 1 or epoch % 10 == 0:
                 logger.log_images(epoch, "validation", lr_images, out_images, hr_images)
 
 
@@ -264,9 +265,8 @@ if __name__ == '__main__':
     # TODO: DEFINE DISCRIMINATOR
 
     # Logger initialize
-    logger = WandbLogger(
-        proj_name='ESRGAN', entity_name="esrgan-aidl-2022", task='training', generator=generator
-    )
+    logger = WandbLogger(proj_name='ESRGAN', entity_name="esrgan-aidl-2022", task='training', generator=generator)
+    # logger = TensorboardLogger(task='training', generator=generator)
 
     # Define loss functions
     content_loss = nn.L1Loss().to(device)
