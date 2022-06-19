@@ -140,9 +140,10 @@ def pretraining_stage_train(dataloader: DataLoader, optimizer: torch.optim.Optim
     )
 
 
-def pretraining_stage_validate(dataloader: DataLoader, epoch_i: int, num_epoch: int):
-    # Switch generator model to evaluation mode
+def validate_model(dataloader: DataLoader, stage: str, epoch_i: int, num_epoch: int):
+    # Switch generator and discriminator model to evaluation mode
     generator.eval()
+    discriminator.eval()
 
     # Reset metrics
     content_loss_metric.reset()
@@ -161,9 +162,13 @@ def pretraining_stage_validate(dataloader: DataLoader, epoch_i: int, num_epoch: 
             # Generate a high resolution images from low resolution input
             out_images = generator(lr_images)
 
-            # Measure pixel-wise content loss against ground truth image
-            loss = content_loss(out_images, hr_images)
-            content_loss_metric.update(loss.item(), lr_images.size(0))
+            # Measure pixel-wise content loss against ground truth image (Pixel-wise loss)
+            c_loss = content_loss(out_images, hr_images)
+            content_loss_metric.update(c_loss.item(), lr_images.size(0))
+
+            # Measure perceptual loss against ground truth image (VGG-based loss)
+            p_loss = perceptual_loss(out_images, hr_images)
+            perceptual_loss_metric.update(p_loss.item(), hr_images.size(0))
 
             # Measure PSNR and SSIM metric against ground truth image
             _measure_psnr_ssim_metrics(hr_images, out_images)
@@ -176,12 +181,14 @@ def pretraining_stage_validate(dataloader: DataLoader, epoch_i: int, num_epoch: 
     tqdm.write(
         f"VALIDATION METRICS [{epoch_i}/{num_epoch}]:\r\n"
         f"  - {str(content_loss_metric)}\r\n"
+        f"  - {str(perceptual_loss_metric)}\r\n"
         f"  - {str(psnr_metric)}\r\n"
         f"  - {str(ssim_metric)}\r\n"
     )
     logger.log_metrics(
-        "PSNR-driven", "validation", {
+        stage, "validation", {
             "content_loss": content_loss_metric.avg,
+            "perceptual_loss": perceptual_loss_metric.avg,
             "PSNR": psnr_metric.avg,
             "SSIM": ssim_metric.avg
         }
@@ -219,7 +226,7 @@ def exec_pretraining_stage(num_epoch: int, cr_patch_size: Tuple[int, int], lr: f
         # Train model
         pretraining_stage_train(train_dataloader, optimizer, scheduler, epoch_i, num_epoch)
         # Validate model
-        pretraining_stage_validate(val_dataloader, epoch_i, num_epoch)
+        validate_model(val_dataloader, "PSNR-driven", epoch_i, num_epoch)
 
         # Print metrics after this epoch
         tqdm.write("-" * 64 + "\r\n")
@@ -335,7 +342,7 @@ def training_stage_train(dataloader: DataLoader, g_optimizer: torch.optim.Optimi
         d_pred_real = discriminator(hr_images_w_noise)
         d_pred_fake = discriminator(out_images.detach())
 
-        # # Calculate discriminator adversarial loss (relativistic GAN loss)
+        # Calculate discriminator adversarial loss (relativistic GAN loss)
         d_loss = d_adversarial_loss(d_pred_fake, d_pred_real)
         d_adversarial_loss_metric.update(d_loss.item(), hr_images.size(0))
 
@@ -375,77 +382,6 @@ def training_stage_train(dataloader: DataLoader, g_optimizer: torch.optim.Optimi
     )
 
 
-def training_stage_validate(dataloader: DataLoader, g_adversarial_loss_scaling: float, g_content_loss_scaling: float,
-                            epoch_i: int, num_epoch: int):
-    # Switch generator and discriminator models to evaluation mode
-    generator.eval()
-    discriminator.eval()
-
-    # Reset metrics
-    content_loss_metric.reset()
-    perceptual_loss_metric.reset()
-    g_adversarial_loss_metric.reset()
-    g_total_loss_metric.reset()
-    d_adversarial_loss_metric.reset()
-    psnr_metric.reset()
-    ssim_metric.reset()
-
-    # Disable gradient propagation
-    with torch.no_grad():
-        # Iterate over validation image batches for this epoch
-        for i, (lr_images, hr_images) in enumerate(tqdm(dataloader, desc="[VALIDATION]", leave=False)):
-
-            # Move images to device
-            lr_images = lr_images.to(device)
-            hr_images = hr_images.to(device)
-
-            # Generate a high resolution images from low resolution input
-            out_images = generator(lr_images)
-
-            # Evaluate real and generated images with the discriminator
-            pred_real = discriminator(hr_images)
-            pred_fake = discriminator(out_images)
-
-            # Measure total generator loss against ground truth image
-            _gan_calc_gen_losses(
-                hr_images, out_images, pred_real, pred_fake, g_adversarial_loss_scaling, g_content_loss_scaling
-            )
-
-            # Calculate discriminator adversarial loss (relativistic GAN loss)
-            d_loss = d_adversarial_loss(pred_fake, pred_real)
-            d_adversarial_loss_metric.update(d_loss.item(), lr_images.size(0))
-
-            # Measure PSNR and SSIM metric against ground truth image
-            _measure_psnr_ssim_metrics(hr_images, out_images)
-
-            # Log processed images and results
-            if (epoch_i % 500 == 0 or epoch_i == 1 or epoch_i == num_epoch) and i == 0:
-                logger.log_images("validation", lr_images, out_images, hr_images)
-
-    # Log metrics
-    tqdm.write(
-        f"VALIDATION METRICS [{epoch_i}/{num_epoch}]:\r\n"
-        f"  - {str(content_loss_metric)}\r\n"
-        f"  - {str(perceptual_loss_metric)}\r\n"
-        f"  - {str(g_adversarial_loss_metric)}\r\n"
-        f"  - {str(g_total_loss_metric)}\r\n"
-        f"  - {str(d_adversarial_loss_metric)}\r\n"
-        f"  - {str(psnr_metric)}\r\n"
-        f"  - {str(ssim_metric)}\r\n"
-    )
-    logger.log_metrics(
-        "GAN-based", "validation", {
-            "content_loss": content_loss_metric.avg,
-            "perceptual_loss": perceptual_loss_metric.avg,
-            "g_adversarial_loss": g_adversarial_loss_metric.avg,
-            "g_total_loss": g_total_loss_metric.avg,
-            "d_adversarial_loss": d_adversarial_loss_metric.avg,
-            "PSNR": psnr_metric.avg,
-            "SSIM": ssim_metric.avg
-        }
-    )
-
-
 def exec_training_stage(num_epoch: int, cr_patch_size: Tuple[int, int], g_lr: float, d_lr: float,
                         g_sched_steps: List[int], g_sched_gamma: float, d_sched_steps: List[int], d_sched_gamma: float,
                         g_adversarial_loss_scaling: float, g_content_loss_scaling: float,
@@ -453,8 +389,8 @@ def exec_training_stage(num_epoch: int, cr_patch_size: Tuple[int, int], g_lr: fl
                         val_datasets_list: Iterable[datasets.ImagePairDataset],
                         train_aug_transforms: List, store_checkpoint: bool = True):
     # Define optimizers for training stage
-    g_optimizer = torch.optim.Adam(generator.parameters(), lr=g_lr)
-    d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=d_lr)
+    g_optimizer = torch.optim.AdamW(generator.parameters(), lr=g_lr, weight_decay=0.0)
+    d_optimizer = torch.optim.SGD(discriminator.parameters(), lr=d_lr)
     # Define schedulers for training stage
     g_scheduler = torch.optim.lr_scheduler.MultiStepLR(g_optimizer, milestones=g_sched_steps, gamma=g_sched_gamma)
     d_scheduler = torch.optim.lr_scheduler.MultiStepLR(d_optimizer, milestones=d_sched_steps, gamma=d_sched_gamma)
@@ -485,7 +421,7 @@ def exec_training_stage(num_epoch: int, cr_patch_size: Tuple[int, int], g_lr: fl
             epoch_i, num_epoch
         )
         # Validate model
-        training_stage_validate(val_dataloader, g_adversarial_loss_scaling, g_content_loss_scaling, epoch_i, num_epoch)
+        validate_model(val_dataloader, "GAN-based", epoch_i, num_epoch)
 
         # Print metrics after this epoch
         tqdm.write("-" * 64 + "\r\n")
@@ -551,14 +487,14 @@ if __name__ == '__main__':
         "batch_size": 16,
         "img_channels": 3,
         "pretraining": {
-            "num_epoch": 150,
+            "num_epoch": 5000,
             "cr_patch_size": (192, 192),
             "lr": 0.0002,
-            "sched_step": 200000,
+            "sched_step": 150000,
             "sched_gamma": 0.5,
         },
         "training": {
-            "num_epoch": 120,
+            "num_epoch": 4000,
             "cr_patch_size": (128, 128),
             "g_lr": 0.0001,
             "d_lr": 0.0001,
@@ -657,10 +593,10 @@ if __name__ == '__main__':
     # Pre-training stage (PSNR driven) #
     ####################################
 
-    data = torch.load("saved_models/1655650698_RRDB_PSNR_x4.pth")
-    generator.load_state_dict(data["model_state_dict"])
-    start_epoch = data.get("epoch_i", data["hparams"]["pretraining"]["num_epoch"])
-    # start_epoch = 0
+    # data = torch.load("saved_models/1655650698_RRDB_PSNR_x4.pth")
+    # generator.load_state_dict(data["model_state_dict"])
+    # start_epoch = data.get("epoch_i", data["hparams"]["pretraining"]["num_epoch"])
+    start_epoch = 0
     logger.set_current_step(start_epoch + 1)
 
     # Define datasets to use
