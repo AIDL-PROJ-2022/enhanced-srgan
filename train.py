@@ -303,7 +303,8 @@ def training_stage_train(dataloader: DataLoader, g_optimizer: torch.optim.Optimi
         lr_images = lr_images.to(device)
         hr_images = hr_images.to(device)
 
-        # Add some noise to the ground truth image (WHY?)
+        # Add some noise to the ground truth image (Arjovsky et. al., Huszar, 2016)
+        # [http://www.inference.vc/instance-noise-a-trick-for-stabilising-gan-training/]
         noise = torch.randn(hr_images.shape, device=hr_images.device)
         hr_images_w_noise = torch.clamp((hr_images + 0.05 * noise), min=0.0, max=1.0)
 
