@@ -9,11 +9,10 @@ __status__ = "Development"
 
 import os
 import albumentations as A
-import torch
 
 from typing import List, Tuple
-from ..utils.datasets import download_and_extract_archive
 
+from ..utils.datasets import download_and_extract_archive
 from .base_class import ImagePairDataset
 
 
@@ -30,8 +29,7 @@ class BSDS500(ImagePairDataset):
     dataset_img_base_dir = "BSR/BSDS500/data/images/"
 
     def __init__(self, target: str, scale_factor: int = 2, patch_size: Tuple[int, int] = (128, 128),
-                 base_dir: str = "data", transforms: List[A.BasicTransform] = None,
-                 retrieve_transforms_info: bool = False, download: bool = True):
+                 base_dir: str = "data", transforms: List[A.BasicTransform] = None, download: bool = True):
         # Check that user provided a valid target
         if target not in ("train", "test", "val"):
             raise ValueError(f"Invalid BSDS500 target '{target}' provided.")
@@ -45,6 +43,5 @@ class BSDS500(ImagePairDataset):
             download_and_extract_archive(BSDS500.dataset_url, base_dir, md5=BSDS500.dataset_md5sum)
 
         super(BSDS500, self).__init__(
-            scale_factor, train_mode, patch_size, base_dir, hr_img_dir,
-            transforms=transforms, retrieve_transforms_info=retrieve_transforms_info
+            scale_factor, train_mode, patch_size, base_dir, hr_img_dir, transforms=transforms
         )

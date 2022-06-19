@@ -4,12 +4,17 @@ from torch import Tensor
 
 
 class Logger(ABC):
-    def log_stage(self, stage: str, epoch: int, train_losses: float, val_losses: float,
-                  psnr_metric: float, ssim_metric: float):
+    def __init__(self):
+        self._current_step: int = 0
+
+    def set_current_step(self, step: int):
+        self._current_step = step
+
+    def step(self):
+        self._current_step += 1
+
+    def log_metrics(self, stage: str, dataset_target: str, metrics: dict):
         raise NotImplementedError
 
-    def log_image_transforms(self, epoch: int, dataset_target: str, img_transforms: dict):
-        raise NotImplementedError
-
-    def log_images(self, epoch: int, target: str, lr_images: Tensor, out_images: Tensor, gt_images: Tensor):
+    def log_images(self, target: str, lr_images: Tensor, out_images: Tensor, gt_images: Tensor):
         raise NotImplementedError

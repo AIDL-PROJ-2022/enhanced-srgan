@@ -22,6 +22,7 @@ class PairedTransform(BasicTransform):
 
     Args:
         paired_img_scale (int): scale relation between image and scaled image. Must be an integer >= 1.
+        scaled_img_target_key (str): expected key of the scaled image during transform execution. Default: scaled_image
         always_apply (bool): always apply transform. Default: False.
         p (float): probability of applying the transform. Default: 1.
 
@@ -32,17 +33,21 @@ class PairedTransform(BasicTransform):
         uint8, float32
     """
 
-    def __init__(self, paired_img_scale: int, always_apply: bool = False, p: float = 1.0):
+    def __init__(self, paired_img_scale: int, scaled_img_target_key: str = "scaled_image",
+                 always_apply: bool = False, p: float = 1.0):
         super(PairedTransform, self).__init__(always_apply, p)
-        self.paired_img_scale = int(paired_img_scale)
-        if self.paired_img_scale < 1:
+
+        if paired_img_scale < 1:
             raise ValueError("Paired image scale must be an integer equal or bigger than 1.")
+
+        self.paired_img_scale = int(paired_img_scale)
+        self.scaled_img_target_key = scaled_img_target_key
 
     @property
     def targets(self) -> Dict[str, Callable]:
         return {
             "image": self.apply,
-            "scaled_image": self.apply_scaled
+            self.scaled_img_target_key: self.apply_scaled
         }
 
     def apply_scaled(self, img: np.ndarray, h_start: float = 0, w_start: float = 0, **_params) -> np.ndarray:
@@ -53,7 +58,7 @@ class PairedTransform(BasicTransform):
         params = super().update_params(params, **kwargs)
         # Retrieve both images dimensions
         img_size = kwargs["image"].shape[:2]
-        scaled_img_size = kwargs["scaled_image"].shape[:2]
+        scaled_img_size = kwargs[self.scaled_img_target_key].shape[:2]
         exp_scaled_img_size = tuple([int(dim * self.paired_img_scale) for dim in img_size])
         # Check that scaled image match expected dimensions
         if scaled_img_size != exp_scaled_img_size:
@@ -76,6 +81,7 @@ class PairedCrop(PairedTransform):
     Args:
         scaled_cr_size (tuple): Size of the scaled crop. Must be a (height, width) tuple.
         paired_img_scale (int): scale relation between image and scaled image. Must be an integer >= 1.
+        scaled_img_target_key (str): expected key of the scaled image during transform execution. Default: scaled_image
         always_apply (bool): always apply transform. Default: False.
         p (float): probability of applying the transform. Default: 1.
 
@@ -86,8 +92,8 @@ class PairedCrop(PairedTransform):
         uint8, float32
     """
     def __init__(self, scaled_cr_size: Tuple[int, int], paired_img_scale: int,
-                 always_apply: bool = False, p: float = 1.0):
-        super(PairedCrop, self).__init__(paired_img_scale, always_apply, p)
+                 scaled_img_target_key: str = "scaled_image", always_apply: bool = False, p: float = 1.0):
+        super(PairedCrop, self).__init__(paired_img_scale, scaled_img_target_key, always_apply, p)
         self._check_and_set_scaled_cr_size(scaled_cr_size)
 
     def _check_and_set_scaled_cr_size(self, scaled_cr_size: Tuple[int, int]):
@@ -124,6 +130,7 @@ class PairedRandomCrop(PairedCrop):
     Args:
         scaled_cr_size (tuple): Size of the scaled crop. Must be a (height, width) tuple.
         paired_img_scale (int): scale relation between image and scaled image. Must be an integer >= 1.
+        scaled_img_target_key (str): expected key of the scaled image during transform execution. Default: scaled_image
         always_apply (bool): always apply transform. Default: False.
         p (float): probability of applying the transform. Default: 1.
 
@@ -134,14 +141,22 @@ class PairedRandomCrop(PairedCrop):
         uint8, float32
     """
     def __init__(self, scaled_cr_size: Tuple[int, int], paired_img_scale: int,
-                 always_apply: bool = False, p: float = 1.0):
-        super(PairedRandomCrop, self).__init__(scaled_cr_size, paired_img_scale, always_apply, p)
+                 scaled_img_target_key: str = "scaled_image", always_apply: bool = False, p: float = 1.0):
+        super(PairedRandomCrop, self).__init__(scaled_cr_size, paired_img_scale, scaled_img_target_key, always_apply, p)
 
     def apply(self, img: np.ndarray, h_start: float = 0, w_start: float = 0, **_params) -> np.ndarray:
-        # Get scaled crop height and width from its size
+        # Get image height and width
+        img_h, img_w = img.shape[:2]
+        # Get crop height and width from its size
         crop_h, crop_w = self.cr_size
+        # Calculate X and Y start position
+        y_min = int((img_h - crop_h) * h_start)
+        x_min = int((img_w - crop_w) * w_start)
+        # Calculate X and Y end position
+        y_max = y_min + crop_h
+        x_max = x_min + crop_w
         # Return cropped image
-        return cr_func.random_crop(img, crop_h, crop_w, h_start, w_start)
+        return cr_func.crop(img, x_min, y_min, x_max, y_max)
 
     def apply_scaled(self, img: np.ndarray, h_start: float = 0, w_start: float = 0, **_params) -> np.ndarray:
         # Get image height and width
@@ -169,6 +184,7 @@ class PairedCenterCrop(PairedCrop):
     Args:
         scaled_cr_size (tuple): Size of the scaled crop. Must be a (height, width) tuple.
         paired_img_scale (int): scale relation between image and scaled image. Must be an integer >= 1.
+        scaled_img_target_key (str): expected key of the scaled image during transform execution. Default: scaled_image
         always_apply (bool): always apply transform. Default: False.
         p (float): probability of applying the transform. Default: 1.
 
@@ -179,8 +195,8 @@ class PairedCenterCrop(PairedCrop):
         uint8, float32
     """
     def __init__(self, scaled_cr_size: Tuple[int, int], paired_img_scale: int,
-                 always_apply: bool = False, p: float = 1.0):
-        super(PairedCenterCrop, self).__init__(scaled_cr_size, paired_img_scale, always_apply, p)
+                 scaled_img_target_key: str = "scaled_image", always_apply: bool = False, p: float = 1.0):
+        super(PairedCenterCrop, self).__init__(scaled_cr_size, paired_img_scale, scaled_img_target_key, always_apply, p)
 
     def apply(self, img: np.ndarray, **_params) -> np.ndarray:
         # Get scaled crop height and width from its size
@@ -223,7 +239,7 @@ class SimpleNormalize(ImageOnlyTransform):
         self.max_pixel_value = float(max_pixel_value)
 
     def apply(self, img: np.ndarray, **_params) -> np.ndarray:
-        return img / self.max_pixel_value
+        return img.astype(np.float32) / float(self.max_pixel_value)
 
     def get_transform_init_args_names(self) -> Tuple[str]:
         return "max_pixel_value",
