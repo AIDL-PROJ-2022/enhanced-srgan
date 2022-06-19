@@ -25,7 +25,7 @@ class SubPixelConv(nn.Module):
     """
 
     def __init__(self, num_features: int, scale_factor: int = 2):
-        super().__init__()
+        super(SubPixelConv, self).__init__()
 
         # Check that scale factor is a power of two (2^n)
         if (scale_factor & (scale_factor - 1)) != 0:

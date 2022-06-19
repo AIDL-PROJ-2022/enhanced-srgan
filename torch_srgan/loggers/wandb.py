@@ -1,14 +1,17 @@
 import os
 import datetime
-import torch
 import wandb
 
-from torch_srgan.loggers.base_class import Logger
+from torch import Tensor
+from torch.nn import Module
+
+from .base_class import Logger
 
 
 class WandbLogger(Logger):
     def __init__(self, proj_name: str, entity_name: str, task: str,
-                 generator: torch.nn.Module = None, discriminator: torch.nn.Module = None):
+                 generator: Module = None, discriminator: Module = None):
+        super(WandbLogger, self).__init__()
         # Workaround to fix progress bars: disable wandb console
         os.environ["WANDB_CONSOLE"] = "off"
         # Initialize wandb logger
@@ -19,22 +22,14 @@ class WandbLogger(Logger):
         if generator is not None:
             wandb.watch(generator, log="all")
         # Log discriminator model
-        # Log discriminator model
         if discriminator is not None:
             wandb.watch(discriminator, log="all")
 
-    def log_stage(self, stage: str, epoch: int, train_losses: float, val_losses: float,
-                  psnr_metric: float, ssim_metric: float):
-        wandb.log({f"{stage}/train_loss": train_losses}, step=epoch)
-        wandb.log({f"{stage}/val_loss": val_losses}, step=epoch)
-        wandb.log({f"{stage}/psnr_metric": psnr_metric}, step=epoch)
-        wandb.log({f"{stage}/ssim_metric": ssim_metric}, step=epoch)
+    def log_metrics(self, stage: str, dataset_target: str, metrics: dict):
+        for name, value in metrics.items():
+            wandb.log({f"{dataset_target}/{stage}/{name}": value}, step=self._current_step)
 
-    def log_image_transforms(self, epoch: int, dataset_target: str, img_transforms: dict):
-        wandb.log({f"{dataset_target}/img_transforms": img_transforms}, step=epoch)
-
-    def log_images(self, epoch: int, target: str, lr_images: torch.Tensor,
-                   out_images: torch.Tensor, gt_images: torch.Tensor):
-        wandb.log({f'{target}/lr_images': [wandb.Image(im) for im in lr_images]}, step=epoch)
-        wandb.log({f'{target}/out_images': [wandb.Image(im) for im in out_images]}, step=epoch)
-        wandb.log({f'{target}/gt_images': [wandb.Image(im) for im in gt_images]}, step=epoch)
+    def log_images(self, target: str, lr_images: Tensor, out_images: Tensor, gt_images: Tensor):
+        wandb.log({f'{target}/lr_images': [wandb.Image(im) for im in lr_images]}, step=self._current_step)
+        wandb.log({f'{target}/out_images': [wandb.Image(im) for im in out_images]}, step=self._current_step)
+        wandb.log({f'{target}/gt_images': [wandb.Image(im) for im in gt_images]}, step=self._current_step)
