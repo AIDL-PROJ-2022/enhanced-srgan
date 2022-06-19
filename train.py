@@ -368,6 +368,8 @@ def training_stage_train(dataloader: DataLoader, g_optimizer: torch.optim.Optimi
         f"  - {str(g_adversarial_loss_metric)}\r\n"
         f"  - {str(g_total_loss_metric)}\r\n"
         f"  - {str(d_adversarial_loss_metric)}\r\n"
+        f"  - {str(psnr_metric)}\r\n"
+        f"  - {str(ssim_metric)}\r\n"
     )
     logger.log_metrics(
         "GAN-based", "train", {
