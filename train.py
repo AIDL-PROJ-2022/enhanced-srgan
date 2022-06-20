@@ -16,8 +16,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from torch_srgan.datasets import BSDS500
-from torch_srgan.loggers.wandb import WandbLogger
-from torch_srgan.loggers.tensorboard import TensorboardLogger
+from torch_srgan.loggers.loggerboard import Loggerboard
 from torch_srgan.models.esrgan import GeneratorESRGAN
 
 
@@ -265,8 +264,8 @@ if __name__ == '__main__':
     # TODO: DEFINE DISCRIMINATOR
 
     # Logger initialize
-    logger = WandbLogger(proj_name='ESRGAN', entity_name="esrgan-aidl-2022", task='training', generator=generator)
-    # logger = TensorboardLogger(task='training', generator=generator)
+    logger = Loggerboard(proj_name='ESRGAN', entity_name="esrgan-aidl-2022", task='training', generator=generator, config=hparams)
+    logger.log_model_graph(model=generator, train_loader=train_dataloader)
 
     # Define loss functions
     content_loss = nn.L1Loss().to(device)
