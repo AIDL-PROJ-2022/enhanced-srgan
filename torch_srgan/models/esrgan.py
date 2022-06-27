@@ -87,85 +87,130 @@ class GeneratorESRGAN(nn.Module):
         return out
 
 
+# class DiscriminatorESRGAN(nn.Module):
+#     """
+#
+#     """
+#     def __init__(self, img_channels: int = 3, vgg_blk_ch: Tuple[int] = (64, 64, 128, 128, 256, 256, 512, 512),
+#                  fc_features: Tuple[int] = (1024, )):
+#         super(DiscriminatorESRGAN, self).__init__()
+#
+#         # Initialize convolutional blocks array
+#         cnn_blocks: List[Tuple[str, nn.Module]] = []
+#
+#         # Set the discriminator input convolution block and append it to blocks list
+#         first_conv = collections.OrderedDict([
+#             ("conv", Conv2d(img_channels, vgg_blk_ch[0], stride=1)),
+#             ("act", LeakyReLU()),
+#         ])
+#         cnn_blocks.append((f"block_0", nn.Sequential(first_conv)))
+#
+#         # Initialize latent space input channels to first block output channels
+#         in_ch = vgg_blk_ch[0]
+#         # Generate VGG-like blocks of the discriminator
+#         for i, out_ch in enumerate(vgg_blk_ch[1:], start=1):
+#             # Calculate the stride for this convolutional block. If the convolutional layer has the same input and
+#             # output channels, we need to apply a stride of two, that is equivalent of doing: 'conv + 2x2 pooling'.
+#             stride = 2 if in_ch == out_ch else 1
+#             # Create convolutional block
+#             block_list = collections.OrderedDict([
+#                 ("conv", Conv2d(in_ch, out_ch, stride=stride)),
+#                 ("bn", nn.BatchNorm2d(out_ch)),
+#                 ("act", LeakyReLU()),
+#             ])
+#             block = nn.Sequential(collections.OrderedDict(block_list))
+#             cnn_blocks.append((f"block_{i}", block))
+#             # Update next convolutional block input channels
+#             in_ch = out_ch
+#         # Add an adaptive average pooling layer as the last feature extractor block to ensure a fixed input
+#         # dimension to the fully connected classifier head.
+#         cnn_blocks.append(("avg_pool", nn.AdaptiveAvgPool2d((7, 7))))
+#
+#         # Convert convolutional blocks list to a PyTorch sequence
+#         self.features = nn.Sequential(collections.OrderedDict(cnn_blocks))
+#
+#         # Initialize fully connected blocks array
+#         fc_blocks: List[Tuple[str, nn.Module]] = []
+#
+#         # Initialize fully connected layers input feature size from the last convolution channels and output size
+#         fc_in_feat = int(vgg_blk_ch[-1] * 7 * 7)
+#         # Generate the fully connected layer blocks
+#         for i, fc_out_feat in enumerate(fc_features):
+#             # Create fully connected block
+#             block_list = collections.OrderedDict([
+#                 ("linear", nn.Linear(fc_in_feat, fc_out_feat)),
+#                 ("act", LeakyReLU()),
+#             ])
+#             block = nn.Sequential(collections.OrderedDict(block_list))
+#             fc_blocks.append((f"block_{i}", block))
+#             # Update next fully connected block input features
+#             fc_in_feat = fc_out_feat
+#         # Add last fully connected layer with an output size of one
+#         fc_blocks.append((f"linear_out", nn.Linear(fc_in_feat, 1)))
+#
+#         # Convert fully connected blocks list to a PyTorch sequence
+#         self.head = nn.Sequential(collections.OrderedDict(fc_blocks))
+#
+#     def forward(self, x):
+#         """
+#         Forward pass.
+#
+#         Args:
+#             x: Batch of inputs.
+#
+#         Returns:
+#             Processed batch.
+#         """
+#         x = self.features(x)
+#         x = x.view(x.shape[0], -1)
+#         x = self.head(x)
+#
+#         return x
+
 class DiscriminatorESRGAN(nn.Module):
-    """
-
-    """
-    def __init__(self, img_size: Tuple[int, int], img_channels: int = 3,
-                 vgg_blk_ch: Tuple[int] = (64, 64, 128, 128, 256, 256, 512, 512),
-                 fc_features: Tuple[int] = (1024, )):
+    def __init__(self, **_kwargs) -> None:
         super(DiscriminatorESRGAN, self).__init__()
+        self.features = nn.Sequential(
+            # input size. (3) x 96 x 96
+            nn.Conv2d(3, 64, (3, 3), (1, 1), (1, 1), bias=True),
+            nn.LeakyReLU(0.2, True),
+            # state size. (64) x 48 x 48
+            nn.Conv2d(64, 64, (3, 3), (2, 2), (1, 1), bias=False),
+            nn.BatchNorm2d(64),
+            nn.LeakyReLU(0.2, True),
+            nn.Conv2d(64, 128, (3, 3), (1, 1), (1, 1), bias=False),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(0.2, True),
+            # state size. (128) x 24 x 24
+            nn.Conv2d(128, 128, (3, 3), (2, 2), (1, 1), bias=False),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(0.2, True),
+            nn.Conv2d(128, 256, (3, 3), (1, 1), (1, 1), bias=False),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(0.2, True),
+            # state size. (256) x 12 x 12
+            nn.Conv2d(256, 256, (3, 3), (2, 2), (1, 1), bias=False),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(0.2, True),
+            nn.Conv2d(256, 512, (3, 3), (1, 1), (1, 1), bias=False),
+            nn.BatchNorm2d(512),
+            nn.LeakyReLU(0.2, True),
+            # state size. (512) x 6 x 6
+            nn.Conv2d(512, 512, (3, 3), (2, 2), (1, 1), bias=False),
+            nn.BatchNorm2d(512),
+            nn.LeakyReLU(0.2, True),
+            nn.AdaptiveAvgPool2d((6, 6)),
+        )
 
-        # Initialize convolutional blocks array
-        cnn_blocks: List[Tuple[str, nn.Module]] = []
+        self.classifier = nn.Sequential(
+            nn.Linear(512 * 6 * 6, 1024),
+            nn.LeakyReLU(0.2, True),
+            nn.Linear(1024, 1),
+        )
 
-        # Set the discriminator input convolution block and append it to blocks list
-        first_conv = collections.OrderedDict([
-            ("conv", Conv2d(img_channels, vgg_blk_ch[0], stride=1)),
-            ("act", LeakyReLU()),
-        ])
-        cnn_blocks.append((f"block_0", nn.Sequential(first_conv)))
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        out = self.features(x)
+        out = torch.flatten(out, 1)
+        out = self.classifier(out)
 
-        # Initialize latent space input channels to first block output channels
-        in_ch = vgg_blk_ch[0]
-        # We need also to calculate the convolutional blocks output features height and width,
-        # so initialize it to input image size and recalculate it for each block depending on the stride.
-        cnn_blocks_out_size = list(img_size)
-        # Generate VGG-like blocks of the discriminator
-        for i, out_ch in enumerate(vgg_blk_ch[1:], start=1):
-            # Calculate the stride for this convolutional block. If the convolutional layer has the same input and
-            # output channels, we need to apply a stride of two, that is equivalent of doing: 'conv + 2x2 pooling'.
-            stride = 2 if in_ch == out_ch else 1
-            # Create convolutional block
-            block_list = collections.OrderedDict([
-                ("conv", Conv2d(in_ch, out_ch, stride=stride)),
-                ("bn", nn.BatchNorm2d(out_ch)),
-                ("act", LeakyReLU()),
-            ])
-            block = nn.Sequential(collections.OrderedDict(block_list))
-            cnn_blocks.append((f"block_{i}", block))
-            # Update next convolutional block input channels
-            in_ch = out_ch
-            # Recalculate convolutional blocks output size depending on the stride
-            cnn_blocks_out_size = [x / stride for x in cnn_blocks_out_size]
-
-        # Convert convolutional blocks list to a PyTorch sequence
-        self.features = nn.Sequential(collections.OrderedDict(cnn_blocks))
-
-        # Initialize fully connected blocks array
-        fc_blocks: List[Tuple[str, nn.Module]] = []
-
-        # Initialize fully connected layers input feature size from the last convolution channels and output size
-        fc_in_feat = int(vgg_blk_ch[-1] * np.prod(cnn_blocks_out_size))
-        # Generate the fully connected layer blocks
-        for i, fc_out_feat in enumerate(fc_features):
-            # Create fully connected block
-            block_list = collections.OrderedDict([
-                ("linear", nn.Linear(fc_in_feat, fc_out_feat)),
-                ("act", LeakyReLU()),
-            ])
-            block = nn.Sequential(collections.OrderedDict(block_list))
-            fc_blocks.append((f"block_{i}", block))
-            # Update next fully connected block input features
-            fc_in_feat = fc_out_feat
-        # Add last fully connected layer with an output size of one
-        fc_blocks.append((f"linear_out", nn.Linear(fc_in_feat, 1)))
-
-        # Convert fully connected blocks list to a PyTorch sequence
-        self.head = nn.Sequential(collections.OrderedDict(fc_blocks))
-
-    def forward(self, x):
-        """
-        Forward pass.
-
-        Args:
-            x: Batch of inputs.
-
-        Returns:
-            Processed batch.
-        """
-        x = self.features(x)
-        x = torch.flatten(x, start_dim=1)
-        x = self.head(x)
-
-        return x
+        return out

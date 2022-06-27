@@ -24,15 +24,15 @@ class ContentLoss(_Loss):
         else:
             raise NotImplementedError()
 
-    def forward(self, fake_data: torch.Tensor, real_data: torch.Tensor) -> torch.Tensor:
+    def forward(self, out_images: torch.Tensor, gt_images: torch.Tensor) -> torch.Tensor:
         """
         Forward propagation method for the content loss.
 
         Args:
-            fake_data: Batch of input (fake, generated) images.
-            real_data: Batch of target (real, ground truth) images.
+            out_images: Batch of input (generated) images.
+            gt_images: Batch of target (real, ground truth) images.
 
         Returns:
             Loss, scalar.
         """
-        return self.loss_f(fake_data, real_data)
+        return self.loss_f(out_images, gt_images)

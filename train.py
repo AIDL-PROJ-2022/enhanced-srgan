@@ -3,6 +3,7 @@ ESRGAN Network training script.
 """
 
 import argparse
+import collections
 import os
 import time
 import albumentations as A
@@ -16,8 +17,10 @@ from tqdm import tqdm
 
 import torch_srgan.datasets as datasets
 from torch_srgan.loggers.wandb import WandbLogger
-from torch_srgan.models.esrgan import GeneratorESRGAN, DiscriminatorESRGAN
+from torch_srgan.models.RRDBNet import RRDBNet
+from torch_srgan.models.VGG_discriminator import VGGStyleDiscriminator
 from torch_srgan.nn.criterions import ContentLoss, PerceptualLoss, RelativisticAdversarialLoss
+from torch_srgan.nn.criterions.adversarial import AdversarialLoss
 
 
 class AverageMeter(object):
@@ -124,7 +127,7 @@ def pretraining_stage_train(dataloader: DataLoader, optimizer: torch.optim.Optim
         scheduler.step()
 
         # Log processed images and results
-        if (epoch_i % 500 == 0 or epoch_i == 1 or epoch_i == num_epoch) and i == 0:
+        if (epoch_i % 200 == 0 or epoch_i == 1 or epoch_i == num_epoch) and i == 0:
             # logger.log_image_transforms(epoch, "train", transforms)
             logger.log_images("train", lr_images, out_images, hr_images)
 
@@ -161,6 +164,8 @@ def validate_model(dataloader: DataLoader, stage: str, epoch_i: int, num_epoch: 
 
             # Generate a high resolution images from low resolution input
             out_images = generator(lr_images)
+            # Make sure that images are between the range [0, 1]
+            out_images = torch.clamp(out_images, min=0, max=1)
 
             # Measure pixel-wise content loss against ground truth image (Pixel-wise loss)
             c_loss = content_loss(out_images, hr_images)
@@ -174,7 +179,7 @@ def validate_model(dataloader: DataLoader, stage: str, epoch_i: int, num_epoch: 
             _measure_psnr_ssim_metrics(hr_images, out_images)
 
             # Log processed images and results
-            if (epoch_i % 500 == 0 or epoch_i == 1 or epoch_i == num_epoch) and i == 0:
+            if (epoch_i % 100 == 0 or epoch_i == 1 or epoch_i == num_epoch) and i == 0:
                 logger.log_images("validation", lr_images, out_images, hr_images)
 
     # Log metrics
@@ -258,28 +263,6 @@ def exec_pretraining_stage(num_epoch: int, cr_patch_size: Tuple[int, int], lr: f
         os.remove(checkpoint_file_path)
 
 
-def _gan_calc_gen_losses(hr_images: torch.Tensor, out_images: torch.Tensor,
-                         pred_real: torch.Tensor, pred_fake: torch.Tensor,
-                         g_adversarial_loss_scaling: float, g_content_loss_scaling: float):
-    # Measure perceptual loss against ground truth image (VGG-based loss)
-    p_loss = perceptual_loss(out_images, hr_images)
-    perceptual_loss_metric.update(p_loss.item(), hr_images.size(0))
-
-    # Calculate generator adversarial loss (relativistic GAN loss)
-    g_a_loss = g_adversarial_loss(pred_fake, pred_real)
-    g_adversarial_loss_metric.update(g_a_loss.item(), hr_images.size(0))
-
-    # Measure pixel-wise content loss against ground truth image (Pixel-wise loss)
-    c_loss = content_loss(out_images, hr_images)
-    content_loss_metric.update(c_loss.item(), hr_images.size(0))
-
-    # Calculate total generator loss
-    g_loss = p_loss + (g_adversarial_loss_scaling * g_a_loss) + (g_content_loss_scaling * c_loss)
-    g_total_loss_metric.update(g_loss.item(), hr_images.size(0))
-
-    return g_loss
-
-
 def training_stage_train(dataloader: DataLoader, g_optimizer: torch.optim.Optimizer, d_optimizer: torch.optim.Optimizer,
                          g_scheduler: torch.optim.lr_scheduler.MultiStepLR,
                          d_scheduler: torch.optim.lr_scheduler.MultiStepLR,
@@ -312,23 +295,39 @@ def training_stage_train(dataloader: DataLoader, g_optimizer: torch.optim.Optimi
         # Train Generator #
         ###################
 
+        # Disable discriminator gradients
+        for p in discriminator.parameters():
+            p.requires_grad = False
+
         # Set optimizer gradients to zero
         g_optimizer.zero_grad()
 
         # Generate a high resolution images from low resolution input
         out_images = generator(lr_images)
 
-        # Evaluate real and generated images with the discriminator
-        g_pred_real = discriminator(hr_images_w_noise).detach()
+        # Measure perceptual loss against ground truth image (VGG-based loss)
+        p_loss = perceptual_loss(out_images, hr_images)
+        perceptual_loss_metric.update(p_loss.item(), hr_images.size(0))
+
+        # Measure pixel-wise content loss against ground truth image (Pixel-wise loss)
+        c_loss = content_loss(out_images, hr_images)
+        content_loss_metric.update(c_loss.item(), hr_images.size(0))
+
+        # Evaluate generated images with the discriminator
+        g_pred_real = discriminator(hr_images).detach()
         g_pred_fake = discriminator(out_images)
 
-        # Measure total generator loss against ground truth image
-        g_loss = _gan_calc_gen_losses(
-            hr_images, out_images, g_pred_real, g_pred_fake, g_adversarial_loss_scaling, g_content_loss_scaling
-        )
+        # Calculate generator adversarial loss (relativistic GAN loss)
+        g_a_loss_real = adversarial_loss(g_pred_real - g_pred_fake.mean(0, keepdim=True), target_is_real=False)
+        g_a_loss_fake = adversarial_loss(g_pred_fake - g_pred_real.mean(0, keepdim=True), target_is_real=True)
+        g_a_loss = (g_a_loss_fake + g_a_loss_real) / 2
+        g_adversarial_loss_metric.update(g_a_loss.item(), hr_images.size(0))
+
+        g_total_loss = p_loss + (c_loss * g_content_loss_scaling) + (g_a_loss * g_adversarial_loss_scaling)
+        g_total_loss_metric.update(g_total_loss.item(), hr_images.size(0))
 
         # Backpropagate gradients and go to next optimizer and scheduler step
-        g_loss.backward()
+        g_total_loss.backward()
         g_optimizer.step()
         g_scheduler.step()
 
@@ -336,18 +335,25 @@ def training_stage_train(dataloader: DataLoader, g_optimizer: torch.optim.Optimi
         # Train Discriminator #
         #######################
 
+        # Enable discriminator gradients
+        for p in discriminator.parameters():
+            p.requires_grad = True
+
         # Set optimizer gradients to zero
         d_optimizer.zero_grad()
 
         # Evaluate real and generated images with the discriminator
-        d_pred_real = discriminator(hr_images_w_noise)
+        d_pred_real = discriminator(hr_images)
         d_pred_fake = discriminator(out_images.detach())
 
-        # Calculate discriminator adversarial loss (relativistic GAN loss)
-        d_loss = d_adversarial_loss(d_pred_fake, d_pred_real)
+        loss_real = adversarial_loss(d_pred_real - d_pred_fake.mean(0, keepdim=True), target_is_real=True)
+        loss_fake = adversarial_loss(d_pred_fake - d_pred_real.mean(0, keepdim=True), target_is_real=False)
+
+        # Total loss
+        d_loss = (loss_real + loss_fake) / 2
         d_adversarial_loss_metric.update(d_loss.item(), hr_images.size(0))
 
-        # Backpropagate gradients and go to next optimizer and scheduler step
+        # Go to next optimizer and scheduler step
         d_loss.backward()
         d_optimizer.step()
         d_scheduler.step()
@@ -357,7 +363,7 @@ def training_stage_train(dataloader: DataLoader, g_optimizer: torch.optim.Optimi
         ###########
 
         # Log processed images and results
-        if (epoch_i % 500 == 0 or epoch_i == 1 or epoch_i == num_epoch) and i == 0:
+        if (epoch_i % 100 == 0 or epoch_i == 1 or epoch_i == num_epoch) and i == 0:
             # logger.log_image_transforms(epoch, "train", transforms)
             logger.log_images("train", lr_images, out_images, hr_images)
 
@@ -369,8 +375,6 @@ def training_stage_train(dataloader: DataLoader, g_optimizer: torch.optim.Optimi
         f"  - {str(g_adversarial_loss_metric)}\r\n"
         f"  - {str(g_total_loss_metric)}\r\n"
         f"  - {str(d_adversarial_loss_metric)}\r\n"
-        f"  - {str(psnr_metric)}\r\n"
-        f"  - {str(ssim_metric)}\r\n"
     )
     logger.log_metrics(
         "GAN-based", "train", {
@@ -379,8 +383,6 @@ def training_stage_train(dataloader: DataLoader, g_optimizer: torch.optim.Optimi
             "g_adversarial_loss": g_adversarial_loss_metric.avg,
             "g_total_loss": g_total_loss_metric.avg,
             "d_adversarial_loss": d_adversarial_loss_metric.avg,
-            "PSNR": psnr_metric.avg,
-            "SSIM": ssim_metric.avg
         }
     )
 
@@ -392,8 +394,8 @@ def exec_training_stage(num_epoch: int, cr_patch_size: Tuple[int, int], g_lr: fl
                         val_datasets_list: Iterable[datasets.ImagePairDataset],
                         train_aug_transforms: List, store_checkpoint: bool = True):
     # Define optimizers for training stage
-    g_optimizer = torch.optim.AdamW(generator.parameters(), lr=g_lr, weight_decay=0.0)
-    d_optimizer = torch.optim.SGD(discriminator.parameters(), lr=d_lr)
+    g_optimizer = torch.optim.Adam(generator.parameters(), lr=g_lr, betas=(0.9, 0.99))
+    d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=d_lr, betas=(0.9, 0.99))
     # Define schedulers for training stage
     g_scheduler = torch.optim.lr_scheduler.MultiStepLR(g_optimizer, milestones=g_sched_steps, gamma=g_sched_gamma)
     d_scheduler = torch.optim.lr_scheduler.MultiStepLR(d_optimizer, milestones=d_sched_steps, gamma=d_sched_gamma)
@@ -492,15 +494,15 @@ if __name__ == '__main__':
         "pretraining": {
             "num_epoch": 5000,
             "cr_patch_size": (192, 192),
-            "lr": 0.0002,
+            "lr": 2e-4,
             "sched_step": 150000,
             "sched_gamma": 0.5,
         },
         "training": {
             "num_epoch": 4000,
             "cr_patch_size": (128, 128),
-            "g_lr": 0.0001,
-            "d_lr": 0.0001,
+            "g_lr": 1e-4,
+            "d_lr": 1e-4,
             "g_sched_steps": (50000, 100000, 200000, 300000),
             "g_sched_gamma": 0.5,
             "d_sched_steps": (50000, 100000, 200000, 300000),
@@ -511,27 +513,27 @@ if __name__ == '__main__':
         "generator": {
             "rrdb_channels": 64,
             "growth_channels": 32,
-            "num_basic_blocks": 16,
+            "num_basic_blocks": 23,
             "num_dense_blocks": 3,
             "num_residual_blocks": 5,
             "residual_scaling": 0.2,
         },
+        # "discriminator": {
+        #     "vgg_blk_ch": (64, 64, 128, 128, 256, 256, 512, 512),
+        #     "fc_features": (100, ),
+        # },
         "discriminator": {
-            "vgg_blk_ch": (64, 64, 128, 128, 256, 256, 512, 512),
-            "fc_features": (1024, ),
+            "num_feat": 64,
         },
         "content_loss": {
             "loss_f": "l1"
         },
         "perceptual_loss": {
-            "layers": {
-                "conv1_2": 0.1,
-                "conv2_2": 0.1,
-                "conv3_4": 1.,
-                "conv4_4": 1.,
+            "layer_weights": {
                 "conv5_4": 1.,
             },
-            "loss_f": "l1"
+            "normalize_input": True,
+            "normalize_loss": False
         },
         "network_interpolation_alpha": 0.8,
     }
@@ -555,6 +557,27 @@ if __name__ == '__main__':
         ], p=0.25)
     ])
 
+    # Initialize generator and discriminator models
+    generator = RRDBNet(
+        img_channels=hparams["img_channels"], scale_factor=hparams["scale_factor"], **hparams["generator"]
+    ).to(device)
+    discriminator = VGGStyleDiscriminator(
+        num_in_ch=hparams["img_channels"], **hparams["discriminator"]
+    ).to(device)
+
+    # Transfer learning from pre-trained official model
+    data = torch.load("saved_models/ESRGAN_PSNR_SRx4_DF2K_official-150ff491.pth")
+    original_params = list(data["params"].items())
+    generator_state_dict = []
+    i = 0
+    for name, param in generator.named_parameters():
+        if not name.endswith(".residual_scaling"):
+            generator_state_dict.append((name, original_params[i][1]))
+            i += 1
+        else:
+            generator_state_dict.append((name, param.data))
+    generator.load_state_dict(collections.OrderedDict(generator_state_dict))
+
     # Define datasets to use:
     # BSDS500
     bsds500_train_dataset = datasets.BSDS500(target='train', scale_factor=hparams["scale_factor"])
@@ -563,20 +586,12 @@ if __name__ == '__main__':
     div2k_train_dataset = datasets.DIV2K(target='train', scale_factor=hparams["scale_factor"])
     div2k_val_dataset = datasets.DIV2K(target='val', scale_factor=hparams["scale_factor"])
 
-    # Initialize generator and discriminator models
-    generator = GeneratorESRGAN(
-        img_channels=hparams["img_channels"], scale_factor=hparams["scale_factor"], **hparams["generator"]
-    ).to(device)
-    discriminator = DiscriminatorESRGAN(
-        img_size=hparams["training"]["cr_patch_size"], img_channels=hparams["img_channels"], **hparams["discriminator"]
-    ).to(device)
-
     # Define losses used during training
     content_loss = ContentLoss(**hparams["content_loss"]).to(device)
     perceptual_loss = PerceptualLoss(**hparams["perceptual_loss"]).to(device)
-    g_adversarial_loss = RelativisticAdversarialLoss(real_label_val=0, fake_label_val=1).to(device)
-    d_adversarial_loss = RelativisticAdversarialLoss(real_label_val=1, fake_label_val=0).to(device)
-    criterion_GAN = torch.nn.BCEWithLogitsLoss().to(device)
+    # g_adversarial_loss = RelativisticAdversarialLoss(is_discriminator=False, **hparams["adversarial_loss"]).to(device)
+    # d_adversarial_loss = RelativisticAdversarialLoss(is_discriminator=True, **hparams["adversarial_loss"]).to(device)
+    adversarial_loss = AdversarialLoss().to(device)
 
     # Initialize logging interface
     logger = WandbLogger(
@@ -596,22 +611,22 @@ if __name__ == '__main__':
     # Pre-training stage (PSNR driven) #
     ####################################
 
-    # data = torch.load("saved_models/1655650698_RRDB_PSNR_x4.pth")
+    # data = torch.load("saved_models/1655663862_RRDB_PSNR_x4_e5000.pth")
     # generator.load_state_dict(data["model_state_dict"])
     # start_epoch = data.get("epoch_i", data["hparams"]["pretraining"]["num_epoch"])
     start_epoch = 0
     logger.set_current_step(start_epoch + 1)
 
-    # Define datasets to use
-    train_datasets = [bsds500_train_dataset, div2k_train_dataset]
-    val_datasets = [bsds500_val_dataset, div2k_val_dataset]
-
-    # Execute supervised pre-training stage
-    exec_pretraining_stage(
-        **hparams["pretraining"], start_epoch_i=start_epoch+1,
-        train_datasets_list=train_datasets, val_datasets_list=val_datasets,
-        train_aug_transforms=[spatial_transforms, hard_transforms]
-    )
+    # # Define datasets to use
+    # train_datasets = [div2k_train_dataset]
+    # val_datasets = [bsds500_val_dataset, div2k_val_dataset]
+    #
+    # # Execute supervised pre-training stage
+    # exec_pretraining_stage(
+    #     **hparams["pretraining"], start_epoch_i=start_epoch+1,
+    #     train_datasets_list=train_datasets, val_datasets_list=val_datasets,
+    #     train_aug_transforms=[spatial_transforms, hard_transforms]
+    # )
 
     ##############################
     # Training stage (GAN based) #
@@ -619,7 +634,7 @@ if __name__ == '__main__':
 
     # Define datasets to use
     train_datasets = [div2k_train_dataset]
-    val_datasets = [div2k_val_dataset]
+    val_datasets = [bsds500_val_dataset, div2k_val_dataset]
 
     # Execute supervised pre-training stage
     exec_training_stage(
