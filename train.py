@@ -486,14 +486,14 @@ if __name__ == '__main__':
         "batch_size": 16,
         "img_channels": 3,
         "pretraining": {
-            "num_epoch": 5000,
+            "num_epoch": 10000,
             "cr_patch_size": (192, 192),
             "lr": 2e-4,
             "sched_step": 150000,
             "sched_gamma": 0.5,
         },
         "training": {
-            "num_epoch": 4000,
+            "num_epoch": 8000,
             "cr_patch_size": (128, 128),
             "g_lr": 1e-4,
             "d_lr": 1e-4,
@@ -507,7 +507,7 @@ if __name__ == '__main__':
         "generator": {
             "rrdb_channels": 64,
             "growth_channels": 32,
-            "num_basic_blocks": 23,
+            "num_basic_blocks": 16,
             "num_dense_blocks": 3,
             "num_residual_blocks": 5,
             "residual_scaling": 0.2,
@@ -557,18 +557,18 @@ if __name__ == '__main__':
         img_channels=hparams["img_channels"], **hparams["discriminator"]
     ).to(device)
 
-    # Transfer learning from pre-trained official model
-    data = torch.load("saved_models/ESRGAN_PSNR_SRx4_DF2K_official-150ff491.pth")
-    original_params = list(data["params"].items())
-    generator_state_dict = []
-    i = 0
-    for name, param in generator.named_parameters():
-        if not name.endswith(".residual_scaling"):
-            generator_state_dict.append((name, original_params[i][1]))
-            i += 1
-        else:
-            generator_state_dict.append((name, param.data))
-    generator.load_state_dict(collections.OrderedDict(generator_state_dict))
+    # # Transfer learning from pre-trained official model
+    # data = torch.load("saved_models/ESRGAN_PSNR_SRx4_DF2K_official-150ff491.pth")
+    # original_params = list(data["params"].items())
+    # generator_state_dict = []
+    # i = 0
+    # for name, param in generator.named_parameters():
+    #     if not name.endswith(".residual_scaling"):
+    #         generator_state_dict.append((name, original_params[i][1]))
+    #         i += 1
+    #     else:
+    #         generator_state_dict.append((name, param.data))
+    # generator.load_state_dict(collections.OrderedDict(generator_state_dict))
 
     # Define datasets to use:
     # BSDS500
@@ -601,14 +601,11 @@ if __name__ == '__main__':
     # Pre-training stage (PSNR driven) #
     ####################################
 
-    # data = torch.load("saved_models/1655663862_RRDB_PSNR_x4_e5000.pth")
-    # generator.load_state_dict(data["model_state_dict"])
-    # start_epoch = data.get("epoch_i", data["hparams"]["pretraining"]["num_epoch"])
     start_epoch = 0
     logger.set_current_step(start_epoch + 1)
 
     # Define datasets to use
-    train_datasets = [div2k_train_dataset]
+    train_datasets = [div2k_train_dataset, bsds500_val_dataset]
     val_datasets = [bsds500_val_dataset, div2k_val_dataset]
 
     # Execute supervised pre-training stage
