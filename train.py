@@ -19,8 +19,7 @@ import torch_srgan.datasets as datasets
 from torch_srgan.loggers.wandb import WandbLogger
 from torch_srgan.models.RRDBNet import RRDBNet
 from torch_srgan.models.VGG_discriminator import VGGStyleDiscriminator
-from torch_srgan.nn.criterions import ContentLoss, PerceptualLoss, RelativisticAdversarialLoss
-from torch_srgan.nn.criterions.adversarial import AdversarialLoss
+from torch_srgan.nn.criterions import AdversarialLoss, ContentLoss, PerceptualLoss
 
 
 class AverageMeter(object):
@@ -286,11 +285,6 @@ def training_stage_train(dataloader: DataLoader, g_optimizer: torch.optim.Optimi
         lr_images = lr_images.to(device)
         hr_images = hr_images.to(device)
 
-        # Add some noise to the ground truth image (Arjovsky et. al., Huszar, 2016)
-        # [http://www.inference.vc/instance-noise-a-trick-for-stabilising-gan-training/]
-        noise = torch.randn(hr_images.shape, device=hr_images.device)
-        hr_images_w_noise = torch.clamp((hr_images + 0.05 * noise), min=0.0, max=1.0)
-
         ###################
         # Train Generator #
         ###################
@@ -517,13 +511,11 @@ if __name__ == '__main__':
             "num_dense_blocks": 3,
             "num_residual_blocks": 5,
             "residual_scaling": 0.2,
+            "use_subpixel_conv": False
         },
-        # "discriminator": {
-        #     "vgg_blk_ch": (64, 64, 128, 128, 256, 256, 512, 512),
-        #     "fc_features": (100, ),
-        # },
         "discriminator": {
-            "num_feat": 64,
+            "vgg_blk_ch": (64, 64, 128, 128, 256, 256, 512, 512),
+            "fc_features": (100, ),
         },
         "content_loss": {
             "loss_f": "l1"
@@ -562,7 +554,7 @@ if __name__ == '__main__':
         img_channels=hparams["img_channels"], scale_factor=hparams["scale_factor"], **hparams["generator"]
     ).to(device)
     discriminator = VGGStyleDiscriminator(
-        num_in_ch=hparams["img_channels"], **hparams["discriminator"]
+        img_channels=hparams["img_channels"], **hparams["discriminator"]
     ).to(device)
 
     # Transfer learning from pre-trained official model
@@ -589,8 +581,6 @@ if __name__ == '__main__':
     # Define losses used during training
     content_loss = ContentLoss(**hparams["content_loss"]).to(device)
     perceptual_loss = PerceptualLoss(**hparams["perceptual_loss"]).to(device)
-    # g_adversarial_loss = RelativisticAdversarialLoss(is_discriminator=False, **hparams["adversarial_loss"]).to(device)
-    # d_adversarial_loss = RelativisticAdversarialLoss(is_discriminator=True, **hparams["adversarial_loss"]).to(device)
     adversarial_loss = AdversarialLoss().to(device)
 
     # Initialize logging interface
@@ -617,16 +607,16 @@ if __name__ == '__main__':
     start_epoch = 0
     logger.set_current_step(start_epoch + 1)
 
-    # # Define datasets to use
-    # train_datasets = [div2k_train_dataset]
-    # val_datasets = [bsds500_val_dataset, div2k_val_dataset]
-    #
-    # # Execute supervised pre-training stage
-    # exec_pretraining_stage(
-    #     **hparams["pretraining"], start_epoch_i=start_epoch+1,
-    #     train_datasets_list=train_datasets, val_datasets_list=val_datasets,
-    #     train_aug_transforms=[spatial_transforms, hard_transforms]
-    # )
+    # Define datasets to use
+    train_datasets = [div2k_train_dataset]
+    val_datasets = [bsds500_val_dataset, div2k_val_dataset]
+
+    # Execute supervised pre-training stage
+    exec_pretraining_stage(
+        **hparams["pretraining"], start_epoch_i=start_epoch+1,
+        train_datasets_list=train_datasets, val_datasets_list=val_datasets,
+        train_aug_transforms=[spatial_transforms, hard_transforms]
+    )
 
     ##############################
     # Training stage (GAN based) #
