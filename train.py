@@ -605,7 +605,7 @@ if __name__ == '__main__':
     logger.set_current_step(start_epoch + 1)
 
     # Define datasets to use
-    train_datasets = [div2k_train_dataset, bsds500_val_dataset]
+    train_datasets = [bsds500_train_dataset, div2k_train_dataset]
     val_datasets = [bsds500_val_dataset, div2k_val_dataset]
 
     # Execute supervised pre-training stage
