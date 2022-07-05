@@ -4,6 +4,7 @@ ESRGAN Network training script.
 
 import argparse
 import collections
+import json
 import os
 import time
 import albumentations as A
@@ -477,58 +478,10 @@ if __name__ == '__main__':
     # Create saved models directory if not exist
     os.makedirs("saved_models", exist_ok=True)
 
-    # Ignore warnings
-    # warnings.filterwarnings('ignore')
+    hparams_file_path = "configs/pretraining_192_patch_size.json"
 
-    # Define hyper-parameters
-    hparams = {
-        "scale_factor": 4,
-        "batch_size": 16,
-        "img_channels": 3,
-        "pretraining": {
-            "num_epoch": 10000,
-            "cr_patch_size": (192, 192),
-            "lr": 2e-4,
-            "sched_step": 200000,
-            "sched_gamma": 0.5,
-        },
-        "training": {
-            "num_epoch": 8000,
-            "cr_patch_size": (128, 128),
-            "g_lr": 1e-4,
-            "d_lr": 1e-4,
-            "g_sched_steps": (50000, 100000, 200000, 300000),
-            "g_sched_gamma": 0.5,
-            "d_sched_steps": (50000, 100000, 200000, 300000),
-            "d_sched_gamma": 0.5,
-            "g_adversarial_loss_scaling": 0.005,
-            "g_content_loss_scaling": 0.01
-        },
-        "generator": {
-            "rrdb_channels": 64,
-            "growth_channels": 32,
-            "num_basic_blocks": 16,
-            "num_dense_blocks": 3,
-            "num_residual_blocks": 5,
-            "residual_scaling": 0.2,
-            "use_subpixel_conv": False
-        },
-        "discriminator": {
-            "vgg_blk_ch": (64, 64, 128, 128, 256, 256, 512, 512),
-            "fc_features": (100, ),
-        },
-        "content_loss": {
-            "loss_f": "l1"
-        },
-        "perceptual_loss": {
-            "layer_weights": {
-                "conv5_4": 1.,
-            },
-            "normalize_input": True,
-            "normalize_loss": False
-        },
-        "network_interpolation_alpha": 0.8,
-    }
+    with open(hparams_file_path, "r") as f:
+        hparams = json.load(f)
 
     # Define train dataset augmentation transforms
     # Spatial transforms. Must be applied to both images (LR + HR)
@@ -540,13 +493,8 @@ if __name__ == '__main__':
     ])
     # Hard transforms. Must be applied only to LR images.
     hard_transforms = A.Compose([
-        A.CoarseDropout(max_holes=8, max_height=2, max_width=2, p=0.5),
-        A.OneOf([
-            A.ImageCompression(quality_lower=65, p=0.75),
-            A.AdvancedBlur(
-                blur_limit=(3, 7), sigmaX_limit=(0.2, 1.5), sigmaY_limit=(0.5, 1.5), beta_limit=(0.5, 4.0), p=0.25
-            ),
-        ], p=0.25)
+        A.CoarseDropout(max_holes=8, max_height=2, max_width=2, p=0.25),
+        A.ImageCompression(quality_lower=65, p=0.25),
     ])
 
     # Initialize generator and discriminator models
