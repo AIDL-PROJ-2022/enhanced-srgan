@@ -505,19 +505,6 @@ if __name__ == '__main__':
         img_channels=hparams["img_channels"], **hparams["discriminator"]
     ).to(device)
 
-    # # Transfer learning from pre-trained official model
-    # data = torch.load("saved_models/ESRGAN_PSNR_SRx4_DF2K_official-150ff491.pth")
-    # original_params = list(data["params"].items())
-    # generator_state_dict = []
-    # i = 0
-    # for name, param in generator.named_parameters():
-    #     if not name.endswith(".residual_scaling"):
-    #         generator_state_dict.append((name, original_params[i][1]))
-    #         i += 1
-    #     else:
-    #         generator_state_dict.append((name, param.data))
-    # generator.load_state_dict(collections.OrderedDict(generator_state_dict))
-
     # Define datasets to use:
     # BSDS500
     bsds500_train_dataset = datasets.BSDS500(target='train', scale_factor=hparams["scale_factor"])
@@ -549,6 +536,9 @@ if __name__ == '__main__':
     # Pre-training stage (PSNR driven) #
     ####################################
 
+    # data = torch.load("saved_models/1655663862_RRDB_PSNR_x4_e5000.pth")
+    # generator.load_state_dict(data["model_state_dict"])
+    # start_epoch = data.get("epoch_i", data["hparams"]["pretraining"]["num_epoch"])
     start_epoch = 0
     logger.set_current_step(start_epoch + 1)
 
