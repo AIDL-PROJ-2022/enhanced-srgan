@@ -489,7 +489,7 @@ if __name__ == '__main__':
             "num_epoch": 10000,
             "cr_patch_size": (192, 192),
             "lr": 2e-4,
-            "sched_step": 150000,
+            "sched_step": 200000,
             "sched_gamma": 0.5,
         },
         "training": {
