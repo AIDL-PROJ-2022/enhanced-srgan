@@ -645,7 +645,7 @@ if __name__ == '__main__':
             assert False, f'Model file {args.load_model_path} format is not recognized'
 
     # Execute supervised pre-training stage
-    if model_training is not None:
+    if model_training is None:
         exec_pretraining_stage(
             **hparams["pretraining"], train_aug_transforms=[spatial_transforms, hard_transforms]
         )
