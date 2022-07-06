@@ -7,7 +7,9 @@
     "cr_patch_size": [192, 192],
     "lr": 2e-4,
     "sched_step": 200000,
-    "sched_gamma": 0.5
+    "sched_gamma": 0.5,
+    "train_datasets": ["div2k"],
+    "val_datasets": ["bsds500"]
   },
   "training": {
     "num_epoch": 8000,
@@ -19,7 +21,9 @@
     "d_sched_steps": [50000, 100000, 200000, 300000],
     "d_sched_gamma": 0.5,
     "g_adversarial_loss_scaling": 0.005,
-    "g_content_loss_scaling": 0.01
+    "g_content_loss_scaling": 0.01,
+    "train_datasets": ["div2k"],
+    "val_datasets": ["bsds500"]
   },
   "generator": {
     "rrdb_channels": 64,

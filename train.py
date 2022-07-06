@@ -631,9 +631,13 @@ if __name__ == '__main__':
         else:
             assert False, f'Model file {args.load_model_path} format is not recognized'
 
+    train_datasets = []
+    val_datasets = []
     # Define datasets to use
-    train_datasets = [bsds500_train_dataset, div2k_train_dataset]
-    val_datasets = [bsds500_val_dataset, div2k_val_dataset]
+    for dataset_name in hparams["pretraining"]["train_datasets"]:
+        train_datasets.append(eval(f"{dataset_name}_train_dataset"))
+    for dataset_name in hparams["pretraining"]["val_datasets"]:
+        val_datasets.append(eval(f"{dataset_name}_val_dataset"))
 
     # Execute supervised pre-training stage
     if model_training is not None:
@@ -648,9 +652,13 @@ if __name__ == '__main__':
     # Training stage (GAN based) #
     ##############################
 
+    train_datasets = []
+    val_datasets = []
     # Define datasets to use
-    train_datasets = [div2k_train_dataset]
-    val_datasets = [bsds500_val_dataset, div2k_val_dataset]
+    for dataset_name in hparams["training"]["train_datasets"]:
+        train_datasets.append(eval(f"{dataset_name}_train_dataset"))
+    for dataset_name in hparams["training"]["val_datasets"]:
+        val_datasets.append(eval(f"{dataset_name}_val_dataset"))
 
     # Execute supervised pre-training stage
     exec_training_stage(
