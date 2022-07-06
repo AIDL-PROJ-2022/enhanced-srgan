@@ -288,7 +288,7 @@ def exec_pretraining_stage(num_epoch: int, cr_patch_size: Tuple[int, int], lr: f
             best_psnr = psnr_metric.avg
 
         # Store checkpoint
-        if store_checkpoint:
+        if store_checkpoint and (epoch_i % checkpoint_interval == 0 or epoch_i == 1 or epoch_i == num_epoch):
             checkpoint = {
                 "model_state_dict": generator.state_dict(),
                 "optimizer_state_dict": optimizer.state_dict(),
@@ -523,7 +523,7 @@ def exec_training_stage(num_epoch: int, cr_patch_size: Tuple[int, int], g_lr: fl
             best_psnr = psnr_metric.avg
 
         # Store checkpoint
-        if store_checkpoint:
+        if store_checkpoint and (epoch_i % checkpoint_interval == 0 or epoch_i == 1 or epoch_i == num_epoch):
             checkpoint = {
                 "g_model_state_dict": generator.state_dict(),
                 "d_model_state_dict": discriminator.state_dict(),
@@ -556,6 +556,7 @@ if __name__ == '__main__':
     )
     parser.add_argument("--load-model-path", help="Load model path", type=str)
     parser.add_argument("--autocast", help="Use PyTorch autocast when running on cuda", action='store_true')
+    parser.add_argument("--checkpoint-interval", help="Define checkpoint store frequency", type=int)
     args = parser.parse_args()
 
     # Read config file
@@ -579,6 +580,11 @@ if __name__ == '__main__':
         autocast_f = torch.autocast
     else:
         autocast_f = contextlib.nullcontext
+
+    if args.checkpoint_interval:
+        checkpoint_interval = args.checkpoint_interval
+    else:
+        checkpoint_interval = 1
 
     # Create saved models directory if not exist
     os.makedirs("saved_models", exist_ok=True)
