@@ -96,6 +96,12 @@ def _measure_psnr_ssim_metrics(hr_images: torch.Tensor, out_images: torch.Tensor
     ssim_metric.update(ssim.item(), hr_images.size(0))
 
 
+def log_model_graphs():
+    lr_images, hr_images = next(iter(DataLoader(bsds500_val_dataset, batch_size=1)))
+    logger.log_model_graph(generator, lr_images.to(device))
+    logger.log_model_graph(discriminator, hr_images.to(device))
+
+
 def pretraining_stage_train(dataloader: DataLoader, optimizer: torch.optim.Optimizer,
                             scheduler: torch.optim.lr_scheduler.StepLR, epoch_i: int, num_epoch: int):
     # Switch generator model to train mode
@@ -204,7 +210,7 @@ def exec_pretraining_stage(num_epoch: int, cr_patch_size: Tuple[int, int], lr: f
                            sched_step: int, sched_gamma: float, train_aug_transforms: List,
                            train_datasets_list: Iterable[datasets.ImagePairDataset],
                            val_datasets_list: Iterable[datasets.ImagePairDataset],
-                           start_epoch_i: int = 1, store_checkpoint: bool = True):
+                           start_epoch_i: int = 1, checkpoint_data: dict = None, store_checkpoint: bool = True):
     # Define optimizer and scheduler for pre-training stage
     optimizer = torch.optim.Adam(generator.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=sched_step, gamma=sched_gamma)
@@ -214,10 +220,15 @@ def exec_pretraining_stage(num_epoch: int, cr_patch_size: Tuple[int, int], lr: f
         train_datasets_list, val_datasets_list, cr_patch_size, train_aug_transforms
     )
 
+    if checkpoint_data is not None:
+        generator.load_state_dict(checkpoint_data["model_state_dict"])
+        optimizer.load_state_dict(checkpoint_data["optimizer_state_dict"])
+        scheduler.load_state_dict(checkpoint_data["scheduler_state_dict"])
+
     # Set stage start time
     start_ts = int(time.time())
     # Define checkpoint file path
-    checkpoint_file_path = f"saved_models/{start_ts}_RRDB_PSNR_x{hparams['scale_factor']}.pth"
+    checkpoint_file_path = f"saved_models/{start_ts}_RRDB_PSNR_x{hparams['scale_factor']}_checkpoint.pth"
 
     print()
     print(">>> Pre-training stage (PSNR driven)")
@@ -520,8 +531,11 @@ if __name__ == '__main__':
 
     # Initialize logging interface
     logger = WandbLogger(
-        proj_name='ESRGAN', entity_name="esrgan-aidl-2022", task='training', generator=generator
+        proj_name='ESRGAN', entity_name="esrgan-aidl-2022", task='training', hr_scale_factor=hparams["scale_factor"],
+        generator=generator, discriminator=discriminator
     )
+    # Log generator and generator model graph
+    log_model_graphs()
 
     # Define metrics
     content_loss_metric = AverageMeter("Generator Content Loss", ":.4e")
@@ -536,10 +550,8 @@ if __name__ == '__main__':
     # Pre-training stage (PSNR driven) #
     ####################################
 
-    # data = torch.load("saved_models/1655663862_RRDB_PSNR_x4_e5000.pth")
-    # generator.load_state_dict(data["model_state_dict"])
-    # start_epoch = data.get("epoch_i", data["hparams"]["pretraining"]["num_epoch"])
-    start_epoch = 0
+    data = torch.load("saved_models/1657002718_RRDB_PSNR_x4.pth")
+    start_epoch = data.get("epoch_i", data["hparams"]["pretraining"]["num_epoch"])
     logger.set_current_step(start_epoch + 1)
 
     # Define datasets to use
@@ -550,7 +562,8 @@ if __name__ == '__main__':
     exec_pretraining_stage(
         **hparams["pretraining"], start_epoch_i=start_epoch+1,
         train_datasets_list=train_datasets, val_datasets_list=val_datasets,
-        train_aug_transforms=[spatial_transforms, hard_transforms]
+        train_aug_transforms=[spatial_transforms, hard_transforms],
+        checkpoint_data=data
     )
 
     ##############################
