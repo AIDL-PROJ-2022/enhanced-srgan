@@ -128,9 +128,15 @@ def pretraining_stage_train(dataloader: DataLoader, optimizer: torch.optim.Optim
             loss = content_loss(out_images, hr_images)
             content_loss_metric.update(loss.item(), lr_images.size(0))
 
-        # Backpropagate gradients and go to next optimizer and scheduler step
-        loss.backward()
-        optimizer.step()
+        # Backpropagate gradients and go to next optimizer
+        if scaler is not None:
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
+        else:
+            loss.backward()
+            optimizer.step()
+        # Perform scheduler step
         scheduler.step()
 
         # Log processed images and results
@@ -169,22 +175,21 @@ def validate_model(dataloader: DataLoader, stage: str, epoch_i: int, num_epoch: 
             lr_images = lr_images.to(device)
             hr_images = hr_images.to(device)
 
-            with autocast_f():
-                # Generate a high resolution images from low resolution input
-                out_images = generator(lr_images)
-                # Make sure that images are between the range [0, 1]
-                out_images = torch.clamp(out_images, min=0, max=1)
+            # Generate a high resolution images from low resolution input
+            out_images = generator(lr_images)
+            # Make sure that images are between the range [0, 1]
+            out_images = torch.clamp(out_images, min=0, max=1)
 
-                # Measure pixel-wise content loss against ground truth image (Pixel-wise loss)
-                c_loss = content_loss(out_images, hr_images)
-                content_loss_metric.update(c_loss.item(), lr_images.size(0))
+            # Measure pixel-wise content loss against ground truth image (Pixel-wise loss)
+            c_loss = content_loss(out_images, hr_images)
+            content_loss_metric.update(c_loss.item(), lr_images.size(0))
 
-                # Measure perceptual loss against ground truth image (VGG-based loss)
-                p_loss = perceptual_loss(out_images, hr_images)
-                perceptual_loss_metric.update(p_loss.item(), hr_images.size(0))
+            # Measure perceptual loss against ground truth image (VGG-based loss)
+            p_loss = perceptual_loss(out_images, hr_images)
+            perceptual_loss_metric.update(p_loss.item(), hr_images.size(0))
 
-                # Measure PSNR and SSIM metric against ground truth image
-                _measure_psnr_ssim_metrics(hr_images, out_images)
+            # Measure PSNR and SSIM metric against ground truth image
+            _measure_psnr_ssim_metrics(hr_images, out_images)
 
             # Log processed images and results
             if (epoch_i % 100 == 0 or epoch_i == 1 or epoch_i == num_epoch) and i == 0:
@@ -367,9 +372,15 @@ def training_stage_train(dataloader: DataLoader, g_optimizer: torch.optim.Optimi
             g_total_loss = p_loss + (c_loss * g_content_loss_scaling) + (g_a_loss * g_adversarial_loss_scaling)
             g_total_loss_metric.update(g_total_loss.item(), hr_images.size(0))
 
-        # Backpropagate gradients and go to next optimizer and scheduler step
-        g_total_loss.backward()
-        g_optimizer.step()
+        # Backpropagate gradients and go to next optimizer
+        if scaler is not None:
+            scaler.scale(g_total_loss).backward()
+            scaler.step(g_optimizer)
+            scaler.update()
+        else:
+            g_total_loss.backward()
+            g_optimizer.step()
+        # Perform scheduler step
         g_scheduler.step()
 
         #######################
@@ -395,9 +406,15 @@ def training_stage_train(dataloader: DataLoader, g_optimizer: torch.optim.Optimi
             d_loss = (loss_real + loss_fake) / 2
             d_adversarial_loss_metric.update(d_loss.item(), hr_images.size(0))
 
-        # Go to next optimizer and scheduler step
-        d_loss.backward()
-        d_optimizer.step()
+        # Backpropagate gradients and go to next optimizer
+        if scaler is not None:
+            scaler.scale(d_loss).backward()
+            scaler.step(d_optimizer)
+            scaler.update()
+        else:
+            d_loss.backward()
+            d_optimizer.step()
+        # Perform scheduler step
         d_scheduler.step()
 
         ###########
@@ -577,9 +594,11 @@ if __name__ == '__main__':
         torch.backends.cudnn.benchmark = True
 
     if args.autocast and "cuda" in str(device):
-        autocast_f = torch.autocast
+        autocast_f = torch.cuda.amp.autocast
+        scaler = torch.cuda.amp.GradScaler()
     else:
         autocast_f = contextlib.nullcontext
+        scaler = None
 
     if args.checkpoint_interval:
         checkpoint_interval = args.checkpoint_interval
