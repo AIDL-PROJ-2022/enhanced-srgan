@@ -207,9 +207,16 @@ def validate_model(dataloader: DataLoader, stage: str, epoch_i: int, num_epoch: 
 
 def exec_pretraining_stage(num_epoch: int, cr_patch_size: Tuple[int, int], lr: float,
                            sched_step: int, sched_gamma: float, train_aug_transforms: List,
-                           train_datasets_list: Iterable[datasets.ImagePairDataset],
-                           val_datasets_list: Iterable[datasets.ImagePairDataset],
+                           train_datasets: Iterable[str], val_datasets: Iterable[str],
                            store_checkpoint: bool = True):
+    train_datasets_list = []
+    val_datasets_list = []
+    # Define datasets to use
+    for dataset_name in train_datasets:
+        train_datasets_list.append(eval(f"{dataset_name}_train_dataset"))
+    for dataset_name in val_datasets:
+        val_datasets_list.append(eval(f"{dataset_name}_val_dataset"))
+
     # Define optimizer and scheduler for pre-training stage
     optimizer = torch.optim.Adam(generator.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=sched_step, gamma=sched_gamma)
@@ -420,9 +427,15 @@ def training_stage_train(dataloader: DataLoader, g_optimizer: torch.optim.Optimi
 def exec_training_stage(num_epoch: int, cr_patch_size: Tuple[int, int], g_lr: float, d_lr: float,
                         g_sched_steps: List[int], g_sched_gamma: float, d_sched_steps: List[int], d_sched_gamma: float,
                         g_adversarial_loss_scaling: float, g_content_loss_scaling: float,
-                        train_datasets_list: Iterable[datasets.ImagePairDataset],
-                        val_datasets_list: Iterable[datasets.ImagePairDataset],
-                        train_aug_transforms: List, store_checkpoint: bool = True):
+                        train_aug_transforms: List, train_datasets: Iterable[str], val_datasets: Iterable[str],
+                        store_checkpoint: bool = True):
+    train_datasets_list = []
+    val_datasets_list = []
+    # Define datasets to use
+    for dataset_name in train_datasets:
+        train_datasets_list.append(eval(f"{dataset_name}_train_dataset"))
+    for dataset_name in val_datasets:
+        val_datasets_list.append(eval(f"{dataset_name}_val_dataset"))
     # Define optimizers for training stage
     g_optimizer = torch.optim.Adam(generator.parameters(), lr=g_lr, betas=(0.9, 0.99))
     d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=d_lr, betas=(0.9, 0.99))
@@ -631,19 +644,10 @@ if __name__ == '__main__':
         else:
             assert False, f'Model file {args.load_model_path} format is not recognized'
 
-    train_datasets = []
-    val_datasets = []
-    # Define datasets to use
-    for dataset_name in hparams["pretraining"]["train_datasets"]:
-        train_datasets.append(eval(f"{dataset_name}_train_dataset"))
-    for dataset_name in hparams["pretraining"]["val_datasets"]:
-        val_datasets.append(eval(f"{dataset_name}_val_dataset"))
-
     # Execute supervised pre-training stage
     if model_training is not None:
         exec_pretraining_stage(
-            **hparams["pretraining"], train_datasets_list=train_datasets, val_datasets_list=val_datasets,
-            train_aug_transforms=[spatial_transforms, hard_transforms]
+            **hparams["pretraining"], train_aug_transforms=[spatial_transforms, hard_transforms]
         )
     else:
         print(f'We don\'t need to pretrain because we have a model training loaded')
@@ -652,16 +656,7 @@ if __name__ == '__main__':
     # Training stage (GAN based) #
     ##############################
 
-    train_datasets = []
-    val_datasets = []
-    # Define datasets to use
-    for dataset_name in hparams["training"]["train_datasets"]:
-        train_datasets.append(eval(f"{dataset_name}_train_dataset"))
-    for dataset_name in hparams["training"]["val_datasets"]:
-        val_datasets.append(eval(f"{dataset_name}_val_dataset"))
-
     # Execute supervised pre-training stage
     exec_training_stage(
-        **hparams["training"], train_datasets_list=train_datasets, val_datasets_list=val_datasets,
-        train_aug_transforms=[spatial_transforms]
+        **hparams["training"], train_aug_transforms=[spatial_transforms]
     )
