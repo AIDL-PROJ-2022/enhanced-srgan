@@ -40,7 +40,7 @@ class SubPixelConv(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward pass. Apply conv -> shuffle pixels -> apply non-linearity.
+        Forward pass. Apply conv -> shuffle pixels -> non-linearity.
 
         Args:
             x: Batch of inputs.

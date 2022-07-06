@@ -3,7 +3,7 @@ import torch.nn as nn
 
 from typing import List, Tuple
 
-from ..nn.modules import Conv2d, LeakyReLU, ResidualInResidualDenseBlock, SubPixelConv, Interpolate
+from ..nn.modules import Conv2d, LeakyReLU, ResidualInResidualDenseBlock, SubPixelConv, InterpUpscale
 
 
 class RRDBNet(nn.Module):
@@ -59,11 +59,7 @@ class RRDBNet(nn.Module):
             if use_subpixel_conv:
                 upsampling_block = SubPixelConv(num_features=rrdb_channels, scale_factor=2)
             else:
-                upsampling_block = nn.Sequential(collections.OrderedDict([
-                    ("interp", Interpolate(scale_factor=2, mode='nearest-exact')),
-                    ("conv", Conv2d(rrdb_channels, rrdb_channels)),
-                    ("act", LeakyReLU()),
-                ]))
+                upsampling_block = InterpUpscale(num_features=rrdb_channels, scale_factor=2)
             upsampling_blocks_list.append((f"upsampling_{i}", upsampling_block))
         # Define upsampling last convolution block
         last_conv = nn.Sequential(

@@ -545,8 +545,8 @@ def exec_training_stage(num_epoch: int, cr_patch_size: Tuple[int, int], g_lr: fl
 if __name__ == '__main__':
     # Read arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_json", help="path config json", type=str, default="configs/esrgan_default.json")
-    parser.add_argument("--load_model_path", help="load model path", type=str)
+    parser.add_argument("--config-json", help="path config json", type=str, default="configs/esrgan_default.json")
+    parser.add_argument("--load-model-path", help="load model path", type=str)
     args = parser.parse_args()
 
     # Read config file
