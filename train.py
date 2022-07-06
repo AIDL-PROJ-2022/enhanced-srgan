@@ -607,7 +607,7 @@ if __name__ == '__main__':
     # Initialize logging interface
     logger = WandbLogger(
         proj_name='ESRGAN', entity_name="esrgan-aidl-2022", task='training', hr_scale_factor=hparams["scale_factor"],
-        generator=generator, discriminator=discriminator
+        generator=generator, discriminator=discriminator, config=hparams
     )
     # Log generator and generator model graph
     log_model_graphs()
