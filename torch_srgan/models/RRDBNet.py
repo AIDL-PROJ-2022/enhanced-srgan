@@ -60,7 +60,7 @@ class RRDBNet(nn.Module):
                 upsampling_block = SubPixelConv(num_features=rrdb_channels, scale_factor=2)
             else:
                 upsampling_block = nn.Sequential(collections.OrderedDict([
-                    ("interp", Interpolate(scale_factor=2, mode='nearest')),
+                    ("interp", Interpolate(scale_factor=2, mode='nearest-exact')),
                     ("conv", Conv2d(rrdb_channels, rrdb_channels)),
                     ("act", LeakyReLU()),
                 ]))
