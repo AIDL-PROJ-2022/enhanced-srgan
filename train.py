@@ -3,7 +3,6 @@ ESRGAN Network training script.
 """
 
 import argparse
-import collections
 import json
 import os
 import time
@@ -11,7 +10,7 @@ import albumentations as A
 import torch
 import piq
 
-from typing import Dict, List, Tuple, Iterable
+from typing import List, Tuple, Iterable, Optional
 
 from torch.utils.data import DataLoader, ConcatDataset
 from tqdm import tqdm
@@ -210,22 +209,24 @@ def exec_pretraining_stage(num_epoch: int, cr_patch_size: Tuple[int, int], lr: f
                            sched_step: int, sched_gamma: float, train_aug_transforms: List,
                            train_datasets_list: Iterable[datasets.ImagePairDataset],
                            val_datasets_list: Iterable[datasets.ImagePairDataset],
-                           store_checkpoint: bool = True, model_pretraining: Dict = None):
+                           store_checkpoint: bool = True):
     # Define optimizer and scheduler for pre-training stage
     optimizer = torch.optim.Adam(generator.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=sched_step, gamma=sched_gamma)
     start_epoch_i = 1
-    if(model_pretraining):
-        if('epoch_i' in model_pretraining):
+
+    if model_pretraining is not None:
+        if 'epoch_i' in model_pretraining:
             generator.load_state_dict(model_pretraining['model_state_dict'])
             optimizer.load_state_dict(model_pretraining['optimizer_state_dict'])
             scheduler.load_state_dict(model_pretraining['scheduler_state_dict'])
-            start_epoch_i = model_pretraining['epoch_i']+1
+            start_epoch_i = model_pretraining['epoch_i'] + 1
             print(f'starting pretrain epoch with position: {start_epoch_i}')
         else:
             generator.load_state_dict(model_pretraining['model_state_dict'])
             print(f'We already have the pretraining trained, we don\'t continue')
             return
+
     logger.set_current_step(start_epoch_i)
 
     # Setup train and validation datasets and its corresponding loader
@@ -244,6 +245,9 @@ def exec_pretraining_stage(num_epoch: int, cr_patch_size: Tuple[int, int], lr: f
     print("-" * 64)
     print()
 
+    best_ssim: Optional[float] = None
+    best_psnr: Optional[float] = None
+
     # Train model for specified number of epoch
     for epoch_i in tqdm(range(start_epoch_i, num_epoch+1), desc="[PRE-TRAINING (PSNR)]"):
 
@@ -257,6 +261,21 @@ def exec_pretraining_stage(num_epoch: int, cr_patch_size: Tuple[int, int], lr: f
 
         # Go to next logger step
         logger.step()
+
+        # Check if validation loss is the lower from all epoch
+        if best_ssim is None or ssim_metric.avg > best_ssim and psnr_metric.avg > best_psnr:
+            # Store a checkpoint with a different name for the best performant model result
+            checkpoint = {
+                "model_state_dict": generator.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict(),
+                "scheduler_state_dict": scheduler.state_dict(),
+                "hparams": hparams,
+                "epoch_i": epoch_i
+            }
+            torch.save(checkpoint, f"saved_models/{start_ts}_RRDB_PSNR_x{hparams['scale_factor']}_best_model.pth")
+            # Update best SSIM and PSNR results
+            best_ssim = ssim_metric.avg
+            best_psnr = psnr_metric.avg
 
         # Store checkpoint
         if store_checkpoint:
@@ -277,6 +296,7 @@ def exec_pretraining_stage(num_epoch: int, cr_patch_size: Tuple[int, int], lr: f
     torch.save(
         pretrain_model_data, f"saved_models/{start_ts}_RRDB_PSNR_x{hparams['scale_factor']}.pth"
     )
+
 
 def training_stage_train(dataloader: DataLoader, g_optimizer: torch.optim.Optimizer, d_optimizer: torch.optim.Optimizer,
                          g_scheduler: torch.optim.lr_scheduler.MultiStepLR,
@@ -402,7 +422,7 @@ def exec_training_stage(num_epoch: int, cr_patch_size: Tuple[int, int], g_lr: fl
                         g_adversarial_loss_scaling: float, g_content_loss_scaling: float,
                         train_datasets_list: Iterable[datasets.ImagePairDataset],
                         val_datasets_list: Iterable[datasets.ImagePairDataset],
-                        train_aug_transforms: List, store_checkpoint: bool = True, model_training: Dict = None):
+                        train_aug_transforms: List, store_checkpoint: bool = True):
     # Define optimizers for training stage
     g_optimizer = torch.optim.Adam(generator.parameters(), lr=g_lr, betas=(0.9, 0.99))
     d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=d_lr, betas=(0.9, 0.99))
@@ -411,8 +431,8 @@ def exec_training_stage(num_epoch: int, cr_patch_size: Tuple[int, int], g_lr: fl
     d_scheduler = torch.optim.lr_scheduler.MultiStepLR(d_optimizer, milestones=d_sched_steps, gamma=d_sched_gamma)
     start_epoch_i = 1
 
-    if(model_training):
-        if('epoch_i' in model_training):
+    if model_training:
+        if 'epoch_i' in model_training:
             generator.load_state_dict(model_training['g_model_state_dict'])
             discriminator.load_state_dict(model_training['d_model_state_dict'])
             g_optimizer.load_state_dict(model_training['g_optimizer_state_dict'])
@@ -445,6 +465,9 @@ def exec_training_stage(num_epoch: int, cr_patch_size: Tuple[int, int], g_lr: fl
     print("-" * 64)
     print()
 
+    best_ssim: Optional[float] = None
+    best_psnr: Optional[float] = None
+
     # Train model for specified number of epoch
     for epoch_i in tqdm(range(start_epoch_i, num_epoch+1), desc="[TRAINING (GAN)]"):
 
@@ -462,6 +485,24 @@ def exec_training_stage(num_epoch: int, cr_patch_size: Tuple[int, int], g_lr: fl
 
         # Go to next logger step
         logger.step()
+
+        # Check if validation loss is the lower from all epoch
+        if best_ssim is None or ssim_metric.avg > best_ssim and psnr_metric.avg > best_psnr:
+            # Store a checkpoint with a different name for the best performant model result
+            checkpoint = {
+                "g_model_state_dict": generator.state_dict(),
+                "d_model_state_dict": discriminator.state_dict(),
+                "g_optimizer_state_dict": g_optimizer.state_dict(),
+                "d_optimizer_state_dict": d_optimizer.state_dict(),
+                "g_scheduler_state_dict": g_scheduler.state_dict(),
+                "d_scheduler_state_dict": d_scheduler.state_dict(),
+                "hparams": hparams,
+                "epoch_i": epoch_i
+            }
+            torch.save(checkpoint, f"saved_models/{start_ts}_RRDB_PSNR_x{hparams['scale_factor']}_best_model.pth")
+            # Update best SSIM and PSNR results
+            best_ssim = ssim_metric.avg
+            best_psnr = psnr_metric.avg
 
         # Store checkpoint
         if store_checkpoint:
@@ -487,10 +528,11 @@ def exec_training_stage(num_epoch: int, cr_patch_size: Tuple[int, int], g_lr: fl
         train_model_data, f"saved_models/{start_ts}_RRDB_ESRGAN_x{hparams['scale_factor']}.pth"
     )
 
+
 if __name__ == '__main__':
-    # Reard arguments
+    # Read arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_json", help="path config json", type=str, default="configs/pretraining_192_patch_size.json")
+    parser.add_argument("--config_json", help="path config json", type=str, default="configs/esrgan_default.json")
     parser.add_argument("--load_model_path", help="load model path", type=str)
     args = parser.parse_args()
 
@@ -575,28 +617,29 @@ if __name__ == '__main__':
 
     model_pretraining = None
     model_training = None
-    if(args.load_model_path):
-        if(not os.path.exists(args.load_model_path)):
-            assert False, f'path file "{args.load_model_path} doesn\'t exists"'
-        checkpoint = torch.load(args.load_model_path)
-        if('model_state_dict' in checkpoint):
+
+    if args.load_model_path:
+        if not os.path.exists(args.load_model_path):
+            assert False, f'Checkpoint model path "{args.load_model_path} doesn\'t exists"'
+        _checkpoint = torch.load(args.load_model_path)
+        if 'model_state_dict' in _checkpoint:
             # Pretraining
-            model_pretraining = checkpoint
-        elif('g_model_state_dict' in checkpoint):
+            model_pretraining = _checkpoint
+        elif 'g_model_state_dict' in _checkpoint:
             # Training
-            model_training = checkpoint
+            model_training = _checkpoint
         else:
-            assert False, f'model file {args.load_model_path} format is not recognized'
+            assert False, f'Model file {args.load_model_path} format is not recognized'
 
     # Define datasets to use
     train_datasets = [bsds500_train_dataset, div2k_train_dataset]
     val_datasets = [bsds500_val_dataset, div2k_val_dataset]
 
     # Execute supervised pre-training stage
-    if(not model_training):
+    if model_training is not None:
         exec_pretraining_stage(
             **hparams["pretraining"], train_datasets_list=train_datasets, val_datasets_list=val_datasets,
-            train_aug_transforms=[spatial_transforms, hard_transforms], model_pretraining=model_pretraining
+            train_aug_transforms=[spatial_transforms, hard_transforms]
         )
     else:
         print(f'We don\'t need to pretrain because we have a model training loaded')
@@ -611,12 +654,6 @@ if __name__ == '__main__':
 
     # Execute supervised pre-training stage
     exec_training_stage(
-        **hparams["training"],
-        train_datasets_list=train_datasets, val_datasets_list=val_datasets,
-        train_aug_transforms=[spatial_transforms],
-        model_training=model_training
+        **hparams["training"], train_datasets_list=train_datasets, val_datasets_list=val_datasets,
+        train_aug_transforms=[spatial_transforms]
     )
-
-    #########################
-    # Network Interpolation #
-    #########################
