@@ -3,6 +3,7 @@ ESRGAN Network training script.
 """
 
 import argparse
+import contextlib
 import json
 import os
 import time
@@ -119,12 +120,13 @@ def pretraining_stage_train(dataloader: DataLoader, optimizer: torch.optim.Optim
         # Set optimizer gradients to zero
         optimizer.zero_grad()
 
-        # Generate a high resolution images from low resolution input
-        out_images = generator(lr_images)
+        with autocast_f():
+            # Generate a high resolution images from low resolution input
+            out_images = generator(lr_images)
 
-        # Measure pixel-wise content loss against ground truth image
-        loss = content_loss(out_images, hr_images)
-        content_loss_metric.update(loss.item(), lr_images.size(0))
+            # Measure pixel-wise content loss against ground truth image
+            loss = content_loss(out_images, hr_images)
+            content_loss_metric.update(loss.item(), lr_images.size(0))
 
         # Backpropagate gradients and go to next optimizer and scheduler step
         loss.backward()
@@ -167,21 +169,22 @@ def validate_model(dataloader: DataLoader, stage: str, epoch_i: int, num_epoch: 
             lr_images = lr_images.to(device)
             hr_images = hr_images.to(device)
 
-            # Generate a high resolution images from low resolution input
-            out_images = generator(lr_images)
-            # Make sure that images are between the range [0, 1]
-            out_images = torch.clamp(out_images, min=0, max=1)
+            with autocast_f():
+                # Generate a high resolution images from low resolution input
+                out_images = generator(lr_images)
+                # Make sure that images are between the range [0, 1]
+                out_images = torch.clamp(out_images, min=0, max=1)
 
-            # Measure pixel-wise content loss against ground truth image (Pixel-wise loss)
-            c_loss = content_loss(out_images, hr_images)
-            content_loss_metric.update(c_loss.item(), lr_images.size(0))
+                # Measure pixel-wise content loss against ground truth image (Pixel-wise loss)
+                c_loss = content_loss(out_images, hr_images)
+                content_loss_metric.update(c_loss.item(), lr_images.size(0))
 
-            # Measure perceptual loss against ground truth image (VGG-based loss)
-            p_loss = perceptual_loss(out_images, hr_images)
-            perceptual_loss_metric.update(p_loss.item(), hr_images.size(0))
+                # Measure perceptual loss against ground truth image (VGG-based loss)
+                p_loss = perceptual_loss(out_images, hr_images)
+                perceptual_loss_metric.update(p_loss.item(), hr_images.size(0))
 
-            # Measure PSNR and SSIM metric against ground truth image
-            _measure_psnr_ssim_metrics(hr_images, out_images)
+                # Measure PSNR and SSIM metric against ground truth image
+                _measure_psnr_ssim_metrics(hr_images, out_images)
 
             # Log processed images and results
             if (epoch_i % 100 == 0 or epoch_i == 1 or epoch_i == num_epoch) and i == 0:
@@ -339,29 +342,30 @@ def training_stage_train(dataloader: DataLoader, g_optimizer: torch.optim.Optimi
         # Set optimizer gradients to zero
         g_optimizer.zero_grad()
 
-        # Generate a high resolution images from low resolution input
-        out_images = generator(lr_images)
+        with autocast_f():
+            # Generate a high resolution images from low resolution input
+            out_images = generator(lr_images)
 
-        # Measure perceptual loss against ground truth image (VGG-based loss)
-        p_loss = perceptual_loss(out_images, hr_images)
-        perceptual_loss_metric.update(p_loss.item(), hr_images.size(0))
+            # Measure perceptual loss against ground truth image (VGG-based loss)
+            p_loss = perceptual_loss(out_images, hr_images)
+            perceptual_loss_metric.update(p_loss.item(), hr_images.size(0))
 
-        # Measure pixel-wise content loss against ground truth image (Pixel-wise loss)
-        c_loss = content_loss(out_images, hr_images)
-        content_loss_metric.update(c_loss.item(), hr_images.size(0))
+            # Measure pixel-wise content loss against ground truth image (Pixel-wise loss)
+            c_loss = content_loss(out_images, hr_images)
+            content_loss_metric.update(c_loss.item(), hr_images.size(0))
 
-        # Evaluate generated images with the discriminator
-        g_pred_real = discriminator(hr_images).detach()
-        g_pred_fake = discriminator(out_images)
+            # Evaluate generated images with the discriminator
+            g_pred_real = discriminator(hr_images).detach()
+            g_pred_fake = discriminator(out_images)
 
-        # Calculate generator adversarial loss (relativistic GAN loss)
-        g_a_loss_real = adversarial_loss(g_pred_real - g_pred_fake.mean(0, keepdim=True), target_is_real=False)
-        g_a_loss_fake = adversarial_loss(g_pred_fake - g_pred_real.mean(0, keepdim=True), target_is_real=True)
-        g_a_loss = (g_a_loss_fake + g_a_loss_real) / 2
-        g_adversarial_loss_metric.update(g_a_loss.item(), hr_images.size(0))
+            # Calculate generator adversarial loss (relativistic GAN loss)
+            g_a_loss_real = adversarial_loss(g_pred_real - g_pred_fake.mean(0, keepdim=True), target_is_real=False)
+            g_a_loss_fake = adversarial_loss(g_pred_fake - g_pred_real.mean(0, keepdim=True), target_is_real=True)
+            g_a_loss = (g_a_loss_fake + g_a_loss_real) / 2
+            g_adversarial_loss_metric.update(g_a_loss.item(), hr_images.size(0))
 
-        g_total_loss = p_loss + (c_loss * g_content_loss_scaling) + (g_a_loss * g_adversarial_loss_scaling)
-        g_total_loss_metric.update(g_total_loss.item(), hr_images.size(0))
+            g_total_loss = p_loss + (c_loss * g_content_loss_scaling) + (g_a_loss * g_adversarial_loss_scaling)
+            g_total_loss_metric.update(g_total_loss.item(), hr_images.size(0))
 
         # Backpropagate gradients and go to next optimizer and scheduler step
         g_total_loss.backward()
@@ -379,16 +383,17 @@ def training_stage_train(dataloader: DataLoader, g_optimizer: torch.optim.Optimi
         # Set optimizer gradients to zero
         d_optimizer.zero_grad()
 
-        # Evaluate real and generated images with the discriminator
-        d_pred_real = discriminator(hr_images)
-        d_pred_fake = discriminator(out_images.detach())
+        with autocast_f():
+            # Evaluate real and generated images with the discriminator
+            d_pred_real = discriminator(hr_images)
+            d_pred_fake = discriminator(out_images.detach())
 
-        loss_real = adversarial_loss(d_pred_real - d_pred_fake.mean(0, keepdim=True), target_is_real=True)
-        loss_fake = adversarial_loss(d_pred_fake - d_pred_real.mean(0, keepdim=True), target_is_real=False)
+            loss_real = adversarial_loss(d_pred_real - d_pred_fake.mean(0, keepdim=True), target_is_real=True)
+            loss_fake = adversarial_loss(d_pred_fake - d_pred_real.mean(0, keepdim=True), target_is_real=False)
 
-        # Total loss
-        d_loss = (loss_real + loss_fake) / 2
-        d_adversarial_loss_metric.update(d_loss.item(), hr_images.size(0))
+            # Total loss
+            d_loss = (loss_real + loss_fake) / 2
+            d_adversarial_loss_metric.update(d_loss.item(), hr_images.size(0))
 
         # Go to next optimizer and scheduler step
         d_loss.backward()
@@ -545,8 +550,12 @@ def exec_training_stage(num_epoch: int, cr_patch_size: Tuple[int, int], g_lr: fl
 if __name__ == '__main__':
     # Read arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config-json", help="path config json", type=str, default="configs/esrgan_default.json")
-    parser.add_argument("--load-model-path", help="load model path", type=str)
+    parser.add_argument(
+        "--config-json", help="JSON training configuration hyper-parameters", type=str,
+        default="configs/esrgan_default.json"
+    )
+    parser.add_argument("--load-model-path", help="Load model path", type=str)
+    parser.add_argument("--autocast", help="Use PyTorch autocast when running on cuda", action='store_true')
     args = parser.parse_args()
 
     # Read config file
@@ -565,6 +574,11 @@ if __name__ == '__main__':
     # Enable cudnn benchmarking if available
     if torch.backends.cudnn.is_available() and "cuda" in str(device):
         torch.backends.cudnn.benchmark = True
+
+    if args.autocast and "cuda" in str(device):
+        autocast_f = torch.autocast
+    else:
+        autocast_f = contextlib.nullcontext
 
     # Create saved models directory if not exist
     os.makedirs("saved_models", exist_ok=True)
@@ -624,9 +638,6 @@ if __name__ == '__main__':
     ####################################
     # Pre-training stage (PSNR driven) #
     ####################################
-
-    # start_epoch = 0
-    # logger.set_current_step(start_epoch + 1)
 
     model_pretraining = None
     model_training = None
