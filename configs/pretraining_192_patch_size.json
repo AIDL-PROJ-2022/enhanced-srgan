@@ -3,27 +3,27 @@
   "batch_size": 16,
   "img_channels": 3,
   "pretraining": {
-    "num_epoch": 10000,
+    "num_epoch": 8000,
     "cr_patch_size": [192, 192],
     "lr": 2e-4,
-    "sched_step": 200000,
+    "sched_step": 175000,
     "sched_gamma": 0.5,
-    "train_datasets": ["div2k"],
-    "val_datasets": ["bsds500"]
+    "train_datasets": ["div2k", "bsds500"],
+    "val_datasets": ["div2k", "bsds500"]
   },
   "training": {
-    "num_epoch": 8000,
+    "num_epoch": 6000,
     "cr_patch_size": [128, 128],
     "g_lr": 1e-4,
     "d_lr": 1e-4,
-    "g_sched_steps": [50000, 100000, 200000, 300000],
+    "g_sched_steps": [50000, 100000, 175000, 250000],
     "g_sched_gamma": 0.5,
-    "d_sched_steps": [50000, 100000, 200000, 300000],
+    "d_sched_steps": [50000, 100000, 175000, 250000],
     "d_sched_gamma": 0.5,
     "g_adversarial_loss_scaling": 0.005,
     "g_content_loss_scaling": 0.01,
-    "train_datasets": ["div2k"],
-    "val_datasets": ["bsds500"]
+    "train_datasets": ["div2k", "bsds500"],
+    "val_datasets": ["div2k", "bsds500"]
   },
   "generator": {
     "rrdb_channels": 64,
