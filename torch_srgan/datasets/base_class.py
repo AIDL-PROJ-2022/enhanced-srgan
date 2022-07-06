@@ -7,14 +7,14 @@ __license__ = "MIT"
 __version__ = "0.1.0"
 __status__ = "Development"
 
+import functools
 import os
-import numpy as np
 import cv2
 import albumentations as A
 import torch
 
 from abc import ABC
-from typing import Dict, List, Tuple, Optional, Union
+from typing import Dict, List, Tuple, Optional, Union, Callable
 from torch.utils.data import Dataset
 from albumentations.pytorch import ToTensorV2
 from albumentations.augmentations.crops import functional as cr_func
@@ -31,20 +31,26 @@ class ImagePairDataset(Dataset, ABC):
         TODO
     """
 
-    def __init__(self, scale_factor: int = 2, train: bool = False, patch_size: Tuple[int, int] = (96, 96),
+    # Define high-resolution (ground truth) image key to be used during transformation pipeline
+    _hr_img_transform_key: str = "gt_image"
+    # Partially define composed transform to be applied to both images
+    PairedCompose: Callable[..., A.Compose] = functools.partial(
+        A.Compose, additional_targets={_hr_img_transform_key: "image"}
+    )
+
+    def __init__(self, scale_factor: int = 2, train: bool = False, patch_size: Optional[Tuple[int, int]] = (96, 96),
                  base_dir: str = "data", hr_img_dir: str = "./", lr_img_dir: str = None,
-                 transforms: List[A.BasicTransform] = None, retrieve_transforms_info: bool = False):
+                 transforms: List[A.BasicTransform] = None):
         # Define class member variables from input parameters
         self.scale_factor = scale_factor
-        self.patch_size = patch_size
         self.train_mode = train
         self.base_dir = base_dir
         self.hr_img_dir = os.path.join(base_dir, hr_img_dir)
         self.img_list: List[Dict[str, str]] = []
-        self.transform: A.ReplayCompose = A.ReplayCompose([])
-        self.retrieve_transforms_info = retrieve_transforms_info
+        self.patch_size: Optional[Tuple[int, int]] = None
+        self.transform: A.Compose = A.Compose([])
         # Initialize transform pipeline
-        self.set_dataset_transforms(transforms)
+        self.set_dataset_transforms(patch_size, transforms)
 
         # Check if user provided directories for HR and LR images
         if lr_img_dir:
@@ -69,44 +75,51 @@ class ImagePairDataset(Dataset, ABC):
             for i in range(len(lr_images)):
                 self.data[i].update({"lr": lr_images[i]})
 
-    def set_dataset_transforms(self, transforms: List[A.BasicTransform] = None):
+    def set_dataset_transforms(self, patch_size: Optional[Tuple[int, int]], transforms: List[A.BasicTransform],
+                               apply_to_gt_img: bool = False):
         # Initialize transform pipeline
         transform_pipeline = []
         # Define pre-processing transform depending on if it is a train dataset or not and if a patch size was given
-        if self.patch_size:
+        if patch_size:
             if self.train_mode:
                 # Perform a random crop to both HR and LR images during training
-                paired_crop = PairedRandomCrop(self.patch_size, paired_img_scale=self.scale_factor, always_apply=True)
+                paired_crop = PairedRandomCrop(
+                    patch_size, paired_img_scale=self.scale_factor,
+                    scaled_img_target_key=self._hr_img_transform_key, always_apply=True
+                )
             else:
                 # Perform a center crop to both HR and LR images during test/validation
-                paired_crop = PairedCenterCrop(self.patch_size, paired_img_scale=self.scale_factor, always_apply=True)
+                paired_crop = PairedCenterCrop(
+                    patch_size, paired_img_scale=self.scale_factor,
+                    scaled_img_target_key=self._hr_img_transform_key, always_apply=True
+                )
             # Append to full pipeline
             transform_pipeline.append(paired_crop)
+            # Update patch size defined in class
+            self.patch_size = patch_size
         # Define user requested transformation pipeline (if any)
         if transforms:
-            user_transforms = A.Compose(
-                transforms,
-                additional_targets={"scaled_image": "image"}
-            )
+            compose_class = self.PairedCompose if apply_to_gt_img else A.Compose
+            user_transforms = compose_class(transforms)
             # Append to full pipeline
             transform_pipeline.append(user_transforms)
         # Define post-processing transforms (normalize image and convert it to Tensor)
-        post_transforms = A.Compose(
+        post_transforms = self.PairedCompose(
             [SimpleNormalize(), ToTensorV2()],
-            additional_targets={"scaled_image": "image"}
+            additional_targets={self._hr_img_transform_key: "image"}
         )
         # Append to full pipeline
         transform_pipeline.append(post_transforms)
 
         # Define complete transformation pipeline
-        self.transform = A.ReplayCompose(transform_pipeline)
+        self.transform = A.Compose(transform_pipeline)
 
     def __getitem__(self, index: int) -> \
             Union[Tuple[torch.Tensor, torch.Tensor], Tuple[torch.Tensor, torch.Tensor, dict]]:
         # Retrieve image pair from data array
         img_pair = self.data[index]
         # Read HR image from disk
-        hr_image = cv2.imread(img_pair["hr"], cv2.IMREAD_UNCHANGED).astype(np.float32)
+        hr_image = cv2.imread(img_pair["hr"], cv2.IMREAD_UNCHANGED)
         # Check if LR image was found in dataset
         if not img_pair.get("lr", None):
             # Crop HR image first to ensure that its size is multiple of scale
@@ -117,22 +130,19 @@ class ImagePairDataset(Dataset, ABC):
             # Calculate LR image resize scaling factor
             lr_img_size = (hr_img_w // self.scale_factor, hr_img_h // self.scale_factor)
             # Resize HR image to produce an LR image
-            lr_image = cv2.resize(hr_image, lr_img_size, interpolation=cv2.INTER_AREA)
+            lr_image = cv2.resize(hr_image, lr_img_size, interpolation=cv2.INTER_CUBIC)
         else:
             # Read LR image from disk
-            lr_image = cv2.imread(img_pair["lr"], cv2.IMREAD_UNCHANGED).astype(np.float32)
+            lr_image = cv2.imread(img_pair["lr"], cv2.IMREAD_UNCHANGED)
 
         # Convert image color space to RGB
         lr_image = cv2.cvtColor(lr_image, cv2.COLOR_BGR2RGB)
         hr_image = cv2.cvtColor(hr_image, cv2.COLOR_BGR2RGB)
 
         # Apply transformation pipeline to both images
-        transformed = self.transform(image=lr_image, scaled_image=hr_image)
+        transformed = self.transform(**{"image": lr_image, self._hr_img_transform_key: hr_image})
 
-        if self.retrieve_transforms_info:
-            return transformed["image"], transformed["scaled_image"], transformed["replay"]
-
-        return transformed["image"], transformed["scaled_image"]
+        return transformed["image"], transformed[self._hr_img_transform_key]
 
     def __len__(self) -> int:
         """
