@@ -39,4 +39,4 @@ if __name__ == '__main__':
     else:
         assert False, f"Model file '{args.in_model_path}' format is not recognized"
 
-    torch.save(checkpoint, args.out_model_path)
+    torch.save(model_data, args.out_model_path)
