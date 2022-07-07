@@ -596,6 +596,7 @@ if __name__ == '__main__':
     if args.autocast and "cuda" in str(device):
         autocast_f = torch.cuda.amp.autocast
         scaler = torch.cuda.amp.GradScaler()
+        print("PyTorch Automatic Mixed Precision enabled!")
     else:
         autocast_f = contextlib.nullcontext
         scaler = None
