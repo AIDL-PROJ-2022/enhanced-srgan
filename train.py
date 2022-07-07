@@ -665,12 +665,9 @@ if __name__ == '__main__':
 
     # If user didn't explicitly request to use one GPU, and we have more than one, use all of them
     if not args.no_data_parallel and torch.cuda.device_count() > 1:
-        print(f"Using {torch.cuda.device_count()} during this execution")
+        print(f"Using {torch.cuda.device_count()} GPUs during this execution")
         generator = torch.nn.DataParallel(generator)
         discriminator = torch.nn.DataParallel(discriminator)
-        content_loss = torch.nn.DataParallel(content_loss)
-        perceptual_loss = torch.nn.DataParallel(perceptual_loss)
-        adversarial_loss = torch.nn.DataParallel(adversarial_loss)
 
     # Move everything to device
     generator = generator.to(device)
