@@ -128,16 +128,20 @@ def pretraining_stage_train(dataloader: DataLoader, optimizer: torch.optim.Optim
             loss = content_loss(out_images, hr_images)
             content_loss_metric.update(loss.item(), lr_images.size(0))
 
-        # Backpropagate gradients and go to next optimizer
+        # Backpropagate gradients and go to next optimizer step
         if scaler is not None:
             scaler.scale(loss).backward()
             scaler.step(optimizer)
-            scaler.update()
         else:
             loss.backward()
             optimizer.step()
+
         # Perform scheduler step
         scheduler.step()
+
+        # Update gradients scaler for the next iteration (if defined)
+        if scaler is not None:
+            scaler.update()
 
         # Log processed images and results
         if (epoch_i % 200 == 0 or epoch_i == 1 or epoch_i == num_epoch) and i == 0:
@@ -376,10 +380,10 @@ def training_stage_train(dataloader: DataLoader, g_optimizer: torch.optim.Optimi
         if scaler is not None:
             scaler.scale(g_total_loss).backward()
             scaler.step(g_optimizer)
-            scaler.update()
         else:
             g_total_loss.backward()
             g_optimizer.step()
+
         # Perform scheduler step
         g_scheduler.step()
 
@@ -410,12 +414,16 @@ def training_stage_train(dataloader: DataLoader, g_optimizer: torch.optim.Optimi
         if scaler is not None:
             scaler.scale(d_loss).backward()
             scaler.step(d_optimizer)
-            scaler.update()
         else:
             d_loss.backward()
             d_optimizer.step()
+
         # Perform scheduler step
         d_scheduler.step()
+
+        # Update gradients scaler for the next iteration (if defined)
+        if scaler is not None:
+            scaler.update()
 
         ###########
         # Logging #
