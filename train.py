@@ -98,8 +98,8 @@ def _measure_psnr_ssim_metrics(hr_images: torch.Tensor, out_images: torch.Tensor
 
 def log_model_graphs():
     lr_images, hr_images = next(iter(DataLoader(bsds500_val_dataset, batch_size=1)))
-    logger.log_model_graph(generator, lr_images.to(device))
-    logger.log_model_graph(discriminator, hr_images.to(device))
+    logger.log_model_graph(generator, lr_images)
+    logger.log_model_graph(discriminator, hr_images)
 
 
 def pretraining_stage_train(dataloader: DataLoader, optimizer: torch.optim.Optimizer,
@@ -128,16 +128,20 @@ def pretraining_stage_train(dataloader: DataLoader, optimizer: torch.optim.Optim
             loss = content_loss(out_images, hr_images)
             content_loss_metric.update(loss.item(), lr_images.size(0))
 
-        # Backpropagate gradients and go to next optimizer
+        # Backpropagate gradients and go to next optimizer step
         if scaler is not None:
             scaler.scale(loss).backward()
             scaler.step(optimizer)
-            scaler.update()
         else:
             loss.backward()
             optimizer.step()
+
         # Perform scheduler step
         scheduler.step()
+
+        # Update gradients scaler for the next iteration (if defined)
+        if scaler is not None:
+            scaler.update()
 
         # Log processed images and results
         if (epoch_i % 200 == 0 or epoch_i == 1 or epoch_i == num_epoch) and i == 0:
@@ -376,10 +380,10 @@ def training_stage_train(dataloader: DataLoader, g_optimizer: torch.optim.Optimi
         if scaler is not None:
             scaler.scale(g_total_loss).backward()
             scaler.step(g_optimizer)
-            scaler.update()
         else:
             g_total_loss.backward()
             g_optimizer.step()
+
         # Perform scheduler step
         g_scheduler.step()
 
@@ -410,12 +414,16 @@ def training_stage_train(dataloader: DataLoader, g_optimizer: torch.optim.Optimi
         if scaler is not None:
             scaler.scale(d_loss).backward()
             scaler.step(d_optimizer)
-            scaler.update()
         else:
             d_loss.backward()
             d_optimizer.step()
+
         # Perform scheduler step
         d_scheduler.step()
+
+        # Update gradients scaler for the next iteration (if defined)
+        if scaler is not None:
+            scaler.update()
 
         ###########
         # Logging #
@@ -573,6 +581,7 @@ if __name__ == '__main__':
     )
     parser.add_argument("--load-model-path", help="Load model path", type=str)
     parser.add_argument("--autocast", help="Use PyTorch autocast when running on cuda", action='store_true')
+    parser.add_argument("--no-data-parallel", help="Use PyTorch autocast when running on cuda", action='store_true')
     parser.add_argument("--checkpoint-interval", help="Define checkpoint store frequency", type=int)
     args = parser.parse_args()
 
@@ -586,14 +595,16 @@ if __name__ == '__main__':
         gettrace = getattr(sys, 'gettrace', lambda: None)
         return gettrace() is not None
 
-    device = torch.device("cuda" if torch.cuda.is_available() and not debugger_is_active() else "cpu")
+    cuda_available = torch.cuda.is_available() and not debugger_is_active()
+    device = torch.device("cuda" if cuda_available else "cpu")
     n_cpu = os.cpu_count()
 
     # Enable cudnn benchmarking if available
-    if torch.backends.cudnn.is_available() and "cuda" in str(device):
+    if torch.backends.cudnn.is_available() and cuda_available:
         torch.backends.cudnn.benchmark = True
 
-    if args.autocast and "cuda" in str(device):
+    # Enable Automatic Mixed Precision if user requested it and cuda is available
+    if args.autocast and cuda_available:
         autocast_f = torch.cuda.amp.autocast
         scaler = torch.cuda.amp.GradScaler()
         print("PyTorch Automatic Mixed Precision enabled!")
@@ -626,10 +637,10 @@ if __name__ == '__main__':
     # Initialize generator and discriminator models
     generator = RRDBNet(
         img_channels=hparams["img_channels"], scale_factor=hparams["scale_factor"], **hparams["generator"]
-    ).to(device)
+    )
     discriminator = VGGStyleDiscriminator(
         img_channels=hparams["img_channels"], **hparams["discriminator"]
-    ).to(device)
+    )
 
     # Define datasets to use:
     # BSDS500
@@ -640,9 +651,9 @@ if __name__ == '__main__':
     div2k_val_dataset = datasets.DIV2K(target='val', scale_factor=hparams["scale_factor"])
 
     # Define losses used during training
-    content_loss = ContentLoss(**hparams["content_loss"]).to(device)
-    perceptual_loss = PerceptualLoss(**hparams["perceptual_loss"]).to(device)
-    adversarial_loss = AdversarialLoss().to(device)
+    content_loss = ContentLoss(**hparams["content_loss"])
+    perceptual_loss = PerceptualLoss(**hparams["perceptual_loss"])
+    adversarial_loss = AdversarialLoss()
 
     # Initialize logging interface
     logger = WandbLogger(
@@ -651,6 +662,19 @@ if __name__ == '__main__':
     )
     # Log generator and generator model graph
     log_model_graphs()
+
+    # If user didn't explicitly request to use one GPU, and we have more than one, use all of them
+    if not args.no_data_parallel and torch.cuda.device_count() > 1:
+        print(f"Using {torch.cuda.device_count()} GPUs during this execution")
+        generator = torch.nn.DataParallel(generator)
+        discriminator = torch.nn.DataParallel(discriminator)
+
+    # Move everything to device
+    generator = generator.to(device)
+    discriminator = discriminator.to(device)
+    content_loss = content_loss.to(device)
+    perceptual_loss = perceptual_loss.to(device)
+    adversarial_loss = adversarial_loss.to(device)
 
     # Define metrics
     content_loss_metric = AverageMeter("Generator Content Loss", ":.4e")
