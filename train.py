@@ -73,11 +73,11 @@ def _setup_stage_datasets(train_datasets_list: Iterable[datasets.ImagePairDatase
 
     # Define the dataset loaders
     train_dataloader = DataLoader(
-        ConcatDataset(train_datasets_list), batch_size=hparams["batch_size"], num_workers=n_cpu,
+        ConcatDataset(train_datasets_list), batch_size=hparams["batch_size"], num_workers=n_cpu-1,
         shuffle=True, pin_memory=True, drop_last=True
     )
     val_dataloader = DataLoader(
-        ConcatDataset(val_datasets_list), batch_size=hparams["batch_size"], num_workers=n_cpu,
+        ConcatDataset(val_datasets_list), batch_size=hparams["batch_size"], num_workers=n_cpu-1,
         shuffle=False, pin_memory=True, drop_last=True
     )
 
