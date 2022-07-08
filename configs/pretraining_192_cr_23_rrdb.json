@@ -9,7 +9,7 @@
     "sched_step": 175000,
     "sched_gamma": 0.5,
     "train_datasets": ["bsds500", "div2k"],
-    "val_datasets": ["bsds500", "div2k"]
+    "val_datasets": ["bsds500"]
   },
   "training": {
     "num_epoch": 6000,
@@ -23,7 +23,7 @@
     "g_adversarial_loss_scaling": 0.005,
     "g_content_loss_scaling": 0.01,
     "train_datasets": ["bsds500", "div2k"],
-    "val_datasets": ["bsds500", "div2k"]
+    "val_datasets": ["bsds500"]
   },
   "generator": {
     "rrdb_channels": 64,
