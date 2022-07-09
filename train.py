@@ -596,7 +596,6 @@ if __name__ == '__main__':
     )
     parser.add_argument("--load-model-path", help="Load model path", type=str)
     parser.add_argument("--autocast", help="Use PyTorch autocast when running on cuda", action='store_true')
-    parser.add_argument("--no-data-parallel", help="Use PyTorch autocast when running on cuda", action='store_true')
     parser.add_argument("--checkpoint-interval", help="Define checkpoint store frequency", type=int, default=1)
     parser.add_argument(
         "--best-checkpoint-warmup", help="Define a warm-up period until best checkpoint is stored", type=int, default=0

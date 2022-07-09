@@ -10,7 +10,7 @@ __status__ = "Development"
 import os
 import albumentations as A
 
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 from ..utils.datasets import download_and_extract_archive
 from .base_class import ImagePairDataset
@@ -28,7 +28,7 @@ class BSDS500(ImagePairDataset):
 
     dataset_img_base_dir = "BSR/BSDS500/data/images/"
 
-    def __init__(self, target: str, scale_factor: int = 2, patch_size: Tuple[int, int] = (128, 128),
+    def __init__(self, target: str, scale_factor: int = 2, patch_size: Optional[Tuple[int, int]] = (128, 128),
                  base_dir: str = "data", transforms: List[A.BasicTransform] = None, download: bool = True):
         # Check that user provided a valid target
         if target not in ("train", "test", "val"):
