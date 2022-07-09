@@ -692,11 +692,11 @@ if __name__ == '__main__':
         discriminator = torch.nn.DataParallel(discriminator)
 
     # Move everything to device
-    generator = generator.to(device)
-    discriminator = discriminator.to(device)
-    content_loss = content_loss.to(device)
-    perceptual_loss = perceptual_loss.to(device)
-    adversarial_loss = adversarial_loss.to(device)
+    generator.to(device)
+    discriminator.to(device)
+    content_loss.to(device)
+    perceptual_loss.to(device)
+    adversarial_loss.to(device)
 
     # Define metrics
     content_loss_metric = AverageMeter("Generator Content Loss", ":.4e")
