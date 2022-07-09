@@ -1,0 +1,52 @@
+{
+  "scale_factor": 4,
+  "batch_size": 16,
+  "img_channels": 3,
+  "pretraining": {
+    "num_epoch": 8000,
+    "cr_patch_size": [192, 192],
+    "lr": 2e-4,
+    "sched_step": 175000,
+    "sched_gamma": 0.5,
+    "train_datasets": ["div2k"],
+    "val_datasets": ["div2k"]
+  },
+  "training": {
+    "num_epoch": 6000,
+    "cr_patch_size": [192, 192],
+    "g_lr": 1e-4,
+    "d_lr": 1e-4,
+    "g_sched_steps": [50000, 100000, 175000, 250000],
+    "g_sched_gamma": 0.5,
+    "d_sched_steps": [50000, 100000, 175000, 250000],
+    "d_sched_gamma": 0.5,
+    "g_adversarial_loss_scaling": 0.005,
+    "g_content_loss_scaling": 0.01,
+    "train_datasets": ["div2k"],
+    "val_datasets": ["div2k"]
+  },
+  "generator": {
+    "rrdb_channels": 64,
+    "growth_channels": 32,
+    "num_basic_blocks": 23,
+    "num_dense_blocks": 3,
+    "num_residual_blocks": 5,
+    "residual_scaling": 0.2,
+    "use_subpixel_conv": false
+  },
+  "discriminator": {
+    "vgg_blk_ch": [64, 64, 128, 128, 256, 256, 512, 512],
+    "fc_features": [100]
+  },
+  "content_loss": {
+    "loss_f": "l1"
+  },
+  "perceptual_loss": {
+    "layer_weights": {
+        "conv5_4": 1.0
+    },
+    "normalize_input": true,
+    "normalize_loss": false
+  },
+  "network_interpolation_alpha": 0.8
+}
