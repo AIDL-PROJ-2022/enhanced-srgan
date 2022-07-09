@@ -47,6 +47,5 @@
     },
     "normalize_input": true,
     "normalize_loss": false
-  },
-  "network_interpolation_alpha": 0.8
+  }
 }
