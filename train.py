@@ -102,6 +102,38 @@ def log_model_graphs():
     logger.log_model_graph(discriminator, hr_images)
 
 
+def store_best_checkpoint(checkpoint_data: dict, checkpoint_file_path: str, best_ssim: float, best_psnr: float):
+    if best_ssim is None or ssim_metric.avg > best_ssim and psnr_metric.avg > best_psnr:
+        torch.save(checkpoint_data, checkpoint_file_path)
+        # Update best SSIM and PSNR results
+        best_ssim = ssim_metric.avg
+        best_psnr = psnr_metric.avg
+
+    return best_ssim, best_psnr
+
+
+def store_model_data(model_data_file_path_base: str, num_epoch: int, stage: str, epoch_i: int = None):
+    # Define model data
+    model_data = {
+        "model_state_dict": generator.state_dict(),
+        "stage": stage,
+        "hparams": hparams,
+    }
+    # Store model data after each training stage
+    if epoch_i is None:
+        torch.save(
+            model_data, f"{model_data_file_path_base}.pth"
+        )
+    # Store model data during each training stage each specified epoch
+    elif epoch_i % store_model_interval == 0 or epoch_i == 1 or epoch_i == num_epoch:
+        # Add epoch index to model data
+        model_data["epoch_i"] = epoch_i
+        # Save it
+        torch.save(
+            model_data, f"{model_data_file_path_base}_e{epoch_i}.pth"
+        )
+
+
 def pretraining_stage_train(dataloader: DataLoader, optimizer: torch.optim.Optimizer,
                             scheduler: torch.optim.lr_scheduler.StepLR, epoch_i: int, num_epoch: int):
     # Switch generator model to train mode
@@ -219,8 +251,7 @@ def validate_model(dataloader: DataLoader, stage: str, epoch_i: int, num_epoch: 
 
 def exec_pretraining_stage(num_epoch: int, cr_patch_size: Tuple[int, int], lr: float,
                            sched_step: int, sched_gamma: float, train_aug_transforms: List,
-                           train_datasets: Iterable[str], val_datasets: Iterable[str],
-                           store_checkpoint: bool = True):
+                           train_datasets: Iterable[str], val_datasets: Iterable[str]):
     train_datasets_list = []
     val_datasets_list = []
     # Define datasets to use
@@ -235,7 +266,8 @@ def exec_pretraining_stage(num_epoch: int, cr_patch_size: Tuple[int, int], lr: f
     start_epoch_i = 1
 
     if model_pretraining is not None:
-        if 'epoch_i' in model_pretraining:
+        checkpoint_keys = {'optimizer_state_dict', 'scheduler_state_dict'}
+        if checkpoint_keys.issubset(set(model_pretraining.keys())):
             generator.load_state_dict(model_pretraining['model_state_dict'])
             optimizer.load_state_dict(model_pretraining['optimizer_state_dict'])
             scheduler.load_state_dict(model_pretraining['scheduler_state_dict'])
@@ -255,8 +287,8 @@ def exec_pretraining_stage(num_epoch: int, cr_patch_size: Tuple[int, int], lr: f
 
     # Set stage start time
     start_ts = int(time.time())
-    # Define checkpoint file path
-    checkpoint_file_path = f"saved_models/{start_ts}_RRDB_PSNR_x{hparams['scale_factor']}_checkpoint.pth"
+    # Define model store and checkpoints file path base
+    model_file_path_base = f"saved_models/{start_ts}_RRDB_PSNR_x{hparams['scale_factor']}"
 
     print()
     print(">>> Pre-training stage (PSNR driven)")
@@ -281,40 +313,32 @@ def exec_pretraining_stage(num_epoch: int, cr_patch_size: Tuple[int, int], lr: f
         # Go to next logger step
         logger.step()
 
-        # Check if validation loss is the lower from all epoch
-        if best_ssim is None or ssim_metric.avg > best_ssim and psnr_metric.avg > best_psnr:
-            # Store a checkpoint with a different name for the best performant model result
-            checkpoint = {
-                "model_state_dict": generator.state_dict(),
-                "optimizer_state_dict": optimizer.state_dict(),
-                "scheduler_state_dict": scheduler.state_dict(),
-                "hparams": hparams,
-                "epoch_i": epoch_i
-            }
-            torch.save(checkpoint, f"saved_models/{start_ts}_RRDB_PSNR_x{hparams['scale_factor']}_best_model.pth")
-            # Update best SSIM and PSNR results
-            best_ssim = ssim_metric.avg
-            best_psnr = psnr_metric.avg
+        # Define checkpoint data
+        checkpoint = {
+            "model_state_dict": generator.state_dict(),
+            "optimizer_state_dict": optimizer.state_dict(),
+            "scheduler_state_dict": scheduler.state_dict(),
+            "epoch_i": epoch_i,
+            "stage": "pre-training",
+            "hparams": hparams,
+        }
+
+        # Check if best checkpoint needs to be updated
+        if epoch_i > best_checkpoint_warmup:
+            best_ssim, best_psnr = store_best_checkpoint(
+                checkpoint, f"{model_file_path_base}_best_model.pth", best_ssim, best_psnr
+            )
 
         # Store checkpoint
-        if store_checkpoint and (epoch_i % checkpoint_interval == 0 or epoch_i == 1 or epoch_i == num_epoch):
-            checkpoint = {
-                "model_state_dict": generator.state_dict(),
-                "optimizer_state_dict": optimizer.state_dict(),
-                "scheduler_state_dict": scheduler.state_dict(),
-                "hparams": hparams,
-                "epoch_i": epoch_i
-            }
-            torch.save(checkpoint, checkpoint_file_path)
+        if epoch_i % checkpoint_interval == 0 or epoch_i == 1 or epoch_i == num_epoch:
+            torch.save(checkpoint, f"{model_file_path_base}_checkpoint.pth")
+
+        # Store model during training
+        if store_model_interval is not None:
+            store_model_data(model_file_path_base, num_epoch, "pre-training", epoch_i)
 
     # Store model data after pre-training stage
-    pretrain_model_data = {
-        "model_state_dict": generator.state_dict(),
-        "hparams": hparams,
-    }
-    torch.save(
-        pretrain_model_data, f"saved_models/{start_ts}_RRDB_PSNR_x{hparams['scale_factor']}.pth"
-    )
+    store_model_data(model_file_path_base, num_epoch, "pre-training")
 
 
 def training_stage_train(dataloader: DataLoader, g_optimizer: torch.optim.Optimizer, d_optimizer: torch.optim.Optimizer,
@@ -457,8 +481,7 @@ def training_stage_train(dataloader: DataLoader, g_optimizer: torch.optim.Optimi
 def exec_training_stage(num_epoch: int, cr_patch_size: Tuple[int, int], g_lr: float, d_lr: float,
                         g_sched_steps: List[int], g_sched_gamma: float, d_sched_steps: List[int], d_sched_gamma: float,
                         g_adversarial_loss_scaling: float, g_content_loss_scaling: float,
-                        train_aug_transforms: List, train_datasets: Iterable[str], val_datasets: Iterable[str],
-                        store_checkpoint: bool = True):
+                        train_aug_transforms: List, train_datasets: Iterable[str], val_datasets: Iterable[str]):
     train_datasets_list = []
     val_datasets_list = []
     # Define datasets to use
@@ -475,7 +498,11 @@ def exec_training_stage(num_epoch: int, cr_patch_size: Tuple[int, int], g_lr: fl
     start_epoch_i = 1
 
     if model_training:
-        if 'epoch_i' in model_training:
+        checkpoint_keys = {
+            'g_model_state_dict', 'd_model_state_dict', 'g_optimizer_state_dict',
+            'd_optimizer_state_dict', 'g_scheduler_state_dict', 'd_scheduler_state_dict'
+        }
+        if checkpoint_keys.issubset(set(model_training.keys())):
             generator.load_state_dict(model_training['g_model_state_dict'])
             discriminator.load_state_dict(model_training['d_model_state_dict'])
             g_optimizer.load_state_dict(model_training['g_optimizer_state_dict'])
@@ -499,8 +526,8 @@ def exec_training_stage(num_epoch: int, cr_patch_size: Tuple[int, int], g_lr: fl
 
     # Set stage start time
     start_ts = int(time.time())
-    # Define checkpoint file path
-    checkpoint_file_path = f"saved_models/{start_ts}_RRDB_ESRGAN_x{hparams['scale_factor']}_checkpoint.pth"
+    # Define model store and checkpoints file path base
+    model_file_path_base = f"saved_models/{start_ts}_RRDB_ESRGAN_x{hparams['scale_factor']}"
 
     print()
     print(">>> Training stage (GAN based)")
@@ -529,47 +556,35 @@ def exec_training_stage(num_epoch: int, cr_patch_size: Tuple[int, int], g_lr: fl
         # Go to next logger step
         logger.step()
 
-        # Check if validation loss is the lower from all epoch
-        if best_ssim is None or ssim_metric.avg > best_ssim and psnr_metric.avg > best_psnr:
-            # Store a checkpoint with a different name for the best performant model result
-            checkpoint = {
-                "g_model_state_dict": generator.state_dict(),
-                "d_model_state_dict": discriminator.state_dict(),
-                "g_optimizer_state_dict": g_optimizer.state_dict(),
-                "d_optimizer_state_dict": d_optimizer.state_dict(),
-                "g_scheduler_state_dict": g_scheduler.state_dict(),
-                "d_scheduler_state_dict": d_scheduler.state_dict(),
-                "hparams": hparams,
-                "epoch_i": epoch_i
-            }
-            torch.save(checkpoint, f"saved_models/{start_ts}_RRDB_PSNR_x{hparams['scale_factor']}_best_model.pth")
-            # Update best SSIM and PSNR results
-            best_ssim = ssim_metric.avg
-            best_psnr = psnr_metric.avg
+        # Define checkpoint data
+        checkpoint = {
+            "g_model_state_dict": generator.state_dict(),
+            "d_model_state_dict": discriminator.state_dict(),
+            "g_optimizer_state_dict": g_optimizer.state_dict(),
+            "d_optimizer_state_dict": d_optimizer.state_dict(),
+            "g_scheduler_state_dict": g_scheduler.state_dict(),
+            "d_scheduler_state_dict": d_scheduler.state_dict(),
+            "epoch_i": epoch_i,
+            "stage": "training",
+            "hparams": hparams,
+        }
+
+        # Check if best checkpoint needs to be updated
+        if epoch_i > best_checkpoint_warmup:
+            best_ssim, best_psnr = store_best_checkpoint(
+                checkpoint, f"{model_file_path_base}_best_model.pth", best_ssim, best_psnr
+            )
 
         # Store checkpoint
-        if store_checkpoint and (epoch_i % checkpoint_interval == 0 or epoch_i == 1 or epoch_i == num_epoch):
-            checkpoint = {
-                "g_model_state_dict": generator.state_dict(),
-                "d_model_state_dict": discriminator.state_dict(),
-                "g_optimizer_state_dict": g_optimizer.state_dict(),
-                "d_optimizer_state_dict": d_optimizer.state_dict(),
-                "g_scheduler_state_dict": g_scheduler.state_dict(),
-                "d_scheduler_state_dict": d_scheduler.state_dict(),
-                "hparams": hparams,
-                "epoch_i": epoch_i
-            }
-            torch.save(checkpoint, checkpoint_file_path)
+        if epoch_i % checkpoint_interval == 0 or epoch_i == 1 or epoch_i == num_epoch:
+            torch.save(checkpoint, f"{model_file_path_base}_checkpoint.pth")
+
+        # Store model during training
+        if store_model_interval is not None:
+            store_model_data(model_file_path_base, num_epoch, "training", epoch_i)
 
     # Store model data after pre-training stage
-    train_model_data = {
-        "g_model_state_dict": generator.state_dict(),
-        "d_model_state_dict": discriminator.state_dict(),
-        "hparams": hparams,
-    }
-    torch.save(
-        train_model_data, f"saved_models/{start_ts}_RRDB_ESRGAN_x{hparams['scale_factor']}.pth"
-    )
+    store_model_data(model_file_path_base, num_epoch, "training")
 
 
 if __name__ == '__main__':
@@ -582,7 +597,15 @@ if __name__ == '__main__':
     parser.add_argument("--load-model-path", help="Load model path", type=str)
     parser.add_argument("--autocast", help="Use PyTorch autocast when running on cuda", action='store_true')
     parser.add_argument("--no-data-parallel", help="Use PyTorch autocast when running on cuda", action='store_true')
-    parser.add_argument("--checkpoint-interval", help="Define checkpoint store frequency", type=int)
+    parser.add_argument("--checkpoint-interval", help="Define checkpoint store frequency", type=int, default=1)
+    parser.add_argument(
+        "--best-checkpoint-warmup", help="Define a warm-up period until best checkpoint is stored", type=int, default=0
+    )
+    parser.add_argument(
+        "--store-model-interval",
+        help="Define model store frequency. If not specified, model won't be stored during training.",
+        type=int, default=None
+    )
     args = parser.parse_args()
 
     # Read config file
@@ -612,10 +635,9 @@ if __name__ == '__main__':
         autocast_f = contextlib.nullcontext
         scaler = None
 
-    if args.checkpoint_interval:
-        checkpoint_interval = args.checkpoint_interval
-    else:
-        checkpoint_interval = 1
+    checkpoint_interval: int = args.checkpoint_interval
+    best_checkpoint_warmup: int = args.best_checkpoint_warmup
+    store_model_interval: Optional[int] = args.store_model_interval
 
     # Create saved models directory if not exist
     os.makedirs("saved_models", exist_ok=True)
