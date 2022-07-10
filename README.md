@@ -142,7 +142,7 @@ RPL: Aqui tambien estaría bien poner capacidad de las maquinas que hemos usado 
 
 ## 7. Architecture <a name="architecture"></a>
 
-We've implemented a ESRGAN model using [PyTorch](https://pytorch.org/) RPL: blah blah blah, falta toda la teoría aqui
+We've implemented a ESRGAN model using [PyTorch](https://pytorch.org/) RPL: blah blah blah, falta toda la teoría aqui.
 
 ### 7.1 Hyperparameters <a name="hyperparameters"></a>
 
@@ -196,11 +196,14 @@ Whe have 3 kind of loss functions on this model.
 <p align="center">
   <img src="assets/relativistic_gan.png">
 </p>
-where σ is the sigmoid function and C(x) is the non-transformed discriminator output and Exf [·] represents the operation of taking average for all fake data in the mini-batch.
+where σ is the sigmoid function and C(x) is the non-transformed discriminator output and E$x_f$[·] represents the operation of taking average for all fake data in the mini-batch.
 The discriminator loss is then defined as: 
+
+<br /> 
 <center>
 
 $L_{D}^{Ra} = −E_{x_r} [log(D_{Ra}(x_r , x_f ))] − E_{x_f} [log(1 − D_{Ra}(x_f , x_r ))]$
+
 </center>
 
 And the adversarial los for generator is in a symmetrical form:
@@ -208,9 +211,8 @@ And the adversarial los for generator is in a symmetrical form:
 
 $L_{G}^{Ra} = −E_{x_r} [log(1 − D_{Ra}(x_r, x_f ))] − E_{x_f} [log(D_{Ra}(x_f , x_r ))]$
 </center>
-where $x_f = G(xi)$ and $x_i$ stands for the input LR image.
+where $x_f = G(x_i)$ and $x_i$ stands for the input LR image.
 
-<br /> 
 <br /> 
 
 **Perceptual loss** ($L_{percep}$): Type of content loss introduced in the [Perceptual Losses for Real-Time Style Transfer and Super-Resolution](https://arxiv.org/abs/1603.08155v1) super-resolution and style transfer framework. Also known as VGG loss is based on the ReLU activation layers on the pre-treained 19 layer VGG netowrk.
