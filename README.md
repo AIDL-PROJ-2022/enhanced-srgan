@@ -198,8 +198,9 @@ Whe have 3 kind of loss functions on this model.
 </p>
 where σ is the sigmoid function and C(x) is the non-transformed discriminator output and E$x_f$[·] represents the operation of taking average for all fake data in the mini-batch.
 The discriminator loss is then defined as: 
-
 <br /> 
+<br /> 
+
 <center>
 
 $L_{D}^{Ra} = −E_{x_r} [log(D_{Ra}(x_r , x_f ))] − E_{x_f} [log(1 − D_{Ra}(x_f , x_r ))]$
@@ -213,7 +214,8 @@ $L_{G}^{Ra} = −E_{x_r} [log(1 − D_{Ra}(x_r, x_f ))] − E_{x_f} [log(D_{Ra}(
 </center>
 where $x_f = G(x_i)$ and $x_i$ stands for the input LR image.
 
-<br /> 
+<br />
+<br />
 
 **Perceptual loss** ($L_{percep}$): Type of content loss introduced in the [Perceptual Losses for Real-Time Style Transfer and Super-Resolution](https://arxiv.org/abs/1603.08155v1) super-resolution and style transfer framework. Also known as VGG loss is based on the ReLU activation layers on the pre-treained 19 layer VGG netowrk.
 
