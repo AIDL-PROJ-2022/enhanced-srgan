@@ -112,6 +112,10 @@ We are using two types of datasets
         * 800 images for training.
         * 100 images for validation.
         * 100 images for testing.
+- [SET5](https://deepai.org/dataset/set5-super-resolution)
+    * The Set5 dataset is a dataset consisting of 5 images (“baby”, “bird”, “butterfly”, “head”, “woman”) commonly used for testing performance of Image Super-Resolution models.
+- [SET14](https://deepai.org/dataset/set14-super-resolution)
+    * The Set14 dataset is a dataset consisting of 14 images commonly used for testing performance of Image Super-Resolution models.
 
 <p align="right"><a href="#toc">To top</a></p>
 
@@ -181,6 +185,10 @@ content_loss/loss_f | "l1" |
 perceptual_loss/layer_weights/conv5_4 | 1.0 |
 perceptual_loss/normalize_input | true |
 perceptual_loss/normalize_loss | false |
+
+### 7.2 Loss functions <a name="lossfunctions"></a>
+
+The loss functions we use are RPL: blah blah blah because blah blah blah
 
 <p align="right"><a href="#toc">To top</a></p>
 
