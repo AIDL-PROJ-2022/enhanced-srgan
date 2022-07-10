@@ -186,9 +186,50 @@ perceptual_loss/layer_weights/conv5_4 | 1.0 |
 perceptual_loss/normalize_input | true |
 perceptual_loss/normalize_loss | false |
 
-### 7.2 Loss functions <a name="lossfunctions"></a>
+### 7.2 Loss function <a name="lossfunctions"></a>
 
-The loss functions we use are RPL: blah blah blah because blah blah blah
+Whe have 3 kind of loss functions on this model.
+
+**Content loss**: ($L_{content}$) Content loss that evaluate the 1-norm distances beween recovered image G($x_i$) and the ground-truth y. Can be configured to use the L1 (mean absolute error) or L2 (mean square error) function. By default we use L1 function.
+
+**Relativistic adversarial loss**: We use the relativistic GAN which tries to predict the probability that a real image $x_r$ is relatively more realistic than a fake one $x_f$, as shown in Fig.
+<p align="center">
+  <img src="assets/relativistic_gan.png">
+</p>
+where σ is the sigmoid function and C(x) is the non-transformed discriminator output and Exf [·] represents the operation of taking average for all fake data in the mini-batch.
+The discriminator loss is then defined as: 
+<center>
+
+$L_{D}^{Ra} = −E_{x_r} [log(D_{Ra}(x_r , x_f ))] − E_{x_f} [log(1 − D_{Ra}(x_f , x_r ))]$
+</center>
+
+And the adversarial los for generator is in a symmetrical form:
+<center>
+
+$L_{G}^{Ra} = −E_{x_r} [log(1 − D_{Ra}(x_r, x_f ))] − E_{x_f} [log(D_{Ra}(x_f , x_r ))]$
+</center>
+where $x_f = G(xi)$ and $x_i$ stands for the input LR image.
+
+<br /> 
+
+**Perceptual loss** ($L_{percep}$): Type of content loss introduced in the [Perceptual Losses for Real-Time Style Transfer and Super-Resolution](https://arxiv.org/abs/1603.08155v1) super-resolution and style transfer framework. Also known as VGG loss is based on the ReLU activation layers on the pre-treained 19 layer VGG netowrk.
+
+<p align="center">
+  <img src="assets/vgg_loss.png">
+</p>
+
+but with the improve by using VGG features before activation instead of after activation as in SRGAN. It was empirically found hat the adjusted perceptual loss provides sharper edges and more visually pleasing results, as will be shown
+
+<p align="center">
+  <img src="assets/improved_vgg_loss_results.png">
+</p>
+ The blue dots are produced by image interpolation.
+
+<br /> 
+
+The **total loss** ($L_G$) is then calculated by:
+$L_G = L_{percep} + λL_{G}^{Ra} + ηL_{content}$ which 
+λ, η are the coefficients to balance different loss terms
 
 <p align="right"><a href="#toc">To top</a></p>
 
