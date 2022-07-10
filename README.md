@@ -211,6 +211,7 @@ $L_{G}^{Ra} = −E_{x_r} [log(1 − D_{Ra}(x_r, x_f ))] − E_{x_f} [log(D_{Ra}(
 where $x_f = G(xi)$ and $x_i$ stands for the input LR image.
 
 <br /> 
+<br /> 
 
 **Perceptual loss** ($L_{percep}$): Type of content loss introduced in the [Perceptual Losses for Real-Time Style Transfer and Super-Resolution](https://arxiv.org/abs/1603.08155v1) super-resolution and style transfer framework. Also known as VGG loss is based on the ReLU activation layers on the pre-treained 19 layer VGG netowrk.
 
@@ -219,11 +220,6 @@ where $x_f = G(xi)$ and $x_i$ stands for the input LR image.
 </p>
 
 but with the improve by using VGG features before activation instead of after activation as in SRGAN. It was empirically found hat the adjusted perceptual loss provides sharper edges and more visually pleasing results, as will be shown
-
-<p align="center">
-  <img src="assets/improved_vgg_loss_results.png">
-</p>
- The blue dots are produced by image interpolation.
 
 <br /> 
 
