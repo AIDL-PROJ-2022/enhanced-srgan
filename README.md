@@ -223,7 +223,7 @@ where $x_f = G(x_i)$ and $x_i$ stands for the input LR image.
   <img src="assets/vgg_loss.png">
 </p>
 
-but with the improve by using VGG features before activation instead of after activation as in SRGAN. It was empirically found hat the adjusted perceptual loss provides sharper edges and more visually pleasing results, as will be shown
+but with the improve by using VGG features before activation instead of after activation as in SRGAN. It was empirically found hat the adjusted perceptual loss provides sharper edges and more visually pleasing results.
 
 <br /> 
 
