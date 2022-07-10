@@ -186,7 +186,9 @@ perceptual_loss/layer_weights/conv5_4 | 1.0 |
 perceptual_loss/normalize_input | true |
 perceptual_loss/normalize_loss | false |
 
-### 7.2 Loss function <a name="lossfunctions"></a>
+<p align="right"><a href="#toc">To top</a></p>
+
+### 7.2 Loss functions <a name="lossfunctions"></a>
 
 Whe have 3 kind of loss functions on this model.
 
