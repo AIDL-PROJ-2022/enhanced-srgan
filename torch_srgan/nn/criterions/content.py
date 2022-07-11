@@ -1,3 +1,10 @@
+"""
+Pixel-wise content loss implementation.
+"""
+
+__author__ = "Marc Bermejo"
+
+
 import torch
 
 from torch.nn import functional as F
@@ -14,6 +21,7 @@ class ContentLoss(_Loss):
     Raises:
         NotImplementedError: `loss_f` must be one of: ``'l1'``, ``'l2'``, or ``'mse'``, raise error otherwise.
     """
+
     def __init__(self, loss_f: str = "l1"):
         super(ContentLoss, self).__init__()
 

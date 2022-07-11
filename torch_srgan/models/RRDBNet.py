@@ -1,9 +1,16 @@
+"""
+Residual-on-residual dense block generator network model.
+"""
+
+__author__ = "Marc Bermejo"
+
+
 import collections
 import torch.nn as nn
 
 from typing import List, Tuple
 
-from ..nn.modules import Conv2d, LeakyReLU, ResidualInResidualDenseBlock, SubPixelConv, InterpUpscale
+from ..nn.modules import Conv2dK3, LeakyReLUSlopeDot2, ResidualInResidualDenseBlock, SubPixelConv, InterpUpscale
 
 
 class RRDBNet(nn.Module):
@@ -26,8 +33,8 @@ class RRDBNet(nn.Module):
 
     .. _`ESRGAN: Enhanced Super-Resolution Generative Adversarial Networks`:
         https://arxiv.org/pdf/1809.00219.pdf
-
     """
+
     def __init__(self, img_channels: int = 3, scale_factor: int = 2, rrdb_channels: int = 64,
                  growth_channels: int = 32, num_basic_blocks: int = 23, num_dense_blocks: int = 3,
                  num_residual_blocks: int = 5, residual_scaling: float = 0.2, use_subpixel_conv: bool = False):
@@ -38,7 +45,7 @@ class RRDBNet(nn.Module):
             raise ValueError(f'scale {scale_factor} is not supported. Supported scale is: 2^n.')
 
         # First convolutional layer. This layer creates needed channels for RRDB blocks.
-        self.in_conv = Conv2d(img_channels, rrdb_channels)
+        self.in_conv = Conv2dK3(img_channels, rrdb_channels)
 
         rrdb_blocks_list: List[Tuple[str, nn.Module]] = []
         # Define Residual-in-Residual Dense blocks
@@ -49,7 +56,7 @@ class RRDBNet(nn.Module):
             )
             rrdb_blocks_list.append((f"rrdb_{i}", rrdb_block))
         # Define Residual-in-Residual Dense blocks output convolution
-        rrdb_blocks_list.append((f"out_conv", Conv2d(rrdb_channels, rrdb_channels)))
+        rrdb_blocks_list.append((f"out_conv", Conv2dK3(rrdb_channels, rrdb_channels)))
         # Convert RRDB blocks list to a PyTorch sequence
         self.rrdb_blocks = nn.Sequential(collections.OrderedDict(rrdb_blocks_list))
 
@@ -63,9 +70,9 @@ class RRDBNet(nn.Module):
             upsampling_blocks_list.append((f"upsampling_{i}", upsampling_block))
         # Define upsampling last convolution block
         last_conv = nn.Sequential(
-            Conv2d(rrdb_channels, rrdb_channels),
-            LeakyReLU(),
-            Conv2d(rrdb_channels, img_channels),
+            Conv2dK3(rrdb_channels, rrdb_channels),
+            LeakyReLUSlopeDot2(),
+            Conv2dK3(rrdb_channels, img_channels),
         )
         upsampling_blocks_list.append(("out_conv", last_conv))
         # Convert upsampling blocks list to a PyTorch sequence

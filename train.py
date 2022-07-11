@@ -6,6 +6,7 @@ import argparse
 import contextlib
 import json
 import os
+import pathlib
 import time
 import albumentations as A
 import torch
@@ -591,25 +592,31 @@ if __name__ == '__main__':
     # Read arguments
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--config-json", help="JSON training configuration hyper-parameters", type=str,
-        default="configs/esrgan_default.json"
-    )
-    parser.add_argument("--load-model-path", help="Load model path", type=str)
-    parser.add_argument("--autocast", help="Use PyTorch autocast when running on cuda", action='store_true')
-    parser.add_argument("--checkpoint-interval", help="Define checkpoint store frequency", type=int, default=1)
-    parser.add_argument(
-        "--best-checkpoint-warmup", help="Define a warm-up period until best checkpoint is stored", type=int, default=0
+        "-l", "--load-checkpoint", help="Path to the training checkpoint used as the start point", type=pathlib.Path
     )
     parser.add_argument(
-        "--store-model-interval",
+        "-a", "--autocast", help="Use PyTorch autocast when running on cuda", action='store_true'
+    )
+    parser.add_argument(
+        "-i", "--checkpoint-interval", help="Define checkpoint store frequency", type=int, default=1
+    )
+    parser.add_argument(
+        "-w", "--best-checkpoint-warmup", help="Define a warm-up period until best checkpoint is stored",
+        type=int, default=0
+    )
+    parser.add_argument(
+        "-s", "--store-model-interval",
         help="Define model store frequency. If not specified, model won't be stored during training.",
         type=int, default=None
+    )
+    parser.add_argument(
+        "config_file", help="JSON training configuration hyper-parameters", type=argparse.FileType('r')
     )
     args = parser.parse_args()
 
     # Read config file
-    with open(args.config_json, "r") as f:
-        hparams = json.load(f)
+    hparams = json.load(args.config_file)
+    args.config_file.close()
 
     def debugger_is_active() -> bool:
         import sys
@@ -637,6 +644,23 @@ if __name__ == '__main__':
     checkpoint_interval: int = args.checkpoint_interval
     best_checkpoint_warmup: int = args.best_checkpoint_warmup
     store_model_interval: Optional[int] = args.store_model_interval
+
+    model_pretraining = None
+    model_training = None
+
+    # Load training checkpoint (if requested by user)
+    if args.load_checkpoint:
+        if not os.path.exists(args.load_checkpoint):
+            assert False, f'Checkpoint model path "{args.load_checkpoint} doesn\'t exists"'
+        _checkpoint = torch.load(args.load_checkpoint)
+        if 'model_state_dict' in _checkpoint:
+            # Pretraining
+            model_pretraining = _checkpoint
+        elif 'g_model_state_dict' in _checkpoint:
+            # Training
+            model_training = _checkpoint
+        else:
+            assert False, f'Model file {args.load_checkpoint} format is not recognized'
 
     # Create saved models directory if not exist
     os.makedirs("saved_models", exist_ok=True)
@@ -709,22 +733,6 @@ if __name__ == '__main__':
     ####################################
     # Pre-training stage (PSNR driven) #
     ####################################
-
-    model_pretraining = None
-    model_training = None
-
-    if args.load_model_path:
-        if not os.path.exists(args.load_model_path):
-            assert False, f'Checkpoint model path "{args.load_model_path} doesn\'t exists"'
-        _checkpoint = torch.load(args.load_model_path)
-        if 'model_state_dict' in _checkpoint:
-            # Pretraining
-            model_pretraining = _checkpoint
-        elif 'g_model_state_dict' in _checkpoint:
-            # Training
-            model_training = _checkpoint
-        else:
-            assert False, f'Model file {args.load_model_path} format is not recognized'
 
     # Execute supervised pre-training stage
     if model_training is None:

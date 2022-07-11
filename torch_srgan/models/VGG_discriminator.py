@@ -1,15 +1,31 @@
+"""
+VGG-Style discriminator network for image classification.
+"""
+
+__author__ = "Marc Bermejo"
+
+
 import collections
 import torch.nn as nn
 
 from typing import List, Tuple
 
-from ..nn.modules import Conv2d, LeakyReLU
+from ..nn.modules import Conv2dK3, LeakyReLUSlopeDot2
 
 
 class VGGStyleDiscriminator(nn.Module):
     """
+    VGG-Style discriminator for image classification.
+    Used for training ESRGAN network architecture.
 
+    Args:
+        img_channels: Number of channels in the input image.
+        vgg_blk_ch: Tuple containing the output channels of each convolution of the network.
+            If two consecutive convolutions have the same output channels,
+            a stride of two will be applied to reduce feature map dimensions.
+        fc_features: Fully connected hidden layers output dimension.
     """
+
     def __init__(self, img_channels: int = 3, vgg_blk_ch: Tuple[int] = (64, 64, 128, 128, 256, 256, 512, 512),
                  fc_features: Tuple[int] = (1024, )):
         super(VGGStyleDiscriminator, self).__init__()
@@ -19,8 +35,8 @@ class VGGStyleDiscriminator(nn.Module):
 
         # Set the discriminator input convolution block and append it to blocks list
         first_conv = collections.OrderedDict([
-            ("conv", Conv2d(img_channels, vgg_blk_ch[0], stride=1, bias=True)),
-            ("act", LeakyReLU()),
+            ("conv", Conv2dK3(img_channels, vgg_blk_ch[0], stride=1, bias=True)),
+            ("act", LeakyReLUSlopeDot2()),
         ])
         cnn_blocks.append((f"block_0", nn.Sequential(first_conv)))
 
@@ -33,9 +49,9 @@ class VGGStyleDiscriminator(nn.Module):
             stride = 2 if in_ch == out_ch else 1
             # Create convolutional block
             block_list = collections.OrderedDict([
-                ("conv", Conv2d(in_ch, out_ch, stride=stride, bias=False)),
+                ("conv", Conv2dK3(in_ch, out_ch, stride=stride, bias=False)),
                 ("bn", nn.BatchNorm2d(out_ch)),
-                ("act", LeakyReLU()),
+                ("act", LeakyReLUSlopeDot2()),
             ])
             block = nn.Sequential(collections.OrderedDict(block_list))
             cnn_blocks.append((f"block_{i}", block))
@@ -58,7 +74,7 @@ class VGGStyleDiscriminator(nn.Module):
             # Create fully connected block
             block_list = collections.OrderedDict([
                 ("linear", nn.Linear(fc_in_feat, fc_out_feat)),
-                ("act", LeakyReLU()),
+                ("act", LeakyReLUSlopeDot2()),
             ])
             block = nn.Sequential(collections.OrderedDict(block_list))
             fc_blocks.append((f"block_{i}", block))

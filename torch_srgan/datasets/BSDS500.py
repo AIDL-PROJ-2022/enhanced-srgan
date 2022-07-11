@@ -3,9 +3,7 @@ BSDS500 dataset class implementation.
 """
 
 __author__ = "Marc Bermejo"
-__license__ = "MIT"
-__version__ = "0.1.0"
-__status__ = "Development"
+
 
 import os
 import albumentations as A
@@ -21,8 +19,18 @@ class BSDS500(ImagePairDataset):
     BSDS500 image dataset class.
 
     Args:
-        TODO
+        target: Dataset split target. Allowed values are: ``'train'``, ``'test'``, ``'val'``
+        scale_factor: Scale factor relation between the low resolution and the high resolution images.
+        patch_size: High-resolution image crop size. Needs to be a tuple of (H, W).
+            If set to None, any crop transform will be applied.
+        base_dir: Base directory where datasets are stored.
+        transforms: List of user-defined transformations to be applied to the dataset images.
+        download: Flag to indicate if the dataset needs to be downloaded or not.
+
+    Raises:
+        ValueError: `target` must be one of: ``'train'``, ``'test'``, ``'val'``, raise error if not.
     """
+
     dataset_url = "https://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/BSR/BSR_bsds500.tgz"
     dataset_md5sum = "0b17383ff0b21fe43d2f28e624203169"
 

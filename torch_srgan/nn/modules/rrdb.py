@@ -1,10 +1,17 @@
+"""
+Residual-in-residual dense block module.
+"""
+
+__author__ = "Marc Bermejo"
+
+
 import collections
 import torch.nn as nn
 import torch
 
 from typing import List, Tuple
 
-from .misc import Conv2d, LeakyReLU
+from .misc import Conv2dK3, LeakyReLUSlopeDot2
 
 
 class ResidualDenseBlock(nn.Module):
@@ -12,8 +19,7 @@ class ResidualDenseBlock(nn.Module):
     Basic block of :py:class:`ResidualInResidualDenseBlock`.
 
     Args:
-        num_features: :math:`C` from an expected input of size
-            :math:`(N, C, H, W)`.
+        num_features: :math:`C` from an expected input of size :math:`(N, C, H, W)`.
         growth_channels: Number of channels in the latent space.
         num_blocks: Number of convolutional blocks to use to form dense block.
         residual_scaling: Residual connections scaling factor.
@@ -31,8 +37,8 @@ class ResidualDenseBlock(nn.Module):
         for i in range(num_blocks - 1):
             # Define the convolutional block
             block = collections.OrderedDict([
-                ("conv", Conv2d(in_channels, growth_channels)),
-                ("act",  LeakyReLU()),
+                ("conv", Conv2dK3(in_channels, growth_channels)),
+                ("act", LeakyReLUSlopeDot2()),
             ])
             # Append it to the blocks array
             blocks.append(nn.Sequential(block))
@@ -43,7 +49,7 @@ class ResidualDenseBlock(nn.Module):
 
         # Define the last convolutional block. This block don't need an activation function.
         block = collections.OrderedDict([
-            ("conv", Conv2d(in_channels, num_features)),
+            ("conv", Conv2dK3(in_channels, num_features)),
         ])
         # Append it to the blocks array
         blocks.append(nn.Sequential(block))
@@ -86,8 +92,7 @@ class ResidualInResidualDenseBlock(nn.Module):
     Look at the paper: `ESRGAN: Enhanced Super-Resolution Generative Adversarial Networks`_ for more details.
 
     Args:
-        num_features: :math:`C` from an expected input of size
-            :math:`(N, C, H, W)`.
+        num_features: :math:`C` from an expected input of size :math:`(N, C, H, W)`.
         growth_channels: Number of channels in the latent space.
         num_dense_blocks: Number of dense blocks to use to form `RRDB` block.
         residual_scaling: Residual connections scaling factor.

@@ -1,13 +1,20 @@
+"""
+Interpolation up-scaling module.
+"""
+
+__author__ = "Marc Bermejo"
+
+
 import collections
 import torch
 from torch import nn
 
-from .misc import Conv2d, LeakyReLU
+from .misc import Conv2dK3, LeakyReLUSlopeDot2
 
 
 class InterpUpscale(nn.Module):
     """
-    Upsamples a given multi-channel 1D (temporal), 2D (spatial) or 3D (volumetric) data.
+    Up-samples a given multi-channel 1D (temporal), 2D (spatial) or 3D (volumetric) data.
 
     The input data is assumed to be of the form
     `minibatch x channels x [optional depth] x [optional height] x width`.
@@ -34,9 +41,8 @@ class InterpUpscale(nn.Module):
     Args:
         num_features: Number of channels in the input tensor.
         scale_factor: Factor to increase spatial resolution by.
-        upsample_mode (str, optional): the upsampling algorithm: one of ``'nearest'``,
+        upsample_mode: the upsampling algorithm: one of ``'nearest'``,
             ``'linear'``, ``'bilinear'``, ``'bicubic'`` and ``'trilinear'``.
-            Default: ``'nearest'``
     """
 
     def __init__(self, num_features: int, scale_factor: int = 2, upsample_mode: str = 'nearest'):
@@ -45,8 +51,8 @@ class InterpUpscale(nn.Module):
         # Define upscaling block
         self.block = nn.Sequential(collections.OrderedDict([
             ("interp", nn.Upsample(scale_factor=scale_factor, mode=upsample_mode)),
-            ("conv", Conv2d(num_features, num_features)),
-            ("act", LeakyReLU()),
+            ("conv", Conv2dK3(num_features, num_features)),
+            ("act", LeakyReLUSlopeDot2()),
         ]))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

@@ -4,15 +4,17 @@ ESRGAN Network test script.
 
 import argparse
 import os
+import pathlib
+import matplotlib.figure
 import numpy as np
 import torch
 import piq
 import matplotlib.pyplot as plt
 
-from torch.utils.data import DataLoader
-from torchvision.utils import make_grid
+from torch.utils.data import DataLoader, ConcatDataset
 from torch.nn import functional as F
 from tqdm import tqdm
+from typing import List, Tuple
 
 import torch_srgan.datasets as datasets
 from torch_srgan.models.RRDBNet import RRDBNet
@@ -66,20 +68,22 @@ def tensor_to_image(out_image: torch.Tensor) -> np.array:
     return out_image
 
 
-def validate_model(image_plot_interval: int = 50):
+def validate_model(best_plots_to_show: int = 0, out_dir: str = None):
     print()
     print(">>> Executing model testing")
     print()
     print("-" * 64)
     print()
 
+    # Enable plot auto-layout
     plt.rcParams["figure.autolayout"] = True
+    # Acquire default dots per inch value of matplotlib
+    dpi = matplotlib.rcParams['figure.dpi']
+    # Define margin in pixels
+    margin = 50
 
-    plot_cols = 2
-    plot_rows = int((len(bsds500_test_dataset) / image_plot_interval) / plot_cols)
-
-    # Create plot figure
-    _, plot_axs = plt.subplots(nrows=plot_rows, ncols=plot_cols)
+    # Initialize an array containing the plot and the PSNR value
+    result_figues: List[Tuple[float, matplotlib.figure.Figure]] = []
 
     # Iterate over test images. Batch size is configured to 1, so only one image will be processed each time
     for i, (lr_image, hr_image) in enumerate(tqdm(test_dataloader, desc="[VALIDATION]")):
@@ -94,39 +98,60 @@ def validate_model(image_plot_interval: int = 50):
             out_image = torch.clamp(out_image, min=0, max=1)
 
             # Measure pixel-wise content loss against ground truth image (Pixel-wise loss)
-            c_loss = content_loss(out_image, hr_image)
-            content_loss_metric.update(c_loss.item())
+            c_loss = content_loss(out_image, hr_image).item()
+            content_loss_metric.update(c_loss)
 
             # Measure perceptual loss against ground truth image (VGG-based loss)
-            p_loss = perceptual_loss(out_image, hr_image)
-            perceptual_loss_metric.update(p_loss.item())
+            p_loss = perceptual_loss(out_image, hr_image).item()
+            perceptual_loss_metric.update(p_loss)
 
             # Measure PSNR metric against ground truth image
-            psnr = piq.psnr(hr_image, out_image, data_range=1.0, reduction="mean", convert_to_greyscale=False)
-            psnr_metric.update(psnr.item())
+            psnr = piq.psnr(hr_image, out_image, data_range=1.0, reduction="mean", convert_to_greyscale=False).item()
+            psnr_metric.update(psnr)
 
             # Measure SSIM metric against ground truth image
-            ssim, _ = piq.ssim(
-                hr_image, out_image, kernel_size=11, kernel_sigma=1.5, k1=0.01, k2=0.03,
-                data_range=1.0, reduction="mean", full=True
-            )
-            ssim_metric.update(ssim.item())
+            ssim, _ = piq.ssim(hr_image, out_image, data_range=1.0, reduction="mean", full=True)
+            ssim = ssim.item()
+            ssim_metric.update(ssim)
 
-        # Add image to plot
-        if i % image_plot_interval == 0:
-            # Upscale LR image
-            lr_image = F.interpolate(lr_image, scale_factor=hparams["scale_factor"], mode='nearest-exact')
-            # Create a grid with the three images
-            grid_img = make_grid([lr_image.squeeze(), out_image.squeeze(), hr_image.squeeze()])
-            # Convert it to a numpy array
-            grid_img_np = tensor_to_image(grid_img)
-            # Add it to the plot
-            plot_i = int(i / image_plot_interval)
-            row = int(plot_i / plot_cols)
-            col = int(plot_i % plot_cols)
-            plot_axs[row, col].axis('off')
-            plot_axs[row, col].set_title("LR / GEN / GT")
-            plot_axs[row, col].imshow(grid_img_np)
+        # Create image result plot
+        # Upscale LR image
+        lr_image = F.interpolate(lr_image, scale_factor=hparams["scale_factor"], mode='nearest-exact')
+        # Define an array containing the images with its title
+        images = [
+            ("Low Resolution", tensor_to_image(lr_image)),
+            ("Super Resolved", tensor_to_image(out_image)),
+            ("Ground Truth", tensor_to_image(hr_image))
+        ]
+        # Retrieve the image height and width
+        height, width, _ = images[0][1].shape
+        # Define figure size and left and bottom margins
+        figsize_w = 3 * ((width + 2 * margin) / dpi)
+        figsize_h = (height + 2 * margin) / dpi
+        # Axes ratio
+        left = margin / dpi / figsize_w
+        bottom = margin / dpi / figsize_h
+        # Add extra space for metrics text
+        figsize_h += (2 * margin) / dpi
+        # Create a new plot figure
+        fig = plt.figure(figsize=(figsize_w, figsize_h))
+        # Adjust figure subplots positions
+        fig.subplots_adjust(left=left, bottom=bottom, right=(1. - left), top=(1. - bottom))
+        # Add it to the plot
+        for j, (title, img) in enumerate(images, start=1):
+            ax = fig.add_subplot(1, 3, j)
+            ax.imshow(img)
+            ax.set_title(title, fontdict=dict(fontsize=16, fontweight='bold'))
+        # Add metrics to the plot
+        fig.text(
+            0.5, 0.01, f"PSNR: {round(psnr, 2)}db / SSIM: {round(ssim, 2)}",
+            ha='center', va='bottom', fontsize=16, fontweight='bold'
+        )
+        # Append figure to result figures array
+        result_figues.append((psnr, fig))
+        # If user specified an output directory, store the result plot there
+        if out_dir is not None:
+            fig.savefig(os.path.join(out_dir, f'{i:05d}.png'), bbox_inches='tight')
 
     # Log metrics
     print(
@@ -136,10 +161,15 @@ def validate_model(image_plot_interval: int = 50):
         f"  - {str(psnr_metric)}\r\n"
         f"  - {str(ssim_metric)}\r\n"
     )
-    print()
     print("-" * 64)
 
-    # Show images
+    # Sort all results from its PSNR value
+    result_figues.sort(key=lambda x: x[0])
+    # Hide all plots with bad results
+    for _, fig in result_figues[best_plots_to_show:]:
+        plt.close(fig)
+
+    # Show all plots
     plt.show()
 
 
@@ -153,6 +183,21 @@ def debugger_is_active() -> bool:
 if __name__ == '__main__':
     # Read arguments
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-d", "--datasets",
+        help="Datasets to use to test the specified model. "
+             "Datasets need to be specified sepparated by a coma. Example: --datasets=set5,set14. "
+             "Available values are: 'div2k', 'bsds500', 'set5', and 'set14'",
+        type=str
+    )
+    parser.add_argument(
+        "-s", "--show-results", help="Show N best PSNR of all tested images",
+        type=int, default=0
+    )
+    parser.add_argument(
+        "-o", "--out-dir", help="Specify output directory where all results will be stored",
+        type=pathlib.Path, default=None
+    )
     parser.add_argument("model_path", help="ESRGAN model path to test", type=str)
     args = parser.parse_args()
 
@@ -194,13 +239,33 @@ if __name__ == '__main__':
     psnr_metric = AverageMeter("PSNR", ":.4f")
     ssim_metric = AverageMeter("SSIM", ":.4f")
 
-    # Define datasets to use:
-    # BSDS500
-    bsds500_test_dataset = datasets.BSDS500(target='test', scale_factor=hparams["scale_factor"], patch_size=None)
+    test_datasets = []
+    # Define datasets to use
+    for dataset_name in args.datasets.split(","):
+        # Define dataset object from its name
+        if dataset_name == "bsds500":
+            dataset = datasets.BSDS500(target='test', scale_factor=hparams["scale_factor"], patch_size=None)
+        elif dataset_name == "div2k":
+            dataset = datasets.DIV2K(target='test', scale_factor=hparams["scale_factor"], patch_size=(512, 512))
+        elif dataset_name == "set5":
+            dataset = datasets.Set5(scale_factor=hparams["scale_factor"])
+        elif dataset_name == "set14":
+            dataset = datasets.Set14(scale_factor=hparams["scale_factor"])
+        else:
+            raise ValueError(f"Unrecognized dataset name: {dataset_name}")
+        # Append dataset to the test datasets array
+        test_datasets.append(dataset)
+
+    # Define a concatenated dataset containing all images from specified datasets
+    test_dataset = ConcatDataset(test_datasets)
 
     # Define data loader
     test_dataloader = DataLoader(
-        bsds500_test_dataset, batch_size=1, num_workers=os.cpu_count() - 1, shuffle=False, pin_memory=True
+        test_dataset, batch_size=1, num_workers=os.cpu_count() - 1, shuffle=False, pin_memory=True
     )
 
-    validate_model()
+    # Make sure that output directory is created
+    if args.out_dir:
+        os.makedirs(args.out_dir, exist_ok=True)
+
+    validate_model(args.show_results, args.out_dir)

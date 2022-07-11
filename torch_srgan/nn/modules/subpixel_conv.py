@@ -1,8 +1,12 @@
+"""
+Subpixel convolution up-scaling module.
+"""
+
 import collections
 import torch
 from torch import nn
 
-from .misc import Conv2d, LeakyReLU
+from .misc import Conv2dK3, LeakyReLUSlopeDot2
 
 
 class SubPixelConv(nn.Module):
@@ -21,7 +25,6 @@ class SubPixelConv(nn.Module):
     .. _`Real-Time Single Image and Video Super-Resolution Using an Efficient
         Sub-Pixel Convolutional Neural Network`:
         https://arxiv.org/pdf/1609.05158.pdf
-
     """
 
     def __init__(self, num_features: int, scale_factor: int = 2):
@@ -33,9 +36,9 @@ class SubPixelConv(nn.Module):
 
         # Define upscaling block
         self.block = nn.Sequential(collections.OrderedDict([
-            ("conv", Conv2d(num_features, num_features * 4)),
+            ("conv", Conv2dK3(num_features, num_features * 4)),
             ("px_shuffle", nn.PixelShuffle(upscale_factor=scale_factor)),
-            ("act", LeakyReLU()),
+            ("act", LeakyReLUSlopeDot2()),
         ]))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

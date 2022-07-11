@@ -74,7 +74,7 @@ if __name__ == '__main__':
 
     # Make sure that output directory is created
     if args.out_dir:
-        os.makedirs(args.out_dir, exist_ok=False)
+        os.makedirs(args.out_dir, exist_ok=True)
 
     # Iterate over all given images
     for image_f in image_files:

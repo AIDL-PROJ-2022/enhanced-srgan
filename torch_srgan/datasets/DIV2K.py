@@ -3,26 +3,37 @@ DIV2K dataset class implementation.
 """
 
 __author__ = "Marc Bermejo"
-__license__ = "MIT"
-__version__ = "0.1.0"
-__status__ = "Development"
+
 
 import albumentations as A
 
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 from ..utils.datasets import download_and_extract_archive
 from .base_class import ImagePairDataset
 
 
 class DIV2K(ImagePairDataset):
-    """`DIV2K <https://data.vision.ee.ethz.ch/cvl/DIV2K>`_ Dataset.
+    """
+    `DIV2K <https://data.vision.ee.ethz.ch/cvl/DIV2K>`_ Dataset.
 
     Args:
-        TODO
+        target: Dataset split target. Allowed values are: ``'train'``, ``'test'``, ``'val'``
+        scale_factor: Scale factor relation between the low resolution and the high resolution images.
+        patch_size: High-resolution image crop size. Needs to be a tuple of (H, W).
+            If set to None, any crop transform will be applied.
+        bicubic_downscale: Flag to indicate if we want to use the bicubic or unknown interpolation
+            algorithm for image downscaling.
+        base_dir: Base directory where datasets are stored.
+        transforms: List of user-defined transformations to be applied to the dataset images.
+        download: Flag to indicate if the dataset needs to be downloaded or not.
+
+    Raises:
+        ValueError: `target` must be one of: ``'train'``, ``'test'``, ``'val'``, raise error if not.
+        ValueError: `scale_factor` must be one of: `2`, `3`, `4`, `8`, raise error if not.
     """
 
-    base_url = "http://data.vision.ee.ethz.ch/cvl/DIV2K/"
+    base_url = "https://data.vision.ee.ethz.ch/cvl/DIV2K/"
     resources = {
         "DIV2K_train_LR_bicubic_X2.zip": "9a637d2ef4db0d0a81182be37fb00692",
         "DIV2K_train_LR_unknown_X2.zip": "1396d023072c9aaeb999c28b81315233",
@@ -48,7 +59,7 @@ class DIV2K(ImagePairDataset):
         "DIV2K_valid_HR.zip": "9fcdda83005c5e5997799b69f955ff88",
     }
 
-    def __init__(self, target: str, scale_factor: int = 2, patch_size: Tuple[int, int] = (128, 128),
+    def __init__(self, target: str, scale_factor: int = 2, patch_size: Optional[Tuple[int, int]] = (128, 128),
                  bicubic_downscale: bool = True, base_dir: str = "data", transforms: List[A.BasicTransform] = None,
                  download: bool = True):
 

@@ -1,12 +1,18 @@
-import torch
-from torch import nn
-from torch.nn.functional import l1_loss, mse_loss
-from torch.nn.modules.loss import _Loss
+"""
+VGG perceptual loss implementation.
+"""
 
-from torchvision.models import vgg
+__author__ = "Marc Bermejo"
+
+import torch
 
 from collections import OrderedDict
 from typing import Dict, Tuple
+
+from torch import nn
+from torch.nn.functional import l1_loss, mse_loss
+from torch.nn.modules.loss import _Loss
+from torchvision.models import vgg
 
 
 _VGG_LAYER_NAMES = {
@@ -46,10 +52,10 @@ def _insert_bn_layers(layer_names: Tuple[str]) -> Tuple[str]:
     Insert bn layer after each conv.
 
     Args:
-        layer_names (list): The list of layer names.
+        layer_names: The list of layer names.
 
     Returns:
-        list: The list of layer names with bn layers.
+        The list of layer names with bn layers.
     """
     names_bn = []
 
@@ -64,24 +70,20 @@ def _insert_bn_layers(layer_names: Tuple[str]) -> Tuple[str]:
 
 class PerceptualLoss(_Loss):
     """
-    The Perceptual Loss.
-
-    Calculates loss between features of `model` (VGG19 is used)
-    for input (produced by generator) and target (real) images.
+    VGG perceptual loss.
+    Calculates loss between features of `model` using a pre-trained VGG network
+    for generated and ground-truth images.
 
     Args:
-        layer_weights (dict): The weight for each layer of the VGG network.
-            Here is an example: {'conv5_4': 1.}, which means the conv5_4 feature layer (before relu5_4) will be
-            used to calculate the loss with a weight of 1.0.
-        vgg_type (str): The type of VGG network used as feature extractor.
-            Default: 'vgg19'.
+        layer_weights: The weight for each layer of the VGG network.
+            Here is an example: {'conv5_4': 1.}, which means the conv5_4 feature layer
+            (before relu5_4) will be used to calculate the loss with a weight of 1.0.
+        vgg_type: The type of VGG network used as feature extractor.
         criterion: Loss function to compute distance between features.
-            Default: 'l1'.
         normalize_input: If True, normalize the input image before doing inference though the VGG network.
             The mean and standard deviation values are calculated for an image in the range [0, 1].
-            Default: True.
         normalize_loss: Divide the total perceptual loss by the number of used layers.
-            Default: False.
+
     Raises:
         ValueError: `vgg_type` must be one of: ``'vgg11'``, ``'vgg13'``, ``'vgg16'``, ``'vgg19'``, raise error if not.
         ValueError: `layer_weights` keys must be defined as a layer of given VGG network type.
@@ -155,7 +157,7 @@ class PerceptualLoss(_Loss):
         Extract feature maps from the input image tensor for each requested VGG layer.
 
         Args:
-            x (Tensor): Input tensor with shape (n, c, h, w).
+            x: Input tensor with shape (n, c, h, w).
 
         Returns:
             Dict of layers and its feature maps.
