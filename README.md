@@ -252,7 +252,7 @@ First, before any step, we make **Image data augmentation** doing:
     * Compresion with 0.25 probability
     * Coarse Dropout with 0.25 probability
 
-### 8.1 Pre-train step <a name="pre_training_step"></a>
+### 8.1 Pre-training step <a name="pre_training_step"></a>
 * Only used the [Content loss](#content_loss) function for this step
 * Only works with generator (no discriminator used)
 * Adam optimizer with learning rate $2e^{-4}$ by default
