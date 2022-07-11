@@ -354,7 +354,7 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
   <img src="assets/graphs/validation_GAN-based_perceptual-loss.png">
 </p>
 
-### 9.2 Metrics <a name="images"></a>
+### 9.2 Images <a name="images"></a>
 
 <p align="right"><a href="#toc">To top</a></p>
 
