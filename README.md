@@ -256,7 +256,7 @@ First, before any step, we make **Image data augmentation** doing:
 * Only works with generator (no discriminator used)
 * Adam optimizer with learning rate $2e^{-4}$ by default
 * Scheduler lr_scheduler.StepLR with step 175000 by default
-* metrics logged:
+* Metrics logged:
   * for pretrain: content_loss
   * for validation: content_loss, perceptual_loss, PSNR, SSIM
 
@@ -266,12 +266,11 @@ In this step we train with generator and discriminator. For every mini batch we 
   * The [total loss](#total_loss) ($L_G = L_{percep} + λL_{G}^{Ra} + ηL_{content}$) function is used for this step, which use [perceptual loss](#perceptual_loss), [Relativistic adversarial loss](#adversarial_loss) and [Content loss](#content_loss) with coeficients
   * Adam optimizer with learning rate $1^{e-4}$ by default and betas=(0.9, 0.99)
   * Scheduler lr_scheduler.MultiStepLR with steps [50000, 100000, 175000, 250000]
-
 * Discriminator:
   * The total loss is $L_G = L_{D}^{Ra}$ which is [Relativistic adversarial loss](#adversarial_loss) for discriminator
   * Adam optimizer with learning rate $1^{e-4}$ by default and betas=(0.9, 0.99)
   * Scheduler lr_scheduler.MultiStepLR with steps [50000, 100000, 175000, 250000]
-* metrics logged:
+* Metrics logged:
   * for training: content_loss, perceptual_loss,g_adversarial_loss,g_total_loss,d_adversarial_loss
   * for validation: content_loss, perceptual_loss, PSNR, SSIM
   
