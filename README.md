@@ -376,7 +376,7 @@ p192_cr_23_rrdb_div2k | [ESRGAN-interp.pth](https://drive.google.com/file/d/1Z3x
 ### 9.4 Comparison metrics <a name="comparison"></a>
 
 <p align="center">
-  <img src="assets/metrics_comparison2.png">
+  <img src="assets/metrics_comparison4.png">
 </p>
 
 <p align="right"><a href="#toc">To top</a></p>
