@@ -373,6 +373,11 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
 | 128_cr_23_rrdb_div2k               | [ESRGAN.pth](https://drive.google.com/file/d/1UL1DMT2KaHTjNNiN53v0qplliM4zHEOS/view?usp=sharing)         | ESRGAN model                             |
 | 128_cr_23_rrdb_div2k               | [ESRGAN-interp.pth](https://drive.google.com/file/d/1Bj4C8j1mjoCFkjZzaY_te4KjMMIMt4WO/view?usp=sharing)  | ESRGAN Interpolated with alpha 0.8 model |
 
+### 9.4 Comparison metrics <a name="comparison"></a>
+
+<p align="center">
+  <img src="assets/metrics_comparison4.png">
+</p>
 
 <p align="right"><a href="#toc">To top</a></p>
 
