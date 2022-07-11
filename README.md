@@ -20,6 +20,7 @@ Enhanced SuperRessolution using a GAN model with a residual-on-residual generato
 1. [Training process](#training)
     1. [Pre-training](#pre_training_step)
     1. [Training](#training_step)
+    1. [Logging](#training_logging)
 1. [Results](#results)
 1. [Conclusions](#conclusions)
 1. [References](#references)
@@ -274,7 +275,7 @@ In this step we train with generator and discriminator. For every mini batch we 
   * for training: content_loss, perceptual_loss,g_adversarial_loss,g_total_loss,d_adversarial_loss
   * for validation: content_loss, perceptual_loss, PSNR, SSIM
   
-### 8.10 Logging <a name="training_logging"></a>
+### 8.3 Logging <a name="training_logging"></a>
 For logging we use [wandb](https://wandb.ai/) with tensorboard [integrated](https://docs.wandb.ai/guides/integrations/tensorboard) because we can work with both system and share all the logging information automatically to everyone and in real time. Besides we upload images with the result of the image and the ground truth to compare the results visually for every N epochs. 
 
 <p align="right"><a href="#toc">To top</a></p>
