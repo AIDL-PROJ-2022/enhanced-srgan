@@ -25,6 +25,7 @@ Enhanced SuperRessolution using a GAN model with a residual-on-residual generato
     1. [Executions](#executions)
     1. [Metrics](#metrics)
     1. [Images](#images)
+    1. [Comparison metrics](#comparison)
 1. [Conclusions](#conclusions)
 1. [References](#references)
 
@@ -354,9 +355,25 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
   <img src="assets/graphs/validation_GAN-based_perceptual-loss.png">
 </p>
 
-### 9.2 Images <a name="images"></a>
+### 9.3 model results <a name="images"></a>
+* [Pre-CR: 128 / CR: 128 / 23 RRDBs / DIV2K]
+  <img src="assets/results/128_cr_23_rrdb_div2k_butterfly.png">
+  <img src="assets/results/128_cr_23_rrdb_div2k_parrot.png">
 
-### 9.3 Torch Models trained <a name="models"></a>
+* [Pre-CR: 192 / CR: 192 / 23 RRDBs / DIV2K]
+  <img src="assets/results/192_cr_23_rrdb_div2k_butterfly.png">
+  <img src="assets/results/192_cr_23_rrdb_div2k_parrot.png">
+
+* [Pre-CR: 192 / CR: 128 / 23 RRDBs / DIV2K+BSDS500]
+  <img src="assets/results/p192_t128_cr_23_rrdb_div2k+bsds500_butterfly.png">
+  <img src="assets/results/p192_t128_cr_23_rrdb_div2k+bsds500_parrot.png">
+  
+* [Pre-CR: 192 / CR: 128 / 16 RRDBs / DIV2K+BSDS500]
+  <img src="assets/results/p192_t128_cr_16_rrdb_div2k+bsds500_butterfly.png">
+  <img src="assets/results/p192_t128_cr_16_rrdb_div2k+bsds500_parrot.png">
+  
+
+### 9.4 Torch Models trained <a name="models"></a>
 
 | Model                              | Download                                                                                                 | Comments                                 |
 |------------------------------------|----------------------------------------------------------------------------------------------------------|------------------------------------------|
@@ -373,7 +390,7 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
 | 128_cr_23_rrdb_div2k               | [ESRGAN.pth](https://drive.google.com/file/d/1UL1DMT2KaHTjNNiN53v0qplliM4zHEOS/view?usp=sharing)         | ESRGAN model                             |
 | 128_cr_23_rrdb_div2k               | [ESRGAN-interp.pth](https://drive.google.com/file/d/1Bj4C8j1mjoCFkjZzaY_te4KjMMIMt4WO/view?usp=sharing)  | ESRGAN Interpolated with alpha 0.8 model |
 
-### 9.4 Comparison metrics <a name="comparison"></a>
+### 9.5 Comparison metrics <a name="comparison"></a>
 
 <p align="center">
   <img src="assets/metrics_comparison4.png">
