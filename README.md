@@ -22,6 +22,9 @@ Enhanced SuperRessolution using a GAN model with a residual-on-residual generato
     1. [Training](#training_step)
     1. [Logging](#training_logging)
 1. [Results](#results)
+    1. [Executions](#executions)
+    1. [Metrics](#metrics)
+    1. [Images](#images)
 1. [Conclusions](#conclusions)
 1. [References](#references)
 
@@ -279,6 +282,97 @@ For logging we use [wandb](https://wandb.ai/) with tensorboard [integrated](http
 <p align="right"><a href="#toc">To top</a></p>
 
 ## 9. Results <a name="results"></a>
+
+### 9.1 Executions <a name="executions"></a>
+We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) with differents hyperparameters
+
+* ESRGAN (PRE CR: 128 / CR: 128 / 23 RRDBs / DIV2K)
+  * [Wandb information pretraining and training](https://wandb.ai/markbeta/Torch-SR/runs/1cxsyrdf)
+  * Hyperparameters:
+    * pretraining/cr_patch_size: [128, 128]
+    * training/cr_patch_size: [128, 128]
+    * generator/num_basic_blocks: 23
+    * pretraining/train_datasets: ["div2k"]
+    * training/train_datasets: ["div2k"]
+* ESRGAN (PRE CR: 192 / CR: 128 / 23 RRDBs / DIV2K+BSDS500)
+  * Wandb:
+    * [Wandb information pretraining](https://wandb.ai/markbeta/Torch-SR/runs/oi51pjy8)
+    * [Wandb information training](https://wandb.ai/markbeta/Torch-SR/runs/2m360jaa)
+  * Hyperparameters:
+    * pretraining/cr_patch_size: [192, 192]
+    * training/cr_patch_size: [128, 128]
+    * generator/num_basic_blocks: 23
+    * pretraining/train_datasets: ["div2k", "bsds500"]
+    * training/train_datasets: ["div2k", "bsds500"]
+* ESRGAN (PRE CR: 192 / CR: 192 / 23 RRDBs / DIV2K)
+  * Wandb:
+    * [Wandb information pretraining](https://wandb.ai/markbeta/Torch-SR/runs/2gqchdp0)
+    * [Wandb information training](https://wandb.ai/markbeta/Torch-SR/runs/2b8il8oy)
+  * Hyperparameters:
+    * pretraining/cr_patch_size: [192, 192]
+    * training/cr_patch_size: [192, 192]
+    * generator/num_basic_blocks: 23
+    * pretraining/train_datasets: ["div2k"]
+    * training/train_datasets: ["div2k"]
+* ESRGAN (PRE CR: 192 / CR: 192 / 16 RRDBs /  DIV2K+BSDS500)
+  * Hyperparameters:
+    * pretraining/cr_patch_size: [192, 192]
+    * training/cr_patch_size: [128, 128]
+    * generator/num_basic_blocks: 16
+    * pretraining/train_datasets: ["div2k", "bsds500"]
+    * training/train_datasets: ["div2k", "bsds500"]
+
+### 9.2 Metrics <a name="metrics"></a>
+
+#### 9.2.1 Train PSNR-driven content loss
+<p align="center">
+  <img src="assets/graphs/train_PSNR-driven_content-loss.png">
+</p>
+
+#### 9.2.2 Validation PSNR-driven
+<p align="center">
+  <img src="assets/graphs/validation_PSNR-driven_content-loss.png">
+  <img src="assets/graphs/validation_PSNR-driven_PSNR.png">
+  <img src="assets/graphs/validation_PSNR-driven_SSIM.png">
+  <img src="assets/graphs/validation_PSNR-driven_perceptual-loss.png">
+</p>
+
+#### 9.2.3 Train GAN-based
+<p align="center">
+  <img src="assets/graphs/train_GAN-based_content-loss.png">
+  <img src="assets/graphs/train_GAN-based_g-adversarial-loss.png">
+  <img src="assets/graphs/train_GAN-based_d-adversarial-loss.png">
+  <img src="assets/graphs/train_GAN-based_perceptual-loss.png">
+  <img src="assets/graphs/train_GAN-based_g-total-loss.png">
+</p>
+
+#### 9.2.4 Validation GAN-based
+<p align="center">
+  <img src="assets/graphs/validation_GAN-based_content-loss.png">
+  <img src="assets/graphs/validation_GAN-based_SSIM.png">
+  <img src="assets/graphs/validation_GAN-based_PSNR.png">
+  <img src="assets/graphs/validation_GAN-based_perceptual-loss.png">
+</p>
+
+### 9.2 Images <a name="images"></a>
+
+### 9.3 Torch Models trained <a name="models"></a>
+
+Model | Download | Comments
+--------------- | ------ | --------
+p192_t128_cr_23_rrdb_div2k+bsds500 | [PSNR.pth](https://drive.google.com/file/d/1mzCvgD33wvXu__ZRio4i5Jh9bJCSW658/view?usp=sharing) | PSNR model
+p192_t128_cr_23_rrdb_div2k+bsds500 | [ESRGAN.pth](https://drive.google.com/file/d/1Is_CWrG1GB7Gp7mj68V5ashiVBiK9OOw/view?usp=sharing) | ESRGAN model
+p192_t128_cr_23_rrdb_div2k+bsds500 | [ESRGAN-interp.pth](https://drive.google.com/file/d/14PtG4mM0YdeA7cS3nbaMxmcXe2_Fxc3Q/view?usp=sharing) | ESRGAN Interpolated with alpha 0.8 model
+p192_t128_cr_16_rrdb_div2k+bsds500 | [PSNR.pth](https://drive.google.com/file/d/1cyPHrQy7tiuwB5-k1se7PI9sdWw3yrz8/view?usp=sharing) | PSNR model
+p192_t128_cr_16_rrdb_div2k+bsds500 | [ESRGAN.pth](https://drive.google.com/file/d/1cCxkpeeP-USsNbYEDKkRXNdKY1hN8CCJ/view?usp=sharing) | ESRGAN model
+p192_t128_cr_16_rrdb_div2k+bsds500 | [ESRGAN-interp.pth](https://drive.google.com/file/d/1cJgd9c6EmkKo68Dg1tD_PdZBNbQ-rfvM/view?usp=sharing) | ESRGAN Interpolated with alpha 0.8 model
+p192_cr_23_rrdb_div2k | [PSNR.pth](https://drive.google.com/file/d/1o5FwomoEGLIHBIMAVXiIOlEeGQTmPI09/view?usp=sharing) | PSNR model
+p192_cr_23_rrdb_div2k | [ESRGAN.pth](https://drive.google.com/file/d/1zZwGch8f3dIE5OVU1na1pqHRlOj-61xN/view?usp=sharing) | ESRGAN model
+p192_cr_23_rrdb_div2k | [ESRGAN-interp.pth](https://drive.google.com/file/d/1Z3xTC4DimXQlgw2SvvXBorPzfkozCnRa/view?usp=sharing) | ESRGAN Interpolated with alpha 0.8 model
+128_cr_23_rrdb_div2k | [PSNR.pth](https://drive.google.com/file/d/13orzB4WP9uK0OBG52Ht9nsnUAwi73yKX/view?usp=sharing) | PSNR model
+128_cr_23_rrdb_div2k | [ESRGAN.pth](https://drive.google.com/file/d/1UL1DMT2KaHTjNNiN53v0qplliM4zHEOS/view?usp=sharing) | ESRGAN model
+128_cr_23_rrdb_div2k | [ESRGAN-interp.pth](https://drive.google.com/file/d/1Bj4C8j1mjoCFkjZzaY_te4KjMMIMt4WO/view?usp=sharing) | ESRGAN Interpolated with alpha 0.8 model
+
 
 <p align="right"><a href="#toc">To top</a></p>
 
