@@ -356,6 +356,24 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
 
 ### 9.2 Images <a name="images"></a>
 
+### 9.3 Torch Models trained <a name="models"></a>
+
+Model | Download | Comments
+--------------- | ------ | --------
+p192_t128_cr_23_rrdb_div2k+bsds500 | [PSNR.pth](https://drive.google.com/file/d/1mzCvgD33wvXu__ZRio4i5Jh9bJCSW658/view?usp=sharing) | PSNR model
+p192_t128_cr_23_rrdb_div2k+bsds500 | [ESRGAN.pth](https://drive.google.com/file/d/1Is_CWrG1GB7Gp7mj68V5ashiVBiK9OOw/view?usp=sharing) | ESRGAN model
+p192_t128_cr_23_rrdb_div2k+bsds500 | [ESRGAN-interp.pth](https://drive.google.com/file/d/14PtG4mM0YdeA7cS3nbaMxmcXe2_Fxc3Q/view?usp=sharing) | ESRGAN Interpolated with alpha 0.8 model
+p192_t128_cr_16_rrdb_div2k+bsds500 | [PSNR.pth](https://drive.google.com/file/d/1cyPHrQy7tiuwB5-k1se7PI9sdWw3yrz8/view?usp=sharing) | PSNR model
+p192_t128_cr_16_rrdb_div2k+bsds500 | [ESRGAN.pth](https://drive.google.com/file/d/1cCxkpeeP-USsNbYEDKkRXNdKY1hN8CCJ/view?usp=sharing) | ESRGAN model
+p192_t128_cr_16_rrdb_div2k+bsds500 | [ESRGAN-interp.pth](https://drive.google.com/file/d/1cJgd9c6EmkKo68Dg1tD_PdZBNbQ-rfvM/view?usp=sharing) | ESRGAN Interpolated with alpha 0.8 model
+p192_cr_23_rrdb_div2k | [PSNR.pth](https://drive.google.com/file/d/1o5FwomoEGLIHBIMAVXiIOlEeGQTmPI09/view?usp=sharing) | PSNR model
+p192_cr_23_rrdb_div2k | [ESRGAN.pth](https://drive.google.com/file/d/1zZwGch8f3dIE5OVU1na1pqHRlOj-61xN/view?usp=sharing) | ESRGAN model
+p192_cr_23_rrdb_div2k | [ESRGAN-interp.pth](https://drive.google.com/file/d/1Z3xTC4DimXQlgw2SvvXBorPzfkozCnRa/view?usp=sharing) | ESRGAN Interpolated with alpha 0.8 model
+128_cr_23_rrdb_div2k | [PSNR.pth](https://drive.google.com/file/d/13orzB4WP9uK0OBG52Ht9nsnUAwi73yKX/view?usp=sharing) | PSNR model
+128_cr_23_rrdb_div2k | [ESRGAN.pth](https://drive.google.com/file/d/1UL1DMT2KaHTjNNiN53v0qplliM4zHEOS/view?usp=sharing) | ESRGAN model
+128_cr_23_rrdb_div2k | [ESRGAN-interp.pth](https://drive.google.com/file/d/1Bj4C8j1mjoCFkjZzaY_te4KjMMIMt4WO/view?usp=sharing) | ESRGAN Interpolated with alpha 0.8 model
+
+
 <p align="right"><a href="#toc">To top</a></p>
 
 ## 10. Conclusions <a name="conclusions"></a>
