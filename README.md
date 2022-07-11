@@ -22,6 +22,9 @@ Enhanced SuperRessolution using a GAN model with a residual-on-residual generato
     1. [Training](#training_step)
     1. [Logging](#training_logging)
 1. [Results](#results)
+    1. [Executions](#executions)
+    1. [Metrics](#metrics)
+    1. [Images](#images)
 1. [Conclusions](#conclusions)
 1. [References](#references)
 
@@ -279,6 +282,79 @@ For logging we use [wandb](https://wandb.ai/) with tensorboard [integrated](http
 <p align="right"><a href="#toc">To top</a></p>
 
 ## 9. Results <a name="results"></a>
+
+### 9.1 Executions <a name="executions"></a>
+We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) with differents hyperparameters
+
+* ESRGAN (PRE CR: 128 / CR: 128 / 23 RRDBs / DIV2K)
+  * [Wandb information pretraining and training](https://wandb.ai/markbeta/Torch-SR/runs/1cxsyrdf)
+  * Hyperparameters:
+    * pretraining/cr_patch_size: [128, 128]
+    * training/cr_patch_size: [128, 128]
+    * generator/num_basic_blocks: 23
+    * pretraining/train_datasets: ["div2k"]
+    * training/train_datasets: ["div2k"]
+* ESRGAN (PRE CR: 192 / CR: 128 / 23 RRDBs / DIV2K+BSDS500)
+  * Wandb:
+    * [Wandb information pretraining](https://wandb.ai/markbeta/Torch-SR/runs/oi51pjy8)
+    * [Wandb information training](https://wandb.ai/markbeta/Torch-SR/runs/2m360jaa)
+  * Hyperparameters:
+    * pretraining/cr_patch_size: [192, 192]
+    * training/cr_patch_size: [128, 128]
+    * generator/num_basic_blocks: 23
+    * pretraining/train_datasets: ["div2k", "bsds500"]
+    * training/train_datasets: ["div2k", "bsds500"]
+* ESRGAN (PRE CR: 192 / CR: 192 / 23 RRDBs / DIV2K)
+  * Wandb:
+    * [Wandb information pretraining](https://wandb.ai/markbeta/Torch-SR/runs/2gqchdp0)
+    * [Wandb information training](https://wandb.ai/markbeta/Torch-SR/runs/2b8il8oy)
+  * Hyperparameters:
+    * pretraining/cr_patch_size: [192, 192]
+    * training/cr_patch_size: [192, 192]
+    * generator/num_basic_blocks: 23
+    * pretraining/train_datasets: ["div2k"]
+    * training/train_datasets: ["div2k"]
+* ESRGAN (PRE CR: 192 / CR: 192 / 16 RRDBs /  DIV2K+BSDS500)
+  * Hyperparameters:
+    * pretraining/cr_patch_size: [192, 192]
+    * training/cr_patch_size: [128, 128]
+    * generator/num_basic_blocks: 16
+    * pretraining/train_datasets: ["div2k", "bsds500"]
+    * training/train_datasets: ["div2k", "bsds500"]
+
+### 9.2 Metrics <a name="metrics"></a>
+
+* Train PSNR base content loss
+<p align="center">
+  <img src="assets/graphs/train_PSNR-driven_content-loss.png">
+</p>
+
+* Validation PSNR
+<p align="center">
+  <img src="assets/graphs/validation_PSNR-driven_content-loss.png">
+  <img src="assets/graphs/validation_PSNR-driven_PSNR.png">
+  <img src="assets/graphs/validation_PSNR-driven_SSIM.png">
+  <img src="assets/graphs/validation_PSNR-driven_perceptual-loss.png">
+</p>
+
+* Train GAN base
+<p align="center">
+  <img src="assets/graphs/train_GAN-based_content-loss.png">
+  <img src="assets/graphs/train_GAN-based_g-adversarial-loss.png">
+  <img src="assets/graphs/train_GAN-based_d-adversarial-loss.png">
+  <img src="assets/graphs/train_GAN-based_perceptual-loss.png">
+  <img src="assets/graphs/train_GAN-based_g-total-loss.png">
+</p>
+
+* Validation GAN base
+<p align="center">
+  <img src="assets/graphs/validation_GAN-based_content-loss.png">
+  <img src="assets/graphs/validation_GAN-based_SSIM.png">
+  <img src="assets/graphs/validation_GAN-based_PSNR.png">
+  <img src="assets/graphs/validation_GAN-based_perceptual-loss.png">
+</p>
+
+### 9.2 Metrics <a name="images"></a>
 
 <p align="right"><a href="#toc">To top</a></p>
 
