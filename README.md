@@ -18,6 +18,9 @@ Enhanced SuperRessolution using a GAN model with a residual-on-residual generato
     1. [Hyperparameters](#hyperparameters)
     1. [Loss functions](#lossfunctions)
 1. [Training process](#training)
+    1. [Pre-training](#pre_training_step)
+    1. [Training](#training_step)
+    1. [Logging](#training_logging)
 1. [Results](#results)
 1. [Conclusions](#conclusions)
 1. [References](#references)
@@ -130,13 +133,11 @@ In terms of data visualization and logging, both Wandb and Tensorboard have been
 
 RPL: Aqui tambien estaría bien poner capacidad de las maquinas que hemos usado en local, y también las de google cloud ademas de los tiempos que han tardado
 
+
 <p align="center">
-  <img src="assets/wandb.png">
+  <img src="assets/Environment project.png">
 </p>
-<p align="center">
-  <img src="assets/tensorboard.png">
-  <img src="assets/gcloud.png">
-</p>
+
 
 <p align="right"><a href="#toc">To top</a></p>
 
@@ -192,9 +193,9 @@ perceptual_loss/normalize_loss | false |
 
 Whe have 3 kind of loss functions on this model.
 
-**Content loss**: ($L_{content}$) Content loss that evaluate the 1-norm distances beween recovered image G($x_i$) and the ground-truth y. Can be configured to use the L1 (mean absolute error) or L2 (mean square error) function. By default we use L1 function.
+**Content loss**<a name="content_loss"></a>: ($L_{content}$) Content loss that evaluate the 1-norm distances beween recovered image G($x_i$) and the ground-truth y. Can be configured to use the L1 (mean absolute error) or L2 (mean square error) function. By default we use L1 function.
 
-**Relativistic adversarial loss**: We use the relativistic GAN which tries to predict the probability that a real image $x_r$ is relatively more realistic than a fake one $x_f$, as shown in Fig.
+**Relativistic adversarial loss**<a name="adversarial_loss"></a>: We use the relativistic GAN which tries to predict the probability that a real image $x_r$ is relatively more realistic than a fake one $x_f$, as shown in Fig.
 <p align="center">
   <img src="assets/relativistic_gan.png">
 </p>
@@ -219,7 +220,7 @@ where $x_f = G(x_i)$ and $x_i$ stands for the input LR image.
 <br />
 <br />
 
-**Perceptual loss** ($L_{percep}$): Type of content loss introduced in the [Perceptual Losses for Real-Time Style Transfer and Super-Resolution](https://arxiv.org/abs/1603.08155v1) super-resolution and style transfer framework. Also known as VGG loss is based on the ReLU activation layers on the pre-treained 19 layer VGG netowrk.
+**Perceptual loss** ($L_{percep}$)<a name="perceptual_loss"></a>: Type of content loss introduced in the [Perceptual Losses for Real-Time Style Transfer and Super-Resolution](https://arxiv.org/abs/1603.08155v1) super-resolution and style transfer framework. Also known as VGG loss is based on the ReLU activation layers on the pre-treained 19 layer VGG netowrk.
 
 <p align="center">
   <img src="assets/vgg_loss.png">
@@ -229,13 +230,51 @@ but with the improve by using VGG features before activation instead of after ac
 
 <br /> 
 
-The **total loss** ($L_G$) is then calculated by:
+The **total loss**<a name="total_loss"></a> ($L_G$) is then calculated by:
 $L_G = L_{percep} + λL_{G}^{Ra} + ηL_{content}$ which 
 λ, η are the coefficients to balance different loss terms
 
 <p align="right"><a href="#toc">To top</a></p>
 
 ## 8. Training process <a name="training"></a>
+
+Training process is composed in two main steps, pretraing (warm-up) and training.
+
+First, before any step, we make **Image data augmentation** doing:
+
+* Paired random crop (in train) / Paired center crop (in validation)
+* Spatial transforms (probabilty of each 0.5 probability)
+    * Flip with 0.25 probability
+    * Transpose with 0.75 probability
+* Hard transforms:
+    * Compresion with 0.25 probability
+    * Coarse Dropout with 0.25 probability
+
+### 8.1 Pre-training step <a name="pre_training_step"></a>
+* Only used the [Content loss](#content_loss) function for this step
+* Only works with generator (no discriminator used)
+* Adam optimizer with learning rate $2e^{-4}$ by default
+* Scheduler lr_scheduler.StepLR with step 175000 by default
+* Metrics logged:
+  * for pretrain: content_loss
+  * for validation: content_loss, perceptual_loss, PSNR, SSIM
+
+### 8.2 Training step <a name="training_step"></a>
+In this step we train with generator and discriminator. For every mini batch we first freeze the discriminator and train the generator. When finished the mini batch then we train the discrminator and freeze the generator.
+* Generator:
+  * The [total loss](#total_loss) ($L_G = L_{percep} + λL_{G}^{Ra} + ηL_{content}$) function is used for this step, which use [perceptual loss](#perceptual_loss), [Relativistic adversarial loss](#adversarial_loss) and [Content loss](#content_loss) with coeficients
+  * Adam optimizer with learning rate $1^{e-4}$ by default and betas=(0.9, 0.99)
+  * Scheduler lr_scheduler.MultiStepLR with steps [50000, 100000, 175000, 250000]
+* Discriminator:
+  * The total loss is $L_G = L_{D}^{Ra}$ which is [Relativistic adversarial loss](#adversarial_loss) for discriminator
+  * Adam optimizer with learning rate $1^{e-4}$ by default and betas=(0.9, 0.99)
+  * Scheduler lr_scheduler.MultiStepLR with steps [50000, 100000, 175000, 250000]
+* Metrics logged:
+  * for training: content_loss, perceptual_loss,g_adversarial_loss,g_total_loss,d_adversarial_loss
+  * for validation: content_loss, perceptual_loss, PSNR, SSIM
+  
+### 8.3 Logging <a name="training_logging"></a>
+For logging we use [wandb](https://wandb.ai/) with tensorboard [integrated](https://docs.wandb.ai/guides/integrations/tensorboard) because we can work with both system and share all the logging information automatically to everyone and in real time. Besides we upload images with the result of the image and the ground truth to compare the results visually for every N epochs. 
 
 <p align="right"><a href="#toc">To top</a></p>
 
