@@ -133,13 +133,11 @@ In terms of data visualization and logging, both Wandb and Tensorboard have been
 
 RPL: Aqui tambien estaría bien poner capacidad de las maquinas que hemos usado en local, y también las de google cloud ademas de los tiempos que han tardado
 
+
 <p align="center">
-  <img src="assets/wandb.png">
+  <img src="assets/Environment project.png">
 </p>
-<p align="center">
-  <img src="assets/tensorboard.png">
-  <img src="assets/gcloud.png">
-</p>
+
 
 <p align="right"><a href="#toc">To top</a></p>
 
