@@ -381,6 +381,8 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
   <img src="assets/results/p192_t128_cr_16_rrdb_div2k+bsds500_parrot.png">
 </p>  
 
+<p align="right"><a href="#toc">To top</a></p>
+
 ### 9.4 Torch Models trained <a name="models"></a>
 
 | Model                              | Download                                                                                                 | Comments                                 |
@@ -397,6 +399,8 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
 | 128_cr_23_rrdb_div2k               | [PSNR.pth](https://drive.google.com/file/d/13orzB4WP9uK0OBG52Ht9nsnUAwi73yKX/view?usp=sharing)           | PSNR model                               |
 | 128_cr_23_rrdb_div2k               | [ESRGAN.pth](https://drive.google.com/file/d/1UL1DMT2KaHTjNNiN53v0qplliM4zHEOS/view?usp=sharing)         | ESRGAN model                             |
 | 128_cr_23_rrdb_div2k               | [ESRGAN-interp.pth](https://drive.google.com/file/d/1Bj4C8j1mjoCFkjZzaY_te4KjMMIMt4WO/view?usp=sharing)  | ESRGAN Interpolated with alpha 0.8 model |
+
+<p align="right"><a href="#toc">To top</a></p>
 
 ### 9.5 Comparison metrics <a name="comparison"></a>
 
