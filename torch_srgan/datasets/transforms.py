@@ -21,7 +21,7 @@ class PairedTransform(BasicTransform):
     Args:
         paired_img_scale: scale relation between image and scaled image. Must be an integer bigger than 1.
         scaled_img_target_key: expected key of the scaled image during transform execution.
-        always_apply: always apply transform.
+        always_apply: flag to indicate if transform will be applied always.
         p: probability of applying the transform.
 
     Raises:
@@ -139,9 +139,9 @@ class PairedCrop(PairedTransform):
     Args:
         scaled_cr_size: Size of the scaled crop. Must be a (height, width) tuple.
         paired_img_scale: scale relation between image and scaled image. Must be an integer >= 1.
-        scaled_img_target_key: expected key of the scaled image during transform execution. Default: scaled_image
-        always_apply: always apply transform. Default: False.
-        p: probability of applying the transform. Default: 1.
+        scaled_img_target_key: expected key of the scaled image during transform execution.
+        always_apply: flag to indicate if transform will be applied always.
+        p: probability of applying the transform.
 
     Raises:
         ValueError: Scaled crop size must be a multiple of the given scale.
@@ -154,7 +154,7 @@ class PairedCrop(PairedTransform):
     """
 
     def __init__(self, scaled_cr_size: Tuple[int, int], paired_img_scale: int,
-                 scaled_img_target_key: str = "scaled_image", always_apply: bool = False, p: float = 1.0):
+                 scaled_img_target_key: str = "scaled_image", always_apply: bool = True, p: float = 1.0):
         super(PairedCrop, self).__init__(paired_img_scale, scaled_img_target_key, always_apply, p)
 
         # Check that scaled crop size is multiple of given scale
@@ -237,9 +237,9 @@ class PairedRandomCrop(PairedCrop):
     Args:
         scaled_cr_size: Size of the scaled crop. Must be a (height, width) tuple.
         paired_img_scale: scale relation between image and scaled image. Must be an integer >= 1.
-        scaled_img_target_key: expected key of the scaled image during transform execution. Default: scaled_image
-        always_apply: always apply transform. Default: False.
-        p: probability of applying the transform. Default: 1.
+        scaled_img_target_key: expected key of the scaled image during transform execution.
+        always_apply: flag to indicate if transform will be applied always.
+        p: probability of applying the transform.
 
     Raises:
         ValueError: Scaled crop size must be a multiple of the given scale.
@@ -252,7 +252,7 @@ class PairedRandomCrop(PairedCrop):
     """
 
     def __init__(self, scaled_cr_size: Tuple[int, int], paired_img_scale: int,
-                 scaled_img_target_key: str = "scaled_image", always_apply: bool = False, p: float = 1.0):
+                 scaled_img_target_key: str = "scaled_image", always_apply: bool = True, p: float = 1.0):
         super(PairedRandomCrop, self).__init__(scaled_cr_size, paired_img_scale, scaled_img_target_key, always_apply, p)
 
     def apply(self, img: np.ndarray, h_start: float = 0, w_start: float = 0, **_params) -> np.ndarray:
@@ -323,11 +323,11 @@ class PairedCenterCrop(PairedCrop):
     Output cropped scaled image will be scale times the size of the configured crop size.
 
     Args:
-        scaled_cr_size (tuple): Size of the scaled crop. Must be a (height, width) tuple.
-        paired_img_scale (int): scale relation between image and scaled image. Must be an integer >= 1.
-        scaled_img_target_key (str): expected key of the scaled image during transform execution. Default: scaled_image
-        always_apply (bool): always apply transform. Default: False.
-        p (float): probability of applying the transform. Default: 1.
+        scaled_cr_size: Size of the scaled crop. Must be a (height, width) tuple.
+        paired_img_scale: scale relation between image and scaled image. Must be an integer >= 1.
+        scaled_img_target_key: expected key of the scaled image during transform execution.
+        always_apply: flag to indicate if transform will be applied always.
+        p: probability of applying the transform.
 
     Raises:
         ValueError: Scaled crop size must be a multiple of the given scale.
@@ -340,7 +340,7 @@ class PairedCenterCrop(PairedCrop):
     """
 
     def __init__(self, scaled_cr_size: Tuple[int, int], paired_img_scale: int,
-                 scaled_img_target_key: str = "scaled_image", always_apply: bool = False, p: float = 1.0):
+                 scaled_img_target_key: str = "scaled_image", always_apply: bool = True, p: float = 1.0):
         super(PairedCenterCrop, self).__init__(scaled_cr_size, paired_img_scale, scaled_img_target_key, always_apply, p)
 
     def apply(self, img: np.ndarray, **_params) -> np.ndarray:
@@ -389,8 +389,8 @@ class SimpleNormalize(ImageOnlyTransform):
 
     Args:
         max_pixel_value: maximum possible pixel value.
-        always_apply: always apply transform. Default: False.
-        p: probability of applying the transform. Default: 1.
+        always_apply: flag to indicate if transform will be applied always.
+        p: probability of applying the transform.
 
     Targets:
         image
@@ -399,7 +399,7 @@ class SimpleNormalize(ImageOnlyTransform):
         uint8, float32
     """
 
-    def __init__(self, max_pixel_value: float = 255.0, always_apply: bool = False, p: float = 1.0):
+    def __init__(self, max_pixel_value: float = 255.0, always_apply: bool = True, p: float = 1.0):
         super(SimpleNormalize, self).__init__(always_apply, p)
         self.max_pixel_value = float(max_pixel_value)
 
