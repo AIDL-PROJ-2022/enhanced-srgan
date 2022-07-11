@@ -152,43 +152,43 @@ We've implemented a ESRGAN model using [PyTorch](https://pytorch.org/) RPL: blah
 
 Default hyperparametres defined in paper
 
-Hyperparameters | Default Values | Comments
---------------- | ------ | --------
-scale_factor | 4 | RPL: blah blah blah
-batch_size | 16 |
-img_channels | 3 |
-pretraining/num_epoch | 10000 |
-pretraining/cr_patch_size | [128, 128] |
-pretraining/lr | 2e-4 |
-pretraining/sched_step | 200000 |
-pretraining/sched_gamma | 0.5 |
-pretraining/train_datasets | ["div2k"] |
-pretraining/val_datasets | ["bsds500"] |
-training/num_epoch |  8000 |
-training/cr_patch_size | [128, 128] |
-training/g_lr | 1e-4 |
-training/d_lr | 1e-4 |
-training/g_sched_steps | [50000, 100000, 200000, 300000] |
-training/g_sched_gamma | 0.5 |
-training/d_sched_steps | [50000, 100000, 200000, 300000] |
-training/d_sched_gamma | 0.5 |
-training/g_adversarial_loss_scaling | 0.005 |
-training/g_content_loss_scaling | 0.01 |
-training/train_datasets | ["div2k"] |
-training/val_datasets | ["bsds500"] |
-generator/rrdb_channels | 64 |
-generator/growth_channels | 32 |
-generator/num_basic_blocks | 16 |
-generator/num_dense_blocks | 3 |
-generator/num_residual_blocks | 5 |
-generator/residual_scaling | 0.2 |
-generator/use_subpixel_conv | false |
-discriminator/vgg_blk_ch | [64, 64, 128, 128, 256, 256, 512, 512] |
-discriminator/fc_features | [100] |
-content_loss/loss_f | "l1" |
-perceptual_loss/layer_weights/conv5_4 | 1.0 |
-perceptual_loss/normalize_input | true |
-perceptual_loss/normalize_loss | false |
+| Hyperparameters                       | Default Values                         | Comments            |
+|---------------------------------------|----------------------------------------|---------------------|
+| scale_factor                          | 4                                      | RPL: blah blah blah |
+| batch_size                            | 16                                     |                     |
+| img_channels                          | 3                                      |                     |
+| pretraining/num_epoch                 | 10000                                  |                     |
+| pretraining/cr_patch_size             | [128, 128]                             |                     |
+| pretraining/lr                        | 2e-4                                   |                     |
+| pretraining/sched_step                | 200000                                 |                     |
+| pretraining/sched_gamma               | 0.5                                    |                     |
+| pretraining/train_datasets            | ["div2k"]                              |                     |
+| pretraining/val_datasets              | ["bsds500"]                            |                     |
+| training/num_epoch                    | 8000                                   |                     |
+| training/cr_patch_size                | [128, 128]                             |                     |
+| training/g_lr                         | 1e-4                                   |                     |
+| training/d_lr                         | 1e-4                                   |                     |
+| training/g_sched_steps                | [50000, 100000, 200000, 300000]        |                     |
+| training/g_sched_gamma                | 0.5                                    |                     |
+| training/d_sched_steps                | [50000, 100000, 200000, 300000]        |                     |
+| training/d_sched_gamma                | 0.5                                    |                     |
+| training/g_adversarial_loss_scaling   | 0.005                                  |                     |
+| training/g_content_loss_scaling       | 0.01                                   |                     |
+| training/train_datasets               | ["div2k"]                              |                     |
+| training/val_datasets                 | ["bsds500"]                            |                     |
+| generator/rrdb_channels               | 64                                     |                     |
+| generator/growth_channels             | 32                                     |                     |
+| generator/num_basic_blocks            | 16                                     |                     |
+| generator/num_dense_blocks            | 3                                      |                     |
+| generator/num_residual_blocks         | 5                                      |                     |
+| generator/residual_scaling            | 0.2                                    |                     |
+| generator/use_subpixel_conv           | false                                  |                     |
+| discriminator/vgg_blk_ch              | [64, 64, 128, 128, 256, 256, 512, 512] |                     |
+| discriminator/fc_features             | [100]                                  |                     |
+| content_loss/loss_f                   | "l1"                                   |                     |
+| perceptual_loss/layer_weights/conv5_4 | 1.0                                    |                     |
+| perceptual_loss/normalize_input       | true                                   |                     |
+| perceptual_loss/normalize_loss        | false                                  |                     |
 
 <p align="right"><a href="#toc">To top</a></p>
 
@@ -358,20 +358,20 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
 
 ### 9.3 Torch Models trained <a name="models"></a>
 
-Model | Download | Comments
---------------- | ------ | --------
-p192_t128_cr_23_rrdb_div2k+bsds500 | [PSNR.pth](https://drive.google.com/file/d/1mzCvgD33wvXu__ZRio4i5Jh9bJCSW658/view?usp=sharing) | PSNR model
-p192_t128_cr_23_rrdb_div2k+bsds500 | [ESRGAN.pth](https://drive.google.com/file/d/1Is_CWrG1GB7Gp7mj68V5ashiVBiK9OOw/view?usp=sharing) | ESRGAN model
-p192_t128_cr_23_rrdb_div2k+bsds500 | [ESRGAN-interp.pth](https://drive.google.com/file/d/14PtG4mM0YdeA7cS3nbaMxmcXe2_Fxc3Q/view?usp=sharing) | ESRGAN Interpolated with alpha 0.8 model
-p192_t128_cr_16_rrdb_div2k+bsds500 | [PSNR.pth](https://drive.google.com/file/d/1cyPHrQy7tiuwB5-k1se7PI9sdWw3yrz8/view?usp=sharing) | PSNR model
-p192_t128_cr_16_rrdb_div2k+bsds500 | [ESRGAN.pth](https://drive.google.com/file/d/1cCxkpeeP-USsNbYEDKkRXNdKY1hN8CCJ/view?usp=sharing) | ESRGAN model
-p192_t128_cr_16_rrdb_div2k+bsds500 | [ESRGAN-interp.pth](https://drive.google.com/file/d/1cJgd9c6EmkKo68Dg1tD_PdZBNbQ-rfvM/view?usp=sharing) | ESRGAN Interpolated with alpha 0.8 model
-p192_cr_23_rrdb_div2k | [PSNR.pth](https://drive.google.com/file/d/1o5FwomoEGLIHBIMAVXiIOlEeGQTmPI09/view?usp=sharing) | PSNR model
-p192_cr_23_rrdb_div2k | [ESRGAN.pth](https://drive.google.com/file/d/1zZwGch8f3dIE5OVU1na1pqHRlOj-61xN/view?usp=sharing) | ESRGAN model
-p192_cr_23_rrdb_div2k | [ESRGAN-interp.pth](https://drive.google.com/file/d/1Z3xTC4DimXQlgw2SvvXBorPzfkozCnRa/view?usp=sharing) | ESRGAN Interpolated with alpha 0.8 model
-128_cr_23_rrdb_div2k | [PSNR.pth](https://drive.google.com/file/d/13orzB4WP9uK0OBG52Ht9nsnUAwi73yKX/view?usp=sharing) | PSNR model
-128_cr_23_rrdb_div2k | [ESRGAN.pth](https://drive.google.com/file/d/1UL1DMT2KaHTjNNiN53v0qplliM4zHEOS/view?usp=sharing) | ESRGAN model
-128_cr_23_rrdb_div2k | [ESRGAN-interp.pth](https://drive.google.com/file/d/1Bj4C8j1mjoCFkjZzaY_te4KjMMIMt4WO/view?usp=sharing) | ESRGAN Interpolated with alpha 0.8 model
+| Model                              | Download                                                                                                 | Comments                                 |
+|------------------------------------|----------------------------------------------------------------------------------------------------------|------------------------------------------|
+| p192_t128_cr_23_rrdb_div2k+bsds500 | [PSNR.pth](https://drive.google.com/file/d/1mzCvgD33wvXu__ZRio4i5Jh9bJCSW658/view?usp=sharing)           | PSNR model                               |
+| p192_t128_cr_23_rrdb_div2k+bsds500 | [ESRGAN.pth](https://drive.google.com/file/d/1Is_CWrG1GB7Gp7mj68V5ashiVBiK9OOw/view?usp=sharing)         | ESRGAN model                             |
+| p192_t128_cr_23_rrdb_div2k+bsds500 | [ESRGAN-interp.pth](https://drive.google.com/file/d/14PtG4mM0YdeA7cS3nbaMxmcXe2_Fxc3Q/view?usp=sharing)  | ESRGAN Interpolated with alpha 0.8 model |
+| p192_t128_cr_16_rrdb_div2k+bsds500 | [PSNR.pth](https://drive.google.com/file/d/1cyPHrQy7tiuwB5-k1se7PI9sdWw3yrz8/view?usp=sharing)           | PSNR model                               |
+| p192_t128_cr_16_rrdb_div2k+bsds500 | [ESRGAN.pth](https://drive.google.com/file/d/1cCxkpeeP-USsNbYEDKkRXNdKY1hN8CCJ/view?usp=sharing)         | ESRGAN model                             |
+| p192_t128_cr_16_rrdb_div2k+bsds500 | [ESRGAN-interp.pth](https://drive.google.com/file/d/1cJgd9c6EmkKo68Dg1tD_PdZBNbQ-rfvM/view?usp=sharing)  | ESRGAN Interpolated with alpha 0.8 model |
+| p192_cr_23_rrdb_div2k              | [PSNR.pth](https://drive.google.com/file/d/1o5FwomoEGLIHBIMAVXiIOlEeGQTmPI09/view?usp=sharing)           | PSNR model                               |
+| p192_cr_23_rrdb_div2k              | [ESRGAN.pth](https://drive.google.com/file/d/1zZwGch8f3dIE5OVU1na1pqHRlOj-61xN/view?usp=sharing)         | ESRGAN model                             |
+| p192_cr_23_rrdb_div2k              | [ESRGAN-interp.pth](https://drive.google.com/file/d/1Z3xTC4DimXQlgw2SvvXBorPzfkozCnRa/view?usp=sharing)  | ESRGAN Interpolated with alpha 0.8 model |
+| 128_cr_23_rrdb_div2k               | [PSNR.pth](https://drive.google.com/file/d/13orzB4WP9uK0OBG52Ht9nsnUAwi73yKX/view?usp=sharing)           | PSNR model                               |
+| 128_cr_23_rrdb_div2k               | [ESRGAN.pth](https://drive.google.com/file/d/1UL1DMT2KaHTjNNiN53v0qplliM4zHEOS/view?usp=sharing)         | ESRGAN model                             |
+| 128_cr_23_rrdb_div2k               | [ESRGAN-interp.pth](https://drive.google.com/file/d/1Bj4C8j1mjoCFkjZzaY_te4KjMMIMt4WO/view?usp=sharing)  | ESRGAN Interpolated with alpha 0.8 model |
 
 
 <p align="right"><a href="#toc">To top</a></p>
