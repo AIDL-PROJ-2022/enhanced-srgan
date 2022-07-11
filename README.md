@@ -324,12 +324,12 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
 
 ### 9.2 Metrics <a name="metrics"></a>
 
-* Train PSNR base content loss
+#### 9.2.1 Train PSNR-driven content loss
 <p align="center">
   <img src="assets/graphs/train_PSNR-driven_content-loss.png">
 </p>
 
-* Validation PSNR
+#### 9.2.2 Validation PSNR-driven
 <p align="center">
   <img src="assets/graphs/validation_PSNR-driven_content-loss.png">
   <img src="assets/graphs/validation_PSNR-driven_PSNR.png">
@@ -337,7 +337,7 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
   <img src="assets/graphs/validation_PSNR-driven_perceptual-loss.png">
 </p>
 
-* Train GAN base
+#### 9.2.3 Train GAN-based
 <p align="center">
   <img src="assets/graphs/train_GAN-based_content-loss.png">
   <img src="assets/graphs/train_GAN-based_g-adversarial-loss.png">
@@ -346,7 +346,7 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
   <img src="assets/graphs/train_GAN-based_g-total-loss.png">
 </p>
 
-* Validation GAN base
+#### 9.2.4 Validation GAN-based
 <p align="center">
   <img src="assets/graphs/validation_GAN-based_content-loss.png">
   <img src="assets/graphs/validation_GAN-based_SSIM.png">
