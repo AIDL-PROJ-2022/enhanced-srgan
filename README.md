@@ -25,6 +25,7 @@ Enhanced SuperRessolution using a GAN model with a residual-on-residual generato
     1. [Executions](#executions)
     1. [Metrics](#metrics)
     1. [Images](#images)
+    1. [Torch models trained](#models)
     1. [Comparison metrics](#comparison)
 1. [Conclusions](#conclusions)
 1. [References](#references)
@@ -357,21 +358,28 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
 
 ### 9.3 model results <a name="images"></a>
 * [Pre-CR: 128 / CR: 128 / 23 RRDBs / DIV2K]
+<p align="center">
   <img src="assets/results/128_cr_23_rrdb_div2k_butterfly.png">
   <img src="assets/results/128_cr_23_rrdb_div2k_parrot.png">
+</p>
 
 * [Pre-CR: 192 / CR: 192 / 23 RRDBs / DIV2K]
+<p align="center">
   <img src="assets/results/192_cr_23_rrdb_div2k_butterfly.png">
   <img src="assets/results/192_cr_23_rrdb_div2k_parrot.png">
+</p>
 
 * [Pre-CR: 192 / CR: 128 / 23 RRDBs / DIV2K+BSDS500]
+<p align="center">
   <img src="assets/results/p192_t128_cr_23_rrdb_div2k+bsds500_butterfly.png">
   <img src="assets/results/p192_t128_cr_23_rrdb_div2k+bsds500_parrot.png">
-  
+</p>
+
 * [Pre-CR: 192 / CR: 128 / 16 RRDBs / DIV2K+BSDS500]
+<p align="center">
   <img src="assets/results/p192_t128_cr_16_rrdb_div2k+bsds500_butterfly.png">
   <img src="assets/results/p192_t128_cr_16_rrdb_div2k+bsds500_parrot.png">
-  
+</p>  
 
 ### 9.4 Torch Models trained <a name="models"></a>
 
