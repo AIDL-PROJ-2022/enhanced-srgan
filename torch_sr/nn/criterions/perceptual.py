@@ -82,7 +82,7 @@ class PerceptualLoss(_Loss):
         criterion: Loss function to compute distance between features.
         normalize_input: If True, normalize the input image before doing inference though the VGG network.
             The mean and standard deviation values are calculated for an image in the range [0, 1].
-        normalize_loss: Divide the total perceptual loss by the number of used layers.
+        normalize_loss: Divide the total perceptual loss by the sum of the specified layers weight.
 
     Raises:
         ValueError: `vgg_type` must be one of: ``'vgg11'``, ``'vgg13'``, ``'vgg16'``, ``'vgg19'``, raise error if not.

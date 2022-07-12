@@ -154,43 +154,45 @@ We've implemented a ESRGAN model using [PyTorch](https://pytorch.org/) RPL: blah
 
 Default hyperparametres defined in paper
 
-| Hyperparameters                       | Default Values                         | Comments            |
-|---------------------------------------|----------------------------------------|---------------------|
-| scale_factor                          | 4                                      | RPL: blah blah blah |
-| batch_size                            | 16                                     |                     |
-| img_channels                          | 3                                      |                     |
-| pretraining/num_epoch                 | 10000                                  |                     |
-| pretraining/cr_patch_size             | [128, 128]                             |                     |
-| pretraining/lr                        | 2e-4                                   |                     |
-| pretraining/sched_step                | 200000                                 |                     |
-| pretraining/sched_gamma               | 0.5                                    |                     |
-| pretraining/train_datasets            | ["div2k"]                              |                     |
-| pretraining/val_datasets              | ["bsds500"]                            |                     |
-| training/num_epoch                    | 8000                                   |                     |
-| training/cr_patch_size                | [128, 128]                             |                     |
-| training/g_lr                         | 1e-4                                   |                     |
-| training/d_lr                         | 1e-4                                   |                     |
-| training/g_sched_steps                | [50000, 100000, 200000, 300000]        |                     |
-| training/g_sched_gamma                | 0.5                                    |                     |
-| training/d_sched_steps                | [50000, 100000, 200000, 300000]        |                     |
-| training/d_sched_gamma                | 0.5                                    |                     |
-| training/g_adversarial_loss_scaling   | 0.005                                  |                     |
-| training/g_content_loss_scaling       | 0.01                                   |                     |
-| training/train_datasets               | ["div2k"]                              |                     |
-| training/val_datasets                 | ["bsds500"]                            |                     |
-| generator/rrdb_channels               | 64                                     |                     |
-| generator/growth_channels             | 32                                     |                     |
-| generator/num_basic_blocks            | 16                                     |                     |
-| generator/num_dense_blocks            | 3                                      |                     |
-| generator/num_residual_blocks         | 5                                      |                     |
-| generator/residual_scaling            | 0.2                                    |                     |
-| generator/use_subpixel_conv           | false                                  |                     |
-| discriminator/vgg_blk_ch              | [64, 64, 128, 128, 256, 256, 512, 512] |                     |
-| discriminator/fc_features             | [100]                                  |                     |
-| content_loss/loss_f                   | "l1"                                   |                     |
-| perceptual_loss/layer_weights/conv5_4 | 1.0                                    |                     |
-| perceptual_loss/normalize_input       | true                                   |                     |
-| perceptual_loss/normalize_loss        | false                                  |                     |
+| Hyperparameters                     | Default Values                           | Comments                                                                                                                                                                                                  |
+|-------------------------------------|:-----------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| scale_factor                        | `4`                                      | Scale factor relation between the low resolution and the high resolution images.                                                                                                                          |
+| batch_size                          | `16`                                     | Data loader configured mini-batch size.                                                                                                                                                                   |
+| img_channels                        | `3`                                      | Number of channels contained into the image. For RGB images this value should be 3.                                                                                                                       |
+| pretraining/num_epoch               | `10000`                                  | Number of epoch needed to complete the pre-training (PSNR-driven) step.                                                                                                                                   |
+| pretraining/cr_patch_size           | `[128, 128]`                             | High-resolution image crop size. Needs to be a tuple of (H, W). If set to None, any crop transform will be applied.                                                                                       |
+| pretraining/lr                      | `2e-4`                                   | Configured learning rate for the pre-training step optimizer. Adam optimizer will be used for this step.                                                                                                  |
+| pretraining/sched_step              | `200000`                                 | Learning rate scheduler decay rate for the pre-training step.                                                                                                                                             |
+| pretraining/sched_gamma             | `0.5`                                    | Multiplicative factor of the learning rate scheduler decay for the pre-training step.                                                                                                                     |
+| pretraining/train_datasets          | `["div2k"]`                              | Dataset(s) used during training of the pre-training step. Must be one of ``'div2k'``, ``'bsds500'``.                                                                                                      |
+| pretraining/val_datasets            | `["bsds500"]`                            | Dataset(s) used during validation of the pre-training step. Must be one of ``'div2k'``, ``'bsds500'``.                                                                                                    |
+| training/num_epoch                  | `8000`                                   | Number of epoch needed to complete the training step.                                                                                                                                                     |
+| training/cr_patch_size              | `[128, 128]`                             | Number of epoch needed to complete the pre-training (GAN-driven) step.                                                                                                                                    |
+| training/g_lr                       | `1e-4`                                   | Configured generator's learning rate for the training step optimizer. Adam optimizer will be used for this step.                                                                                          |
+| training/d_lr                       | `1e-4`                                   | Configured discriminator's learning rate for the training step optimizer. Adam optimizer will be used for this step.                                                                                      |
+| training/g_sched_steps              | `[50000, 100000, 200000, 300000]`        | List of mini-batch indices learning rate decay of the generator's training scheduler.                                                                                                                     |
+| training/g_sched_gamma              | `0.5`                                    | Multiplicative factor of the generator's learning rate scheduler decay for the training step.                                                                                                             |
+| training/d_sched_steps              | `[50000, 100000, 200000, 300000]`        | List of mini-batch indices learning rate decay of the discriminator's training scheduler.                                                                                                                 |
+| training/d_sched_gamma              | `0.5`                                    | Multiplicative factor of the discriminator's learning rate scheduler decay for the training step.                                                                                                         |
+| training/g_adversarial_loss_scaling | `0.005`                                  | Generator adversarial loss scaling factor used to calculate the total generator loss.                                                                                                                     |
+| training/g_content_loss_scaling     | `0.01`                                   | Generator content loss scaling factor used to calculate the total generator loss.                                                                                                                         |
+| training/train_datasets             | `["div2k"]`                              | Dataset(s) used during training of the training step. Must be one of ``'div2k'``, ``'bsds500'``.                                                                                                          |
+| training/val_datasets               | `["bsds500"]`                            | Dataset(s) used during validation of the training step. Must be one of ``'div2k'``, ``'bsds500'``.                                                                                                        |
+| generator/rrdb_channels             | `64`                                     | Number of channels in the residual-on-residual dense blocks latent space.                                                                                                                                 |
+| generator/growth_channels           | `32`                                     | Number of channels in the residual dense block latent space.                                                                                                                                              |
+| generator/num_basic_blocks          | `16`                                     | Number of basic (a.k.a residual-on-residual dense blocks) of the generator network.                                                                                                                       |
+| generator/num_dense_blocks          | `3`                                      | Number of residual dense blocks contained into each RRDB block.                                                                                                                                           |
+| generator/num_residual_blocks       | `5`                                      | Number of convolutional blocks contained into each residual dense block.                                                                                                                                  |
+| generator/residual_scaling          | `0.2`                                    | Scaling factor applied to each skip connection defined into the generator network.                                                                                                                        |
+| generator/use_subpixel_conv         | `false`                                  | If set to `True`, a Sub-Pixel convolution block will be used for up-scaling instead of the original interpolation up-scaling block.                                                                       |
+| discriminator/vgg_blk_ch            | `[64, 64, 128, 128, 256, 256, 512, 512]` | Tuple containing the output channels of each convolution of the network. If two consecutive convolutions have the same output channels, a stride of two will be applied to reduce feature map dimensions. |
+| discriminator/fc_features           | `[100]`                                  | Fully connected hidden layers output dimension.                                                                                                                                                           |
+| content_loss/loss_f                 | `"l1"`                                   | Loss function to use to compute pixel-wise distance between images. Must be one of: ``'l1'``, ``'l2'``, ``'mse'``. Default: ``'l1'``                                                                      |
+| perceptual_loss/layer_weights       | `{"conv5_4": 1.0}`                       | The weight for each layer of the VGG network used for loss calculation.                                                                                                                                   |
+| perceptual_loss/vgg_type            | `"vgg19"`                                | Type of VGG network used as the perceptual loss' feature extractor. Must be one of: ``'vgg11'``, ``'vgg13'``, ``'vgg16'``, ``'vgg19'``. Default: ``'vgg19'``                                              |
+| perceptual_loss/criterion           | `"l1"`                                   | Loss function to compute distance between features. Must be one of: ``'l1'``, ``'l2'``. Default: ``'l1'``                                                                                                 |
+| perceptual_loss/normalize_input     | `true`                                   | If set to `True`, normalize the input image before doing inference though the VGG network. The mean and standard deviation values are calculated for an image in the range `[0, 1]`.                      |
+| perceptual_loss/normalize_loss      | `false`                                  | If set to `True`, divide the total perceptual loss by the sum of the specified layers weight.                                                                                                             |
 
 <p align="right"><a href="#toc">To top</a></p>
 
