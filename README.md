@@ -21,6 +21,7 @@ Enhanced Super resolution using a GAN model with a residual-on-residual generato
     2. [Hyper-parameters](#82-hyper-parameters)
     3. [Loss functions](#83-loss-functions)
     4. [Quality Metrics](#84-quality-metrics)
+    5. [Network Interpolation](#85-network-interpolation)
 9. [Training process](#9-training-process)
     1. [Pre-training](#91-pre-training-step)
     2. [Training](#92-training-step)
@@ -303,6 +304,15 @@ Metric used to compare different image enhancement algorithms systematically to 
 Formula: **$PSNR = 20log_{10}({MAX_f\over\sqrt{MSE}})$** where MSE is the L2 loss and $MAX_f$ is the maximum existing signal value in our original “known to be good” image.
 
 <div style="text-align: right"><a href="#table-of-contents">To top</a></div>
+
+### 8.5 Network Interpolation
+
+To remove unpleasant noise in GAN-based methods while maintain a good perceltual quality, we use Network Interpolation. That means that we first train a PSNR-oriented network $G_{PSNR}$ and then obtain a GAN-based network $G_{GAN}$. 
+
+We interpolate all the corresponding parameters of these two networks to derive an interpolated model $G_{INTERP}$, whose parameters are: **$θ_G^{INTERP} = (1 − α)θ_G^{PSNR} + αθ_G^{GAN}$** where $θ_G^{INTERP}$, $θ_G^{PSNR}$ and $θ_G^{GAN}$ are the parameters of $G_{INTERP}$, $G_{PSNR}$ and $G_{GAN}$ respectively, and α ∈ [0, 1] is the interpolation parameter.
+
+G are the parameters of GINTERP, GPSNR and
+GGAN, respectively, and α ∈ [0, 1] is the interpolation parameter.
 
 ## 9. Training process
 
