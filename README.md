@@ -18,7 +18,7 @@ Enhanced Super resolution using a GAN model with a residual-on-residual generato
 7. [Environment](#7-environment)
 8. [Architecture](#8-architecture)
     1. [Model definitions](#81-model-definitions)
-    2. [Hyper-parameters](#82-hyperparameters)
+    2. [Hyper-parameters](#82-hyper-parameters)
     3. [Loss functions](#83-loss-functions)
     4. [Quality Metrics](#84-quality-metrics)
 9. [Training process](#9-training-process)
@@ -28,9 +28,9 @@ Enhanced Super resolution using a GAN model with a residual-on-residual generato
 10. [Results](#10-results)
      1. [Executions](#101-executions)
      2. [Metrics](#102-metrics)
-     3. [Images](#103-images)
-     4. [Torch models trained](#104-models)
-     5. [Comparison metrics](#105-comparison)
+     3. [Model Results](#103-model-results)
+     4. [Torch models trained](#104-torch-models-trained)
+     5. [Comparison metrics](#105-comparison-metrics)
 11. [Conclusions](#11-conclusions)
 12. [References](#12-references)
 13. [Presentation](#13-presentation)
@@ -188,9 +188,9 @@ We've implemented a ESRGAN model using [PyTorch](https://pytorch.org/)
   <img src="assets/model2.png">
 </p>
 
-### 8.1 Hyperparameters
+### 8.2 Hyper-parameters
 
-Default hyperparametres defined in paper
+Default hyper-parameters defined in paper
 
 | Hyperparameters                     | Default Values                           | Comments                                                                                                                                                                                                  |
 |-------------------------------------|:-----------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -234,7 +234,7 @@ Default hyperparametres defined in paper
 
 <div style="text-align: right"><a href="#table-of-contents">To top</a></div>
 
-### 8.2 Loss functions
+### 8.3 Loss functions
 
 Whe have 3 kind of loss functions on this model.
 
@@ -279,9 +279,9 @@ The **total loss**<a name="total_loss"></a> ($L_G$) is then calculated by:
 $L_G = L_{percep} + λL_{G}^{Ra} + ηL_{content}$ which 
 λ, η are the coefficients to balance different loss terms
 
-### 8.3 Quality Metrics <a name="quality_metrics"></a>
+### 8.4 Quality Metrics
 
-#### 8.3.1 Structural Similarity Index(SSIM)
+#### 8.4.1 Structural Similarity Index (SSIM)
 Given 2 images, SSIM is an index with values in the range (-1,1) which estimates the level of similarity between thos two images.
 * +1 = very similar or the same.
 * -1 = very different.
@@ -294,7 +294,7 @@ It combines different comparison functions:
 Formula: **$SSIM(x,y) = [l(x,y)]^α * [c(x,y)]^β * [s(x,y)]^γ$**, where α,β,γ are the weights assigned to each feature
 
 
-#### 8.3.2 Peak Signal-to-Noise (PSNR)
+#### 8.4.2 Peak Signal-to-Noise (PSNR)
 
 Ratio between maximum possible value (power) of a signal and power of distorting noise that affects the quality of its representation.
 
@@ -419,7 +419,7 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
   <img src="assets/graphs/validation_GAN-based_perceptual-loss.png">
 </p>
 
-### 10.3 model results
+### 10.3 Model Results
 * [Pre-CR: 128 / CR: 128 / 23 RRDBs / DIV2K]
 <p align="center">
   <img src="assets/results/128_cr_23_rrdb_div2k_butterfly.png">
