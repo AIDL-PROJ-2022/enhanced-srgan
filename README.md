@@ -307,7 +307,17 @@ Formula: **$PSNR = 20log_{10}({MAX_f\over\sqrt{MSE}})$** where MSE is the L2 los
 
 To remove unpleasant noise in GAN-based methods while maintain a good perceltual quality, we use Network Interpolation. That means that we first train a PSNR-oriented network $G_{PSNR}$ and then obtain a GAN-based network $G_{GAN}$. 
 
-We interpolate all the corresponding parameters of these two networks to derive an interpolated model $G_{INTERP}$, whose parameters are: **$θ_G^{INTERP} = (1 − α)θ_G^{PSNR} + αθ_G^{GAN}$** where $θ_G^{INTERP}$, $θ_G^{PSNR}$ and $θ_G^{GAN}$ are the parameters of $G_{INTERP}$, $G_{PSNR}$ and $G_{GAN}$ respectively, and α ∈ [0, 1] is the interpolation parameter.
+We interpolate all the corresponding parameters of these two networks to derive an interpolated model $G_{INTERP}$, whose parameters are: 
+
+$θ_G^{INTERP} = (1 − α)θ_G^{PSNR} + αθ_G^{GAN}$
+
+This is the equation I would like centred:
+\[
+  \makebox[\linewidth]{$h(t_{ij}) = Pr[ T_i = j| T_i \geq j |$}
+\]
+
+
+where $θ_G^{INTERP}$, $θ_G^{PSNR}$ and $θ_G^{GAN}$ are the parameters of $G_{INTERP}$, $G_{PSNR}$ and $G_{GAN}$ respectively, and α ∈ [0, 1] is the interpolation parameter.
 
 G are the parameters of GINTERP, GPSNR and
 GGAN, respectively, and α ∈ [0, 1] is the interpolation parameter.
