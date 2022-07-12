@@ -6,7 +6,7 @@ Enhanced Super resolution using a GAN model with a residual-on-residual generato
 
 ### Advisor: Dani Fojo
 
-## Table of Contents <a id="table-of-contents">
+## Table of Contents
 
 1. [Introduction](#1-introduction)
 2. [Motivation](#2-motivation)
