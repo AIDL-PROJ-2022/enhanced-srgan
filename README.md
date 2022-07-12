@@ -312,9 +312,11 @@ First, before any step, we make **Image data augmentation** doing:
 
 * Paired random crop (in train) / Paired center crop (in validation)
 * Spatial transforms (probabilty of each 0.5 probability)
+    * Applied for images of low resolution and high resolution
     * Flip with 0.25 probability
     * Transpose with 0.75 probability
 * Hard transforms:
+    * Applied only for images of low resolution
     * Compresion with 0.25 probability
     * Coarse Dropout with 0.25 probability
 
