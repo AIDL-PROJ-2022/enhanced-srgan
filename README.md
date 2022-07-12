@@ -10,6 +10,7 @@ Enhanced SuperRessolution using a GAN model with a residual-on-residual generato
 
 1. [Introduction](#intro)
 1. [Motivation](#motivation)
+1. [Theory](#theory)
 1. [Execution Instructions](#instructions)
 1. [Milestones](#milestones)
 1. [Datasets](#datasets)
@@ -17,6 +18,7 @@ Enhanced SuperRessolution using a GAN model with a residual-on-residual generato
 1. [Architecture](#architecture)
     1. [Hyperparameters](#hyperparameters)
     1. [Loss functions](#lossfunctions)
+    1. [Quality Metrics](#quality_metrics)
 1. [Training process](#training)
     1. [Pre-training](#pre_training_step)
     1. [Training](#training_step)
@@ -29,6 +31,7 @@ Enhanced SuperRessolution using a GAN model with a residual-on-residual generato
     1. [Comparison metrics](#comparison)
 1. [Conclusions](#conclusions)
 1. [References](#references)
+1. [Presentation](#presentation)
 
 ## 1. Introduction <a name="intro"></a>
 
@@ -53,7 +56,7 @@ As mentioned previously, the idea of the project was to target a solution with p
 
 <p align="right"><a href="#toc">To top</a></p>
 
-### Theory
+## 3. Theory <a name="theory"></a>
 
 The first methods that targeted an increase the resolution of an image, where based on different possible interpolation methods estimating values of the unknown pixels using the ones at their surroundings. 
 
@@ -62,7 +65,7 @@ Later on, the introduction of Convolutional neural networks using a Classifier a
 Afterwards, the SRCNN inspired the creation of new architectures that included different updates and improved accuracy:
 Resnet: use of skip connections.
 Replacement of simple convolutions by residual blocks
-Learnable Upsampling methods like Sub-Pixel convolution instead of interpolations..
+Learnable Upsampling methods like Sub-Pixel convolution instead of interpolations.
    
 Some time later, the introduction of the Perceptual loss, which is a mean of all MSE of each pixel (Target Real HR Image VS Output), as Loss function instead of using directly the MSE error proved to be a right choice as it reduced over-smoothing improving the perceptual quality.
 
@@ -76,22 +79,22 @@ A Discriminator that learns to identify if an image is real or Fake.
 
 <p align="right"><a href="#toc">To top</a></p>
 
-## 3. Execution Instructions <a name="instructions"></a>
+## 4. Execution Instructions <a name="instructions"></a>
 This are the executions commands to traing, test and inference the model
-### 3.1 Installation
+### 4.1 Installation
 Need to install all required packages with pip
 ```bash
 pip install -f requirements.txt
 ```
 
-### 3.2 Pretraining process execution
+### 4.2 Pretraining process execution
 ```bash
-python train.py RPL: blah blah blah
+python train.py
 ```
 
 <p align="right"><a href="#toc">To top</a></p>
 
-## 4. Milestones <a name="milestones"></a>
+## 5. Milestones <a name="milestones"></a>
 The main milestones throughout this project were:
 - Project preparation
 - Dataset Preparation & Loading
@@ -101,12 +104,11 @@ The main milestones throughout this project were:
 
 <p align="right"><a href="#toc">To top</a></p>
 
-## 5. Datasets <a name="datasets"></a>
+## 6. Datasets <a name="datasets"></a>
 We are using two types of datasets
 
 - [BSDS500](https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/resources.html#bsds500)
     * Standard benchmark for edge and contour detection segmentation.
-    * RESOLUTION?
     * Consists of 500 images, each with 5 different ground truth segmentations.
     * Contains:
         * 200 images for training.
@@ -127,7 +129,7 @@ We are using two types of datasets
 
 <p align="right"><a href="#toc">To top</a></p>
 
-## 6. Environment <a name="environment"></a>
+## 7. Environment <a name="environment"></a>
 The project has been fully implemented using Pytorch Framework. Additionally, the Albumentations library has been included in order to perform the crops and different transformations to the images from the Dataset.
 
 Most of the trials have been carried out within local environment because the availability of the equipment and the timing constraints that the project has faced. 
@@ -146,11 +148,11 @@ RPL: Aqui tambien estaría bien poner capacidad de las maquinas que hemos usado 
 
 <p align="right"><a href="#toc">To top</a></p>
 
-## 7. Architecture <a name="architecture"></a>
+## 8. Architecture <a name="architecture"></a>
 
 We've implemented a ESRGAN model using [PyTorch](https://pytorch.org/) RPL: blah blah blah, falta toda la teoría aqui.
 
-### 7.1 Hyperparameters <a name="hyperparameters"></a>
+### 8.1 Hyperparameters <a name="hyperparameters"></a>
 
 Default hyperparametres defined in paper
 
@@ -194,7 +196,7 @@ Default hyperparametres defined in paper
 
 <p align="right"><a href="#toc">To top</a></p>
 
-### 7.2 Loss functions <a name="lossfunctions"></a>
+### 8.2 Loss functions <a name="lossfunctions"></a>
 
 Whe have 3 kind of loss functions on this model.
 
@@ -241,7 +243,7 @@ $L_G = L_{percep} + λL_{G}^{Ra} + ηL_{content}$ which
 
 <p align="right"><a href="#toc">To top</a></p>
 
-## 8. Training process <a name="training"></a>
+## 9. Training process <a name="training"></a>
 
 Training process is composed in two main steps, pretraing (warm-up) and training.
 
@@ -255,7 +257,7 @@ First, before any step, we make **Image data augmentation** doing:
     * Compresion with 0.25 probability
     * Coarse Dropout with 0.25 probability
 
-### 8.1 Pre-training step <a name="pre_training_step"></a>
+### 9.1 Pre-training step <a name="pre_training_step"></a>
 * Only used the [Content loss](#content_loss) function for this step
 * Only works with generator (no discriminator used)
 * Adam optimizer with learning rate $2e^{-4}$ by default
@@ -264,7 +266,7 @@ First, before any step, we make **Image data augmentation** doing:
   * for pretrain: content_loss
   * for validation: content_loss, perceptual_loss, PSNR, SSIM
 
-### 8.2 Training step <a name="training_step"></a>
+### 9.2 Training step <a name="training_step"></a>
 In this step we train with generator and discriminator. For every mini batch we first freeze the discriminator and train the generator. When finished the mini batch then we train the discrminator and freeze the generator.
 * Generator:
   * The [total loss](#total_loss) ($L_G = L_{percep} + λL_{G}^{Ra} + ηL_{content}$) function is used for this step, which use [perceptual loss](#perceptual_loss), [Relativistic adversarial loss](#adversarial_loss) and [Content loss](#content_loss) with coeficients
@@ -278,14 +280,14 @@ In this step we train with generator and discriminator. For every mini batch we 
   * for training: content_loss, perceptual_loss,g_adversarial_loss,g_total_loss,d_adversarial_loss
   * for validation: content_loss, perceptual_loss, PSNR, SSIM
   
-### 8.3 Logging <a name="training_logging"></a>
+### 9.3 Logging <a name="training_logging"></a>
 For logging we use [wandb](https://wandb.ai/) with tensorboard [integrated](https://docs.wandb.ai/guides/integrations/tensorboard) because we can work with both system and share all the logging information automatically to everyone and in real time. Besides we upload images with the result of the image and the ground truth to compare the results visually for every N epochs. 
 
 <p align="right"><a href="#toc">To top</a></p>
 
-## 9. Results <a name="results"></a>
+## 10. Results <a name="results"></a>
 
-### 9.1 Executions <a name="executions"></a>
+### 10.1 Executions <a name="executions"></a>
 We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) with differents hyperparameters
 
 * ESRGAN (PRE CR: 128 / CR: 128 / 23 RRDBs / DIV2K)
@@ -324,14 +326,14 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
     * pretraining/train_datasets: ["div2k", "bsds500"]
     * training/train_datasets: ["div2k", "bsds500"]
 
-### 9.2 Metrics <a name="metrics"></a>
+### 10.2 Metrics <a name="metrics"></a>
 
-#### 9.2.1 Train PSNR-driven content loss
+#### 10.2.1 Train PSNR-driven content loss
 <p align="center">
   <img src="assets/graphs/train_PSNR-driven_content-loss.png">
 </p>
 
-#### 9.2.2 Validation PSNR-driven
+#### 10.2.2 Validation PSNR-driven
 <p align="center">
   <img src="assets/graphs/validation_PSNR-driven_content-loss.png">
   <img src="assets/graphs/validation_PSNR-driven_PSNR.png">
@@ -339,7 +341,7 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
   <img src="assets/graphs/validation_PSNR-driven_perceptual-loss.png">
 </p>
 
-#### 9.2.3 Train GAN-based
+#### 10.2.3 Train GAN-based
 <p align="center">
   <img src="assets/graphs/train_GAN-based_content-loss.png">
   <img src="assets/graphs/train_GAN-based_g-adversarial-loss.png">
@@ -348,7 +350,7 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
   <img src="assets/graphs/train_GAN-based_g-total-loss.png">
 </p>
 
-#### 9.2.4 Validation GAN-based
+#### 10.2.4 Validation GAN-based
 <p align="center">
   <img src="assets/graphs/validation_GAN-based_content-loss.png">
   <img src="assets/graphs/validation_GAN-based_SSIM.png">
@@ -356,7 +358,7 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
   <img src="assets/graphs/validation_GAN-based_perceptual-loss.png">
 </p>
 
-### 9.3 model results <a name="images"></a>
+### 10.3 model results <a name="images"></a>
 * [Pre-CR: 128 / CR: 128 / 23 RRDBs / DIV2K]
 <p align="center">
   <img src="assets/results/128_cr_23_rrdb_div2k_butterfly.png">
@@ -383,7 +385,7 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
 
 <p align="right"><a href="#toc">To top</a></p>
 
-### 9.4 Torch Models trained <a name="models"></a>
+### 10.4 Torch Models trained <a name="models"></a>
 
 | Model                              | Download                                                                                                 | Comments                                 |
 |------------------------------------|----------------------------------------------------------------------------------------------------------|------------------------------------------|
@@ -402,7 +404,7 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
 
 <p align="right"><a href="#toc">To top</a></p>
 
-### 9.5 Comparison metrics <a name="comparison"></a>
+### 10.5 Comparison metrics <a name="comparison"></a>
 
 <p align="center">
   <img src="assets/metrics_comparison4.png">
@@ -410,7 +412,7 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
 
 <p align="right"><a href="#toc">To top</a></p>
 
-## 10. Conclusions <a name="conclusions"></a>
+## 11. Conclusions <a name="conclusions"></a>
 
 It has been a very challenging project and we have learned a lot. One of the first issues we faced is the hardware limitation. It took a lot of time to train the models, and the batch size was also limited to the hardware compute power.
 
@@ -424,66 +426,10 @@ Deep learning has a huge community behind it, which makes it easier to find a so
 
 <p align="right"><a href="#toc">To top</a></p>
 
-## 11. References <a name="references"></a>
+## 12. References <a name="references"></a>
 
+<p align="right"><a href="#toc">To top</a></p>
 
-[Learning from the memory of Atari 2600](https://arxiv.org/pdf/1605.01335.pdf)
-
-[High-dimensional Continuous Control Using Generalized Advantage Estimation](https://arxiv.org/pdf/1506.02438.pdf)
-
-[What Matters In On-Policy Reinforcement Learning? A Large-Scale Empirical Study](https://arxiv.org/pdf/2006.05990.pdf)
-
-[Stabilizing Transformers For Reinforcement Learning](https://arxiv.org/pdf/1910.06764.pdf)
-
-[RL — Proximal Policy Optimization (PPO) Explained | by Jonathan Hui](https://medium.com/@jonathan_hui/rl-proximal-policy-optimization-ppo-explained-77f014ec3f12)
-
-[A (Long) Peek into Reinforcement Learning](https://lilianweng.github.io/lil-log/2018/02/19/a-long-peek-into-reinforcement-learning.html)
-
-[Proximal Policy Optimization Algorithms](https://arxiv.org/pdf/1707.06347.pdf)
-
-[Proximal Policy Optimization](https://openai.com/blog/openai-baselines-ppo/)
-
-[Proximal Policy Optimization (PPO)](https://towardsdatascience.com/proximal-policy-optimization-ppo-with-tensorflow-2-x-89c9430ecc26)
-
-[RL — Proximal Policy Optimization (PPO) Explained](https://medium.com/@jonathan_hui/rl-proximal-policy-optimization-ppo-explained-77f014ec3f12)
-
-[Understanding Actor Critic Methods and A2C](https://towardsdatascience.com/understanding-actor-critic-methods-931b97b6df3f)
-
-[Cartpole - Introduction to Reinforcement Learning (DQN - Deep Q-Learning)](https://towardsdatascience.com/cartpole-introduction-to-reinforcement-learning-ed0eb5b58288)
-
-[Docs » Proximal Policy Optimization](https://spinningup.openai.com/en/latest/algorithms/ppo.html#documentation-pytorch-version)
-
-[RL — Policy Gradient Explained](https://medium.com/@jonathan_hui/rl-policy-gradients-explained-9b13b688b146)
-
-[RL — Policy Gradients Explained (Part 2)](https://medium.com/@jonathan_hui/rl-policy-gradients-explained-advanced-topic-20c2b81a9a8b)
-
-[Asynchronous Methods for Deep Reinforcement Learning](https://arxiv.org/pdf/1602.01783.pdf)
-
-[Reinforcement learning algorithms with Generalized Advantage Estimation](https://github.com/bsivanantham/GAE)
-
-[Proximal Policy Optimization Tutorial (Part 1/2: Actor-Critic Method)](https://towardsdatascience.com/proximal-policy-optimization-tutorial-part-1-actor-critic-method-d53f9afffbf6)
-
-[Proximal Policy Optimization Tutorial (Part 2/2: GAE and PPO loss)](https://towardsdatascience.com/proximal-policy-optimization-tutorial-part-2-2-gae-and-ppo-loss-fe1b3c5549e8)
-
-[Applications of Reinforcement Learning in Real World](https://towardsdatascience.com/applications-of-reinforcement-learning-in-real-world-1a94955bcd12)
-
-[Human-level control through deep reinforcement learning](https://storage.googleapis.com/deepmind-media/dqn/DQNNaturePaper.pdf)
-
-[Playing Atari with Deep Reinforcement Learning](https://deepmind.com/research/publications/playing-atari-deep-reinforcement-learning)
-
-[UC Berkeley Reward-Free RL Beats SOTA Reward-Based RL](https://syncedreview-com.cdn.ampproject.org/v/s/syncedreview.com/2020/09/21/uc-berkeley-reward-free-rl-beats-sota-reward-based-rl/amp/?usqp=mq331AQFKAGwASA%3D&amp_js_v=01#referrer=https%3A%2F%2Fwww.google.com&amp_tf=De%20%251%24s&ampshare=https%3A%2F%2Fsyncedreview.com%2F2020%2F09%2F21%2Fuc-berkeley-reward-free-rl-beats-sota-reward-based-rl%2F)
-
-[From 0 to 200 - lessons learned from solving Atari Breakout with Reinforcement Learning](http://blog.jzhanson.com/blog/rl/project/2018/05/28/breakout.html)
-
-[ACCELERATED METHODS FOR DEEP REINFORCEMENT LEARNING](https://arxiv.org/pdf/1803.02811.pdf)
-
-## Presentation
-
-[Presentation (PPTX 2020-9-29)](/presentation/aidl_presentation_breakout.pptx)
-
-[Presentation (PDF 2020-9-29)](/presentation/aidl_presentation_breakout.pdf)
-
-[Presentation (latest)](https://docs.google.com/presentation/d/15Fdu86SqXk07pGEvxz5FZPpUEyuPUffezvqd6eWLsdA/edit#slide=id.p)
-
+## 13. Presentation <a name="presentation"></a>
 
 <p align="right"><a href="#toc">To top</a></p>
