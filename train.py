@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 ESRGAN Network training script.
 """
@@ -17,11 +19,10 @@ from typing import List, Tuple, Iterable, Optional
 from torch.utils.data import DataLoader, ConcatDataset
 from tqdm import tqdm
 
-import torch_srgan.datasets as datasets
-from torch_srgan.loggers.wandb import WandbLogger
-from torch_srgan.models.RRDBNet import RRDBNet
-from torch_srgan.models.VGG_discriminator import VGGStyleDiscriminator
-from torch_srgan.nn.criterions import AdversarialLoss, ContentLoss, PerceptualLoss
+import torch_sr.datasets as datasets
+from torch_sr.loggers import WandbLogger
+from torch_sr.models import RRDBNet, VGGStyleDiscriminator
+from torch_sr.nn import AdversarialLoss, ContentLoss, PerceptualLoss
 
 
 class AverageMeter(object):
@@ -595,7 +596,11 @@ if __name__ == '__main__':
         "-l", "--load-checkpoint", help="Path to the training checkpoint used as the start point", type=pathlib.Path
     )
     parser.add_argument(
-        "-a", "--autocast", help="Use PyTorch autocast when running on cuda", action='store_true'
+        "-a", "--autocast", help="Use PyTorch autocast when running on GPU with CUDA support", action='store_true'
+    )
+    parser.add_argument(
+        "--no-data-parallel", help="Disable parallelization if more than one GPU is detected on the system",
+        action='store_true'
     )
     parser.add_argument(
         "-i", "--checkpoint-interval", help="Define checkpoint store frequency", type=int, default=1

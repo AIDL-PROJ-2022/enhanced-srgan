@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+
+"""
+Fix up-scaling blocks name from previous versions model state dict.
+"""
+
 import argparse
 import collections
 import os

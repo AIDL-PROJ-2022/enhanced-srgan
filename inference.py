@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+
+"""
+RRDB Network inference script.
+"""
+
 import argparse
 import glob
 import os
@@ -7,8 +13,8 @@ import torch
 
 from pathlib import Path
 
-from torch_srgan.models.RRDBNet import RRDBNet
-from torch_srgan.nn.criterions import ContentLoss, PerceptualLoss
+from torch_sr.models import RRDBNet
+from torch_sr.nn import ContentLoss, PerceptualLoss
 
 
 def debugger_is_active() -> bool:
@@ -22,10 +28,12 @@ if __name__ == '__main__':
     # Read arguments
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--model-path", help="PSNR-based (pre-training) input model path", type=str, required=True
+        "-m", "--model-path", help="Input generator model path. Can be a checkpoint or a final model",
+        type=str, required=True
     )
     parser.add_argument(
-        "--out-dir", help="Output directory where inferred images will be stored", type=str, default=None
+        "-o", "--out-dir", help="Output directory where inferred images will be stored",
+        type=str, default=None
     )
     parser.add_argument('images', type=str, nargs='+')
     args = parser.parse_args()

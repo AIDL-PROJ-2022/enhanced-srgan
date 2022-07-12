@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=62.6", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "torch-sr"
+version = "0.0.1"
+description = "PyTorch Super-Resolution Deep Learning Models"
+license = { file="LICENSE" }
+authors = [
+  { name="Marc Bermejo", email="marcbermejotarrago@gmail.com" },
+  { name="Raul Puente", email="raulpuente@gmail.com" },
+]
+readme = "README.md"
+requires-python = ">=3.7"
+keywords = [
+    "computer vision",
+    "super-resolution",
+    "generative adversarial networks",
+    "esrgan",
+    "pytorch",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Operating System :: OS Independent",
+    "License :: LGPL-2.1",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Image Recognition",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Framework :: PyTorch",
+    "Programming Language :: Python :: 3",
+]
+
+[project.urls]
+homepage = "https://github.com/AIDL-PROJ-2022/enhanced-srgan"
+repository = "https://github.com/AIDL-PROJ-2022/enhanced-srgan"
+documentation = "https://torch-sr.readthedocs.io/"
+bug_tracker = "https://github.com/AIDL-PROJ-2022/enhanced-srgan/issues"

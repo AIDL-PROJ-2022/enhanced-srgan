@@ -158,7 +158,7 @@ class ImagePairDataset(Dataset, ABC):
             # Calculate LR image resize scaling factor
             lr_img_size = (hr_img_w // self.scale_factor, hr_img_h // self.scale_factor)
             # Resize HR image to produce an LR image
-            lr_image = cv2.resize(hr_image, lr_img_size, interpolation=cv2.INTER_CUBIC)
+            lr_image = cv2.resize(hr_image, lr_img_size, interpolation=cv2.INTER_NEAREST)
         else:
             # Read LR image from disk
             lr_image = cv2.imread(img_pair["lr"], cv2.IMREAD_UNCHANGED)

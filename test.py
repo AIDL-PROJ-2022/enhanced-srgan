@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 ESRGAN Network test script.
 """
@@ -16,9 +18,9 @@ from torch.nn import functional as F
 from tqdm import tqdm
 from typing import List, Tuple
 
-import torch_srgan.datasets as datasets
-from torch_srgan.models.RRDBNet import RRDBNet
-from torch_srgan.nn.criterions import ContentLoss, PerceptualLoss
+import torch_sr.datasets as datasets
+from torch_sr.models import RRDBNet
+from torch_sr.nn import ContentLoss, PerceptualLoss
 
 
 class AverageMeter(object):
@@ -77,6 +79,8 @@ def validate_model(best_plots_to_show: int = 0, out_dir: str = None):
 
     # Enable plot auto-layout
     plt.rcParams["figure.autolayout"] = True
+    # Disable warning for too much open figures
+    plt.rcParams["figure.max_open_warning"] = 500
     # Acquire default dots per inch value of matplotlib
     dpi = matplotlib.rcParams['figure.dpi']
     # Define margin in pixels
@@ -106,7 +110,7 @@ def validate_model(best_plots_to_show: int = 0, out_dir: str = None):
             perceptual_loss_metric.update(p_loss)
 
             # Measure PSNR metric against ground truth image
-            psnr = piq.psnr(hr_image, out_image, data_range=1.0, reduction="mean", convert_to_greyscale=False).item()
+            psnr = piq.psnr(hr_image, out_image, data_range=1.0, reduction="mean", convert_to_greyscale=True).item()
             psnr_metric.update(psnr)
 
             # Measure SSIM metric against ground truth image
@@ -164,7 +168,7 @@ def validate_model(best_plots_to_show: int = 0, out_dir: str = None):
     print("-" * 64)
 
     # Sort all results from its PSNR value
-    result_figues.sort(key=lambda x: x[0])
+    result_figues.sort(key=lambda x: x[0], reverse=True)
     # Hide all plots with bad results
     for _, fig in result_figues[best_plots_to_show:]:
         plt.close(fig)
@@ -188,7 +192,7 @@ if __name__ == '__main__':
         help="Datasets to use to test the specified model. "
              "Datasets need to be specified sepparated by a coma. Example: --datasets=set5,set14. "
              "Available values are: 'div2k', 'bsds500', 'set5', and 'set14'",
-        type=str
+        type=str, default="set5"
     )
     parser.add_argument(
         "-s", "--show-results", help="Show N best PSNR of all tested images",
@@ -246,7 +250,7 @@ if __name__ == '__main__':
         if dataset_name == "bsds500":
             dataset = datasets.BSDS500(target='test', scale_factor=hparams["scale_factor"], patch_size=None)
         elif dataset_name == "div2k":
-            dataset = datasets.DIV2K(target='test', scale_factor=hparams["scale_factor"], patch_size=(512, 512))
+            dataset = datasets.DIV2K(target='test', scale_factor=hparams["scale_factor"], patch_size=(768, 768))
         elif dataset_name == "set5":
             dataset = datasets.Set5(scale_factor=hparams["scale_factor"])
         elif dataset_name == "set14":

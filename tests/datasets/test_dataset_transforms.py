@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 
 from albumentations.augmentations.crops import functional as F
-from torch_srgan.datasets.transforms import PairedRandomCrop, PairedCenterCrop, SimpleNormalize
+from torch_sr.datasets.transforms import PairedRandomCrop, PairedCenterCrop, SimpleNormalize
 
 
 def open_test_image(image_name="test_image.png"):

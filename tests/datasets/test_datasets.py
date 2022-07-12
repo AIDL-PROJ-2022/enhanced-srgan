@@ -1,7 +1,7 @@
 import cv2
 import matplotlib.pyplot as plt
 
-from torch_srgan.datasets import BSDS500
+from torch_sr.datasets import BSDS500
 
 
 def visualize(image):

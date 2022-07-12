@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+
+"""
+Extract a model state dictionary from a given checkpoint.
+"""
+
 import argparse
 import os
 import torch

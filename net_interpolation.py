@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+
+"""
+ESRGAN Network interpolation script.
+"""
+
 import argparse
 import os
 import torch
