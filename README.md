@@ -155,7 +155,6 @@ Once the project reached an acceptable level of maturity, different trainings ha
 
 In terms of data visualization and logging, both Wandb and Tensorboard have been included into the project given that W&B can support Tensorboard and each of them provides additional features. For example: Wandb allows tracking the images created after each epoch and Tensorboard displays the Graph execution.
 
-RPL: Aqui tambien estaría bien poner capacidad de las maquinas que hemos usado en local, y también las de google cloud ademas de los tiempos que han tardado
 
 
 <p align="center">
@@ -259,6 +258,29 @@ but with the improve by using VGG features before activation instead of after ac
 The **total loss**<a name="total_loss"></a> ($L_G$) is then calculated by:
 $L_G = L_{percep} + λL_{G}^{Ra} + ηL_{content}$ which 
 λ, η are the coefficients to balance different loss terms
+
+### 8.3 Quality Metrics <a name="quality_metrics"></a>
+
+#### 8.3.1 Structural Similarity Index(SSIM)
+Given 2 images, SSIM is an index between in the range (-1,1) indicating similar are those two images.
+* +1 = very similar or the same.
+* -1 = very different.
+
+It combines different comparison functions:
+* Luminance l(x,y).
+* Contrast c(x,y)
+* Structure s(x,y)
+
+Formula: **$SSIM(x,y) = [l(x,y)]^α * [c(x,y)]^β * [s(x,y)]^γ$**, which α,β,γ are the weights assigned to each feature
+
+
+#### 8.3.2 Peak Signal-to-Noise (PSNR)
+
+Ratio between maximum possible value (power) of a signal and power of distorting noise that affects the quality of its representation.
+
+Metric used to compare different image enhancement algorithms systematically to evaluate which produces better results using the same dataset
+
+Formula: **$PSNR = 20log_{10}({MAX_f\over\sqrt{MSE}})$** where MSE is the L2 loss and $MAX_f$ is the maximum existing signal value in our original “known to be good” image.
 
 <p align="right"><a href="#toc">To top</a></p>
 
