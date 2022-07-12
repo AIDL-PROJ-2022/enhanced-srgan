@@ -462,7 +462,7 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
 ### 10.5 Comparison metrics <a name="comparison"></a>
 
 <p align="center">
-  <img src="assets/metrics_comparison.png">
+  <img src="assets/metrics_comparison_final.png">
 </p>
 
 <p align="right"><a href="#toc">To top</a></p>
