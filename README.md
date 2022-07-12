@@ -1,45 +1,47 @@
 # enhanced-srgan
 
-Enhanced SuperRessolution using a GAN model with a residual-on-residual generator.
+Enhanced Super resolution using a GAN model with a residual-on-residual generator.
 
 ### Authors: Marc Bermejo, Ferran Torres, Raul Puente
 
 ### Advisor: Dani Fojo
 
-## Table of Contents <a name="toc"></a>
+## Table of Contents
 
-1. [Introduction](#intro)
-1. [Motivation](#motivation)
-1. [Theory](#theory)
-1. [Execution Instructions](#instructions)
-1. [Milestones](#milestones)
-1. [Datasets](#datasets)
-1. [Environment](#environment)
-1. [Architecture](#architecture)
-    1. [Hyperparameters](#hyperparameters)
-    1. [Loss functions](#lossfunctions)
-    1. [Quality Metrics](#quality_metrics)
-1. [Training process](#training)
-    1. [Pre-training](#pre_training_step)
-    1. [Training](#training_step)
-    1. [Logging](#training_logging)
-1. [Results](#results)
-    1. [Executions](#executions)
-    1. [Metrics](#metrics)
-    1. [Images](#images)
-    1. [Torch models trained](#models)
-    1. [Comparison metrics](#comparison)
-1. [Conclusions](#conclusions)
-1. [References](#references)
-1. [Presentation](#presentation)
+1. [Introduction](#1-introduction)
+2. [Motivation](#2-motivation)
+3. [Theory](#3-theory)
+4. [Execution Instructions](#4-execution-instructions)
+   1. [Installation](#41-installation)
+5. [Milestones](#5-milestones)
+6. [Datasets](#6-datasets)
+7. [Environment](#7-environment)
+8. [Architecture](#8-architecture)
+    1. [Hyper-parameters](#81-hyperparameters)
+    2. [Loss functions](#82-loss-functions)
+    3. [Quality Metrics](#83-quality-metrics)
+9. [Training process](#9-training-process)
+    1. [Pre-training](#91-pre-training-step)
+    2. [Training](#92-training-step)
+    3. [Logging](#93-logging)
+10. [Results](#10-results)
+     1. [Executions](#101-executions)
+     2. [Metrics](#102-metrics)
+     3. [Images](#103-images)
+     4. [Torch models trained](#104-models)
+     5. [Comparison metrics](#105-comparison)
+11. [Conclusions](#11-conclusions)
+12. [References](#12-references)
+13. [Presentation](#13-presentation)
 
-## 1. Introduction <a name="intro"></a>
+## 1. Introduction
 
 In this project we will implement the Super-Resolution Generative Adversarial Network (SRGAN) which is a seminal work that is capable of generating realistic textures during single image super-resolution. This implementation where introduced by Xintao Wang, Ke Yu, Shixiang Wu, Jinjin Gu, Yihao Liu, Chao Dong, Chen Change Loy, Yu Qiao, Xiaoou Tang in 2018 by the paper [ESRGAN: Enhanced Super-Resolution Generative Adversarial Networks](https://arxiv.org/abs/1809.00219)
 
-<p align="right"><a href="#toc">To top</a></p>
+{: style="text-align: right" }
+[To top](#table-of-contents)
 
-## 2. Motivation <a name="motivation"></a>
+## 2. Motivation
 
 The aim of choosing a project based on Super Resolution was to investigate this set of techniques because of the wide range of possible solutions to real challenges that they can provide. Some examples could be the resolution improvement of images coming from satellites for future analysis or the enhancement of optical inspection processes used in many sectors like Aerospace, Electronics or FMCG. 
 
@@ -54,9 +56,10 @@ As mentioned previously, the idea of the project was to target a solution with p
   <img src="assets/ESRGAN_illustration1.png">
 </p>
 
-<p align="right"><a href="#toc">To top</a></p>
+{: style="text-align: right" }
+[To top](#table-of-contents)
 
-## 3. Theory <a name="theory"></a>
+## 3. Theory
 
 The first methods that targeted an increase the resolution of an image, where based on different possible interpolation methods estimating values of the unknown pixels using the ones at their surroundings. 
 
@@ -77,9 +80,10 @@ A Discriminator that learns to identify if an image is real or Fake.
   <img src="assets/example_srgan.png">
 </p>
 
-<p align="right"><a href="#toc">To top</a></p>
+{: style="text-align: right" }
+[To top](#table-of-contents)
 
-## 4. Execution Instructions <a name="instructions"></a>
+## 4. Execution Instructions
 
 ### 4.1 Installation
 
@@ -109,9 +113,10 @@ pip3 install -r requirements.txt
 python train.py
 ```
 
-<p align="right"><a href="#toc">To top</a></p>
+{: style="text-align: right" }
+[To top](#table-of-contents)
 
-## 5. Milestones <a name="milestones"></a>
+## 5. Milestones
 The main milestones throughout this project were:
 - Project preparation
 - Dataset Preparation & Loading
@@ -119,9 +124,10 @@ The main milestones throughout this project were:
 - First metrics and model training
 - Project Review and conclusions
 
-<p align="right"><a href="#toc">To top</a></p>
+{: style="text-align: right" }
+[To top](#table-of-contents)
 
-## 6. Datasets <a name="datasets"></a>
+## 6. Datasets
 We are using two types of datasets
 
 - [BSDS500](https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/resources.html#bsds500)
@@ -144,9 +150,10 @@ We are using two types of datasets
 - [SET14](https://deepai.org/dataset/set14-super-resolution)
     * The Set14 dataset is a dataset consisting of 14 images commonly used for testing performance of Image Super-Resolution models.
 
-<p align="right"><a href="#toc">To top</a></p>
+{: style="text-align: right" }
+[To top](#table-of-contents)
 
-## 7. Environment <a name="environment"></a>
+## 7. Environment
 The project has been fully implemented using Pytorch Framework. Additionally, the Albumentations library has been included in order to perform the crops and different transformations to the images from the Dataset.
 
 Most of the trials have been carried out within local environment because the availability of the equipment and the timing constraints that the project has faced. 
@@ -163,13 +170,14 @@ RPL: Aqui tambien estaría bien poner capacidad de las maquinas que hemos usado 
 </p>
 
 
-<p align="right"><a href="#toc">To top</a></p>
+{: style="text-align: right" }
+[To top](#table-of-contents)
 
-## 8. Architecture <a name="architecture"></a>
+## 8. Architecture
 
 We've implemented a ESRGAN model using [PyTorch](https://pytorch.org/) RPL: blah blah blah, falta toda la teoría aqui.
 
-### 8.1 Hyperparameters <a name="hyperparameters"></a>
+### 8.1 Hyperparameters
 
 Default hyperparametres defined in paper
 
@@ -213,9 +221,10 @@ Default hyperparametres defined in paper
 | perceptual_loss/normalize_input     | `true`                                   | If set to `True`, normalize the input image before doing inference though the VGG network. The mean and standard deviation values are calculated for an image in the range `[0, 1]`.                      |
 | perceptual_loss/normalize_loss      | `false`                                  | If set to `True`, divide the total perceptual loss by the sum of the specified layers weight.                                                                                                             |
 
-<p align="right"><a href="#toc">To top</a></p>
+{: style="text-align: right" }
+[To top](#table-of-contents)
 
-### 8.2 Loss functions <a name="lossfunctions"></a>
+### 8.2 Loss functions
 
 Whe have 3 kind of loss functions on this model.
 
@@ -260,9 +269,10 @@ The **total loss**<a name="total_loss"></a> ($L_G$) is then calculated by:
 $L_G = L_{percep} + λL_{G}^{Ra} + ηL_{content}$ which 
 λ, η are the coefficients to balance different loss terms
 
-<p align="right"><a href="#toc">To top</a></p>
+{: style="text-align: right" }
+[To top](#table-of-contents)
 
-## 9. Training process <a name="training"></a>
+## 9. Training process
 
 Training process is composed in two main steps, pretraing (warm-up) and training.
 
@@ -276,7 +286,7 @@ First, before any step, we make **Image data augmentation** doing:
     * Compresion with 0.25 probability
     * Coarse Dropout with 0.25 probability
 
-### 9.1 Pre-training step <a name="pre_training_step"></a>
+### 9.1 Pre-training step
 * Only used the [Content loss](#content_loss) function for this step
 * Only works with generator (no discriminator used)
 * Adam optimizer with learning rate $2e^{-4}$ by default
@@ -285,7 +295,7 @@ First, before any step, we make **Image data augmentation** doing:
   * for pretrain: content_loss
   * for validation: content_loss, perceptual_loss, PSNR, SSIM
 
-### 9.2 Training step <a name="training_step"></a>
+### 9.2 Training step
 In this step we train with generator and discriminator. For every mini batch we first freeze the discriminator and train the generator. When finished the mini batch then we train the discrminator and freeze the generator.
 * Generator:
   * The [total loss](#total_loss) ($L_G = L_{percep} + λL_{G}^{Ra} + ηL_{content}$) function is used for this step, which use [perceptual loss](#perceptual_loss), [Relativistic adversarial loss](#adversarial_loss) and [Content loss](#content_loss) with coeficients
@@ -299,14 +309,15 @@ In this step we train with generator and discriminator. For every mini batch we 
   * for training: content_loss, perceptual_loss,g_adversarial_loss,g_total_loss,d_adversarial_loss
   * for validation: content_loss, perceptual_loss, PSNR, SSIM
   
-### 9.3 Logging <a name="training_logging"></a>
+### 9.3 Logging
 For logging we use [wandb](https://wandb.ai/) with tensorboard [integrated](https://docs.wandb.ai/guides/integrations/tensorboard) because we can work with both system and share all the logging information automatically to everyone and in real time. Besides we upload images with the result of the image and the ground truth to compare the results visually for every N epochs. 
 
-<p align="right"><a href="#toc">To top</a></p>
+{: style="text-align: right" }
+[To top](#table-of-contents)
 
-## 10. Results <a name="results"></a>
+## 10. Results
 
-### 10.1 Executions <a name="executions"></a>
+### 10.1 Executions
 We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) with differents hyperparameters
 
 * ESRGAN (PRE CR: 128 / CR: 128 / 23 RRDBs / DIV2K)
@@ -345,7 +356,7 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
     * pretraining/train_datasets: ["div2k", "bsds500"]
     * training/train_datasets: ["div2k", "bsds500"]
 
-### 10.2 Metrics <a name="metrics"></a>
+### 10.2 Metrics
 
 #### 10.2.1 Train PSNR-driven content loss
 <p align="center">
@@ -377,7 +388,7 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
   <img src="assets/graphs/validation_GAN-based_perceptual-loss.png">
 </p>
 
-### 10.3 model results <a name="images"></a>
+### 10.3 model results
 * [Pre-CR: 128 / CR: 128 / 23 RRDBs / DIV2K]
 <p align="center">
   <img src="assets/results/128_cr_23_rrdb_div2k_butterfly.png">
@@ -402,9 +413,10 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
   <img src="assets/results/p192_t128_cr_16_rrdb_div2k+bsds500_parrot.png">
 </p>  
 
-<p align="right"><a href="#toc">To top</a></p>
+{: style="text-align: right" }
+[To top](#table-of-contents)
 
-### 10.4 Torch Models trained <a name="models"></a>
+### 10.4 Torch Models trained
 
 | Model                              | Download                                                                                                 | Comments                                 |
 |------------------------------------|----------------------------------------------------------------------------------------------------------|------------------------------------------|
@@ -421,17 +433,19 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
 | 128_cr_23_rrdb_div2k               | [ESRGAN.pth](https://drive.google.com/file/d/1UL1DMT2KaHTjNNiN53v0qplliM4zHEOS/view?usp=sharing)         | ESRGAN model                             |
 | 128_cr_23_rrdb_div2k               | [ESRGAN-interp.pth](https://drive.google.com/file/d/1Bj4C8j1mjoCFkjZzaY_te4KjMMIMt4WO/view?usp=sharing)  | ESRGAN Interpolated with alpha 0.8 model |
 
-<p align="right"><a href="#toc">To top</a></p>
+{: style="text-align: right" }
+[To top](#table-of-contents)
 
-### 10.5 Comparison metrics <a name="comparison"></a>
+### 10.5 Comparison metrics
 
 <p align="center">
   <img src="assets/metrics_comparison4.png">
 </p>
 
-<p align="right"><a href="#toc">To top</a></p>
+{: style="text-align: right" }
+[To top](#table-of-contents)
 
-## 11. Conclusions <a name="conclusions"></a>
+## 11. Conclusions
 
 It has been a very challenging project and we have learned a lot. One of the first issues we faced is the hardware limitation. It took a lot of time to train the models, and the batch size was also limited to the hardware compute power.
 
@@ -443,12 +457,15 @@ During this project we have had the opportunity of learning how to implement Rei
 
 Deep learning has a huge community behind it, which makes it easier to find a solution to your problem. However, bulding deep learning models can lead you to a very specific problem to your case and it won't be that easy to solve it.
 
-<p align="right"><a href="#toc">To top</a></p>
+{: style="text-align: right" }
+[To top](#table-of-contents)
 
-## 12. References <a name="references"></a>
+## 12. References
 
-<p align="right"><a href="#toc">To top</a></p>
+{: style="text-align: right" }
+[To top](#table-of-contents)
 
-## 13. Presentation <a name="presentation"></a>
+## 13. Presentation
 
-<p align="right"><a href="#toc">To top</a></p>
+{: style="text-align: right" }
+[To top](#table-of-contents)
