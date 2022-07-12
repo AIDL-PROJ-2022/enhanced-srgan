@@ -303,8 +303,6 @@ Metric used to compare different image enhancement algorithms systematically to 
 
 Formula: **$PSNR = 20log_{10}({MAX_f\over\sqrt{MSE}})$** where MSE is the L2 loss and $MAX_f$ is the maximum existing signal value in our original “known to be good” image.
 
-<div style="text-align: right"><a href="#table-of-contents">To top</a></div>
-
 ### 8.5 Network Interpolation
 
 To remove unpleasant noise in GAN-based methods while maintain a good perceltual quality, we use Network Interpolation. That means that we first train a PSNR-oriented network $G_{PSNR}$ and then obtain a GAN-based network $G_{GAN}$. 
@@ -313,6 +311,8 @@ We interpolate all the corresponding parameters of these two networks to derive 
 
 G are the parameters of GINTERP, GPSNR and
 GGAN, respectively, and α ∈ [0, 1] is the interpolation parameter.
+
+<div style="text-align: right"><a href="#table-of-contents">To top</a></div>
 
 ## 9. Training process
 
