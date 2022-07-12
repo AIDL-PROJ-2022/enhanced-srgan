@@ -241,6 +241,19 @@ Whe have 3 kind of loss functions on this model.
 
 **Content loss**<a name="content_loss"></a>: ($L_{content}$) Content loss that evaluate the 1-norm distances beween recovered image G($x_i$) and the ground-truth y. Can be configured to use the L1 (mean absolute error) or L2 (mean square error) function. By default we use L1 function.
 
+$$
+\begin{aligned}
+L1 = MAE = {SAE \over N} = {1 \over N}  \sum_{t = 1}^{N} |y_t - f_t|
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+L2 = MSE = {SSE \over N} = {1 \over N}  \sum_{t = 1}^{N} (y_t - f_t)^2
+\end{aligned}
+$$
+
+
 **Relativistic adversarial loss**<a name="adversarial_loss"></a>: We use the relativistic GAN which tries to predict the probability that a real image $x_r$ is relatively more realistic than a fake one $x_f$, as shown in Fig.
 <p align="center">
   <img src="assets/relativistic_gan.png">
@@ -309,13 +322,11 @@ To remove unpleasant noise in GAN-based methods while maintain a good perceltual
 
 We interpolate all the corresponding parameters of these two networks to derive an interpolated model $G_{INTERP}$, whose parameters are: 
 
-$θ_G^{INTERP} = (1 − α)θ_G^{PSNR} + αθ_G^{GAN}$
-
-This is the equation I would like centred:
-\[
-  \makebox[\linewidth]{$h(t_{ij}) = Pr[ T_i = j| T_i \geq j |$}
-\]
-
+$$
+\begin{aligned}
+ θ_G^{INTERP} = (1 − α)θ_G^{PSNR} + αθ_G^{GAN}
+\end{aligned}
+$$
 
 where $θ_G^{INTERP}$, $θ_G^{PSNR}$ and $θ_G^{GAN}$ are the parameters of $G_{INTERP}$, $G_{PSNR}$ and $G_{GAN}$ respectively, and α ∈ [0, 1] is the interpolation parameter.
 
