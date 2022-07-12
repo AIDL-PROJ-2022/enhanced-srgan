@@ -313,9 +313,14 @@ Formula: **$SSIM(x,y) = [l(x,y)]^α * [c(x,y)]^β * [s(x,y)]^γ$**, where α,β,
 
 Ratio between maximum possible value (power) of a signal and power of distorting noise that affects the quality of its representation.
 
-Metric used to compare different image enhancement algorithms systematically to evaluate which produces better results using the same dataset
+Metric used to compare different image enhancement algorithms systematically to evaluate which produces better results using the same dataset, with the Formula
+$$
+\begin{aligned}
+PSNR = 20log_{10}({MAX_f\over\sqrt{MSE}})
+\end{aligned}
+$$
 
-Formula: **$PSNR = 20log_{10}({MAX_f\over\sqrt{MSE}})$** where MSE is the L2 loss and $MAX_f$ is the maximum existing signal value in our original “known to be good” image.
+where MSE is the L2 loss and $MAX_f$ is the maximum existing signal value in our original “known to be good” image.
 
 ### 8.5 Network Interpolation
 
