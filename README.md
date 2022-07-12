@@ -40,7 +40,7 @@ Enhanced Super resolution using a GAN model with a residual-on-residual generato
 
 In this project we will implement the Super-Resolution Generative Adversarial Network (SRGAN) which is a seminal work that is capable of generating realistic textures during single image super-resolution. This implementation where introduced by Xintao Wang, Ke Yu, Shixiang Wu, Jinjin Gu, Yihao Liu, Chao Dong, Chen Change Loy, Yu Qiao, Xiaoou Tang in 2018 by the paper [ESRGAN: Enhanced Super-Resolution Generative Adversarial Networks](https://arxiv.org/abs/1809.00219)
 
-<p style="text-align: right;"><a href="#table-of-contents">To top</a></p>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 2. Motivation
 
@@ -57,7 +57,7 @@ As mentioned previously, the idea of the project was to target a solution with p
   <img src="assets/ESRGAN_illustration1.png">
 </p>
 
-<p style="text-align: right;"><a href="#table-of-contents">To top</a></p>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 3. Theory
 
@@ -80,7 +80,7 @@ A Discriminator that learns to identify if an image is real or Fake.
   <img src="assets/example_srgan.png">
 </p>
 
-<p style="text-align: right;"><a href="#table-of-contents">To top</a></p>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 4. Execution Instructions
 
@@ -112,7 +112,7 @@ pip3 install -r requirements.txt
 python train.py
 ```
 
-<p style="text-align: right;"><a href="#table-of-contents">To top</a></p>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 5. Milestones
 The main milestones throughout this project were:
@@ -122,7 +122,7 @@ The main milestones throughout this project were:
 - First metrics and model training
 - Project Review and conclusions
 
-<p style="text-align: right;"><a href="#table-of-contents">To top</a></p>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 6. Datasets
 We are using two types of datasets
@@ -147,7 +147,7 @@ We are using two types of datasets
 - [SET14](https://deepai.org/dataset/set14-super-resolution)
     * The Set14 dataset is a dataset consisting of 14 images commonly used for testing performance of Image Super-Resolution models.
 
-<p style="text-align: right;"><a href="#table-of-contents">To top</a></p>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 7. Environment
 The project has been fully implemented using Pytorch Framework. Additionally, the Albumentations library has been included in order to perform the crops and different transformations to the images from the Dataset.
@@ -179,7 +179,7 @@ In terms of data visualization and logging, both Wandb and Tensorboard have been
 </p>
 
 
-<p style="text-align: right;"><a href="#table-of-contents">To top</a></p>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 8. Architecture
 
@@ -229,7 +229,7 @@ Default hyperparametres defined in paper
 | perceptual_loss/normalize_input     | `true`                                   | If set to `True`, normalize the input image before doing inference though the VGG network. The mean and standard deviation values are calculated for an image in the range `[0, 1]`.                      |
 | perceptual_loss/normalize_loss      | `false`                                  | If set to `True`, divide the total perceptual loss by the sum of the specified layers weight.                                                                                                             |
 
-<p style="text-align: right;"><a href="#table-of-contents">To top</a></p>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ### 8.2 Loss functions
 
@@ -299,7 +299,7 @@ Metric used to compare different image enhancement algorithms systematically to 
 
 Formula: **$PSNR = 20log_{10}({MAX_f\over\sqrt{MSE}})$** where MSE is the L2 loss and $MAX_f$ is the maximum existing signal value in our original “known to be good” image.
 
-<p style="text-align: right;"><a href="#table-of-contents">To top</a></p>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 9. Training process
 
@@ -341,7 +341,7 @@ In this step we train with generator and discriminator. For every mini batch we 
 ### 9.3 Logging
 For logging we use [wandb](https://wandb.ai/) with tensorboard [integrated](https://docs.wandb.ai/guides/integrations/tensorboard) because we can work with both system and share all the logging information automatically to everyone and in real time. Besides we upload images with the result of the image and the ground truth to compare the results visually for every N epochs. 
 
-<p style="text-align: right;"><a href="#table-of-contents">To top</a></p>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 10. Results
 
@@ -441,7 +441,7 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
   <img src="assets/results/p192_t128_cr_16_rrdb_div2k+bsds500_parrot.png">
 </p>  
 
-<p style="text-align: right;"><a href="#table-of-contents">To top</a></p>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ### 10.4 Torch Models trained
 
@@ -460,7 +460,7 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
 | 128_cr_23_rrdb_div2k               | [ESRGAN.pth](https://drive.google.com/file/d/1UL1DMT2KaHTjNNiN53v0qplliM4zHEOS/view?usp=sharing)         | ESRGAN model                             |
 | 128_cr_23_rrdb_div2k               | [ESRGAN-interp.pth](https://drive.google.com/file/d/1Bj4C8j1mjoCFkjZzaY_te4KjMMIMt4WO/view?usp=sharing)  | ESRGAN Interpolated with alpha 0.8 model |
 
-<p style="text-align: right;"><a href="#table-of-contents">To top</a></p>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ### 10.5 Comparison metrics
 
@@ -468,7 +468,7 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
   <img src="assets/metrics_comparison_final.png">
 </p>
 
-<p style="text-align: right;"><a href="#table-of-contents">To top</a></p>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 11. Conclusions
 
@@ -482,12 +482,12 @@ During this project we have had the opportunity of learning how to implement Rei
 
 Deep learning has a huge community behind it, which makes it easier to find a solution to your problem. However, bulding deep learning models can lead you to a very specific problem to your case and it won't be that easy to solve it.
 
-<p style="text-align: right;"><a href="#table-of-contents">To top</a></p>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 12. References
 
-<p style="text-align: right;"><a href="#table-of-contents">To top</a></p>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 13. Presentation
 
-<p style="text-align: right;"><a href="#table-of-contents">To top</a></p>
+<p align="right"><a href="#table-of-contents">To top</a></p>
