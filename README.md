@@ -428,12 +428,17 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
 </p>
 
 #### 10.2.2 Validation PSNR-driven
-<p align="center">
+&nbsp;             |  &nbsp;
+:-------------------------:|:-------------------------:
+<img src="assets/graphs/validation_PSNR-driven_content-loss.png">  |  <img src="assets/graphs/validation_PSNR-driven_PSNR.png">
+<img src="assets/graphs/validation_PSNR-driven_SSIM.png">  |  <img src="assets/graphs/validation_PSNR-driven_perceptual-loss.png">
+
+<!-- <p align="center">
   <img src="assets/graphs/validation_PSNR-driven_content-loss.png">
   <img src="assets/graphs/validation_PSNR-driven_PSNR.png">
   <img src="assets/graphs/validation_PSNR-driven_SSIM.png">
   <img src="assets/graphs/validation_PSNR-driven_perceptual-loss.png">
-</p>
+</p> -->
 
 #### 10.2.3 Train GAN-based
 <p align="center">
