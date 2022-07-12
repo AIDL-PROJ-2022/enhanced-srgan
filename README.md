@@ -38,7 +38,7 @@ Enhanced Super resolution using a GAN model with a residual-on-residual generato
 
 In this project we will implement the Super-Resolution Generative Adversarial Network (SRGAN) which is a seminal work that is capable of generating realistic textures during single image super-resolution. This implementation where introduced by Xintao Wang, Ke Yu, Shixiang Wu, Jinjin Gu, Yihao Liu, Chao Dong, Chen Change Loy, Yu Qiao, Xiaoou Tang in 2018 by the paper [ESRGAN: Enhanced Super-Resolution Generative Adversarial Networks](https://arxiv.org/abs/1809.00219)
 
-<p align="right"><a href="#table-of-contents">To top</a></p>
+<p align="right"><a href="#user-content-table-of-contents">To top</a></p>
 
 ## 2. Motivation
 
