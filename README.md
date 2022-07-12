@@ -17,9 +17,10 @@ Enhanced Super resolution using a GAN model with a residual-on-residual generato
 6. [Datasets](#6-datasets)
 7. [Environment](#7-environment)
 8. [Architecture](#8-architecture)
-    1. [Hyper-parameters](#81-hyperparameters)
-    2. [Loss functions](#82-loss-functions)
-    3. [Quality Metrics](#83-quality-metrics)
+    1. [Model definitions](#82-model-definitions)
+    2. [Hyper-parameters](#82-hyperparameters)
+    3. [Loss functions](#83-loss-functions)
+    4. [Quality Metrics](#84-quality-metrics)
 9. [Training process](#9-training-process)
     1. [Pre-training](#91-pre-training-step)
     2. [Training](#92-training-step)
@@ -170,18 +171,22 @@ Once the project reached an acceptable level of maturity, different trainings ha
 
 In terms of data visualization and logging, both Wandb and Tensorboard have been included into the project given that W&B can support Tensorboard and each of them provides additional features. For example: Wandb allows tracking the images created after each epoch and Tensorboard displays the Graph execution.
 
-
-
 <p align="center">
   <img src="assets/Environment project.png">
 </p>
-
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 8. Architecture
 
 We've implemented a ESRGAN model using [PyTorch](https://pytorch.org/)
+
+### 8.1 Model definitions
+
+<p align="center">
+  <img src="assets/model1.png">
+  <img src="assets/model2.png">
+</p>
 
 ### 8.1 Hyperparameters
 
@@ -483,6 +488,42 @@ Deep learning has a huge community behind it, which makes it easier to find a so
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 12. References
+
+[Automated visual quality inspection using AI/ML in manufacturing industries that reduces scrap/rework costs](https://industry40.co.in/automated-visual-quality-inspection-using-ai-ml-in-manufacturing/)
+
+[An Evolution in Single Image Super Resolution using Deep Learning](https://towardsdatascience.com/an-evolution-in-single-image-super-resolution-using-deep-learning-66f0adfb2d6b)
+
+[Enhance Image! Real-time Super Resolution with ARC EV Processor IP](https://www.synopsys.com/designware-ip/technical-bulletin/super-resolution-with-arc-ev.html)
+
+[Image Super-Resolution by Neural Texture Transfer](https://zzutk.github.io/SRNTT-Project-Page/)
+
+[VGG Very Deep Convolutional Networks (VGGNet) - What you need to know - viso.ai](https://viso.ai/deep-learning/vgg-very-deep-convolutional-networks/)
+
+[HAIBAL – Importing a VGG 16 model from Keras](https://www.technologies-france.com/2022/04/09/haibal-importing-a-vgg-16-model-from-keras/)
+
+[Latent Space in Deep Learning](https://www.baeldung.com/cs/dl-latent-space)
+
+[A Gentle Introduction to Padding and Stride for Convolutional Neural Networks](https://machinelearningmastery.com/padding-and-stride-for-convolutional-neural-networks/
+)
+
+[Step by step VGG16 implementation in Keras for beginners](https://towardsdatascience.com/step-by-step-vgg16-implementation-in-keras-for-beginners-a833c686ae6c)
+
+[Perceptual Discriminator Diagram explanation](https://www.researchgate.net/figure/The-perceptual-discriminator-is-composed-of-a-pre-trained-image-classification-network_fig1_327464533)
+
+[GAN Schema](https://www.researchgate.net/figure/Architecture-of-the-generative-adversarial-network-GAN-based-method-with-corresponding_fig1_335862244)
+
+[Content Loss](https://pytorch.org/tutorials/advanced/neural_style_tutorial.html
+)
+
+[Super Resolution GAN (SRGAN)](https://jonathan-hui.medium.com/gan-super-resolution-gan-srgan-b471da7270ec)
+
+[Intuitive Guide to Neural Style Transfer](https://towardsdatascience.com/light-on-math-machine-learning-intuitive-guide-to-neural-style-transfer-ef88e46697ee)
+
+[Neural style transfer](https://keras.io/examples/generative/neural_style_transfer/)
+
+[All about Structural Similarity Index (SSIM): Theory + Code in PyTorch](https://medium.com/srm-mic/all-about-structural-similarity-index-ssim-theory-code-in-pytorch-6551b455541e)
+
+[Peak Signal-to-Noise Ratio as an Image Quality Metric](https://www.ni.com/es-es/innovations/white-papers/11/peak-signal-to-noise-ratio-as-an-image-quality-metric.html)
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
