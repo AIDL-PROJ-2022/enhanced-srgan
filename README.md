@@ -80,14 +80,31 @@ A Discriminator that learns to identify if an image is real or Fake.
 <p align="right"><a href="#toc">To top</a></p>
 
 ## 4. Execution Instructions <a name="instructions"></a>
-This are the executions commands to traing, test and inference the model
+
 ### 4.1 Installation
-Need to install all required packages with pip
+
+You can install ``torch-sr`` via `pip <pip_>`_ or directly from source.
+
+#### Install from GitHub
+
+You can install the latest development version using [pip](https://pip.pypa.io/en/stable/) directly from the GitHub repository:
+
 ```bash
-pip install -f requirements.txt
+pip install git+https://github.com/AIDL-PROJ-2022/enhanced-srgan.git
+```
+
+#### Install from source
+
+It's also possible to clone the Git repository and install it from source using [pip](https://pip.pypa.io/en/stable/):
+
+```bash
+git clone https://github.com/AIDL-PROJ-2022/enhanced-srgan.git
+cd enhanced-srgan
+pip3 install -r requirements.txt
 ```
 
 ### 4.2 Pretraining process execution
+
 ```bash
 python train.py
 ```
