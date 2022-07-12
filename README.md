@@ -154,7 +154,7 @@ Most of the trials have been carried out within local environment because the av
 * Raul Puente's server: 
   * CPU: Intel(R) Core(TM) i9-10900F CPU @ 2.80GHz
   * RAM: 64 GB
-  * GPU: GeForce RTX 3070 - 4 gb RAM
+  * GPU: GeForce® GTX 3070 - 4 GB RAM
 * Marc Bermejo's server:
   * CPU: AMD Ryzen™ 9 3900X @ 3.8GHz
   * RAM: 32 GB
@@ -165,7 +165,7 @@ Once the project reached an acceptable level of maturity, different trainings ha
 * Google cloud environment
   * GPU: NVIDIA V100 GPUs 
   * RAM: 30 GB
-  * CPU: 8 virtual cpu
+  * CPU: 8 VIRTUAL CPU
 
 In terms of data visualization and logging, both Wandb and Tensorboard have been included into the project given that W&B can support Tensorboard and each of them provides additional features. For example: Wandb allows tracking the images created after each epoch and Tensorboard displays the Graph execution.
 
