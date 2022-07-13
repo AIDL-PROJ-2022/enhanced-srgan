@@ -35,6 +35,7 @@ the network architecture, adversarial loss and perceptual loss.
     2. [Hyper-parameters](#82-hyper-parameters)
     3. [Loss functions](#83-loss-functions)
     4. [Quality Metrics](#84-quality-metrics)
+    5. [Network Interpolation](#85-network-interpolation)
 9. [Training process](#9-training-process)
     1. [Pre-training](#91-pre-training-step)
     2. [Training](#92-training-step)
@@ -297,6 +298,19 @@ Whe have 3 kind of loss functions on this model.
 
 **Content loss**<a name="content_loss"></a>: ($L_{content}$) Content loss that evaluate the 1-norm distances beween recovered image G($x_i$) and the ground-truth y. Can be configured to use the L1 (mean absolute error) or L2 (mean square error) function. By default we use L1 function.
 
+$$
+\begin{aligned}
+L1 = MAE = {SAE \over N} = {1 \over N}  \sum_{t = 1}^{N} |y_t - f_t|
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+L2 = MSE = {SSE \over N} = {1 \over N}  \sum_{t = 1}^{N} (y_t - f_t)^2
+\end{aligned}
+$$
+
+
 **Relativistic adversarial loss**<a name="adversarial_loss"></a>: We use the relativistic GAN which tries to predict the probability that a real image $x_r$ is relatively more realistic than a fake one $x_f$, as shown in Fig.
 <p align="center">
   <img src="assets/relativistic_gan.png">
@@ -304,22 +318,23 @@ Whe have 3 kind of loss functions on this model.
 where σ is the sigmoid function and C(x) is the non-transformed discriminator output and E$x_f$[·] represents the operation of taking average for all fake data in the mini-batch.
 The discriminator loss is then defined as: 
 <br /> 
-<br /> 
 
-<center>
-
-$L_{D}^{Ra} = −E_{x_r} [log(D_{Ra}(x_r , x_f ))] − E_{x_f} [log(1 − D_{Ra}(x_f , x_r ))]$
-
-</center>
+$$
+\begin{aligned}
+L_{D}^{Ra} = −E_{x_r} [log(D_{Ra}(x_r , x_f ))] − E_{x_f} [log(1 − D_{Ra}(x_f , x_r ))]
+\end{aligned}
+$$
 
 And the adversarial los for generator is in a symmetrical form:
-<center>
 
-$L_{G}^{Ra} = −E_{x_r} [log(1 − D_{Ra}(x_r, x_f ))] − E_{x_f} [log(D_{Ra}(x_f , x_r ))]$
-</center>
+$$
+\begin{aligned}
+L_{G}^{Ra} = −E_{x_r} [log(1 − D_{Ra}(x_r, x_f ))] − E_{x_f} [log(D_{Ra}(x_f , x_r ))]
+\end{aligned}
+$$
+
 where $x_f = G(x_i)$ and $x_i$ stands for the input LR image.
 
-<br />
 <br />
 
 **Perceptual loss** ($L_{percep}$)<a name="perceptual_loss"></a>: Type of content loss introduced in the [Perceptual Losses for Real-Time Style Transfer and Super-Resolution](https://arxiv.org/abs/1603.08155v1) super-resolution and style transfer framework. Also known as VGG loss is based on the ReLU activation layers on the pre-treained 19 layer VGG netowrk.
@@ -355,9 +370,32 @@ Formula: **$SSIM(x,y) = [l(x,y)]^α * [c(x,y)]^β * [s(x,y)]^γ$**, where α,β,
 
 Ratio between maximum possible value (power) of a signal and power of distorting noise that affects the quality of its representation.
 
-Metric used to compare different image enhancement algorithms systematically to evaluate which produces better results using the same dataset
+Metric used to compare different image enhancement algorithms systematically to evaluate which produces better results using the same dataset, with the Formula
 
-Formula: **$PSNR = 20log_{10}({MAX_f\over\sqrt{MSE}})$** where MSE is the L2 loss and $MAX_f$ is the maximum existing signal value in our original “known to be good” image.
+$$
+\begin{aligned}
+PSNR = 20log_{10}({MAX_f\over\sqrt{MSE}})
+\end{aligned}
+$$
+
+where MSE is the L2 loss and $MAX_f$ is the maximum existing signal value in our original “known to be good” image.
+
+### 8.5 Network Interpolation
+
+To remove unpleasant noise in GAN-based methods while maintain a good perceltual quality, we use Network Interpolation. That means that we first train a PSNR-oriented network $G_{PSNR}$ and then obtain a GAN-based network $G_{GAN}$. 
+
+We interpolate all the corresponding parameters of these two networks to derive an interpolated model $G_{INTERP}$, whose parameters are: 
+
+$$
+\begin{aligned}
+ θ_G^{INTERP} = (1 − α)θ_G^{PSNR} + αθ_G^{GAN}
+\end{aligned}
+$$
+
+where $θ_G^{INTERP}$, $θ_G^{PSNR}$ and $θ_G^{GAN}$ are the parameters of $G_{INTERP}$, $G_{PSNR}$ and $G_{GAN}$ respectively, and α ∈ [0, 1] is the interpolation parameter.
+
+G are the parameters of GINTERP, GPSNR and
+GGAN, respectively, and α ∈ [0, 1] is the interpolation parameter.
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
@@ -454,6 +492,7 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
 </p>
 
 #### 10.2.2 Validation PSNR-driven
+
 <p align="center">
   <img src="assets/graphs/validation_PSNR-driven_content-loss.png">
   <img src="assets/graphs/validation_PSNR-driven_PSNR.png">
