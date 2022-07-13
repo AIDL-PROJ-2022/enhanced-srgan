@@ -567,8 +567,6 @@ $$
 where $θ_G^{INTERP}$, $θ_G^{PSNR}$ and $θ_G^{GAN}$ are the parameters of $G_{INTERP}$, $G_{PSNR}$ and $G_{GAN}$ respectively,
 and α ∈ [0, 1] is the interpolation parameter.
 
-G are the parameters of $G^{INTERP}$, $G^{PSNR} and $G^{GAN}$, respectively, and α ∈ [0, 1] is the interpolation parameter.
-
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 9. Training process
