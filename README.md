@@ -501,9 +501,11 @@ where $x_f = G(x_i)$ and $x_i$ stands for the input LR image.
 [Perceptual Losses for Real-Time Style Transfer and Super-Resolution](https://arxiv.org/abs/1603.08155v1) 
 framework. Also known as VGG loss is based on the ReLU activation layers on the pre-trained 19 layer VGG network.
 
-<p align="center">
-  <img src="assets/vgg_loss.png">
-</p>
+$$
+\begin{aligned}
+l_{VGG/i,j} = {1 \over W_{i,j}H_{i,j}} \sum_{x = 1}^{W_{i,j}} \sum_{y = 1}^{H_{i,j}} (\Phi_{i,j}(I^{HR})_{x,y} - \Phi_{i,j}(G_{\Phi_G}(I^{LR}))_{x,y})^2
+\end{aligned}
+$$
 
 but with the improvement of using VGG features before activation instead of after activation as in SRGAN. 
 It was empirically found hat the adjusted perceptual loss provides sharper edges and more visually pleasing results.
