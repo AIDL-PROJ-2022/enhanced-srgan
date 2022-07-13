@@ -575,7 +575,13 @@ Training process is composed in two main steps, pre-traing (warm-up) and trainin
 
 First, in order to retrieve the dataset images, we perform the pipeline described in Fig 6:
 
-**TODO: ADD FIGURE HERE**
+<p align="center">
+    <img src="assets/image_retrieval.png" alt="Image Retrieval Pipeline">
+    <br>
+    <i><b>
+        Fig 6. Image Retrieval Pipeline
+    </b></i>
+</p>
 
 As user-defined transforms we define the following ones depending on the augmentation target:
 
