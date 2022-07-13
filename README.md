@@ -28,6 +28,10 @@ the network architecture, adversarial loss and perceptual loss.
 2. [Motivation](#2-motivation)
 3. [Execution Instructions](#3-execution-instructions)
    1. [Installation](#31-installation)
+   2. [ESRGAN model training](#32-esrgan-model-training)
+   3. [ESRGAN model test](#33-esrgan-model-test)
+   4. [ESRGAN model inference](#34-esrgan-model-inference)
+   5. [ESRGAN network interpolation](#35-esrgan-network-interpolation)
 4. [Milestones](#4-milestones)
 5. [Datasets](#5-datasets)
 6. [Environment](#6-environment)
@@ -36,17 +40,25 @@ the network architecture, adversarial loss and perceptual loss.
     2. [Discriminator model](#72-discriminator-model)
     3. [Hyper-parameters](#73-hyper-parameters)
     4. [Loss functions](#74-loss-functions)
+       1. [Content loss](#741-content-loss)
+       2. [Relativistic adversarial loss](#742-relativistic-adversarial-loss)
+       3. [Perceptual loss](#743-perceptual-loss)
+       4. [GAN-driven generator loss](#744-gan-driven-generator-loss)
     5. [Quality Metrics](#75-quality-metrics)
     6. [Network Interpolation](#76-network-interpolation)
 8. [Training process](#8-training-process)
-    1. [Pre-training](#81-pre-training-step)
-    2. [Training](#82-training-step)
+    1. [Pre-training step](#81-pre-training-step)
+    2. [Training step](#82-training-step)
     3. [Logging](#83-logging)
 9. [Results](#9-results)
      1. [Executions](#91-executions)
      2. [Metrics](#92-metrics)
+        1. [Train (PSNR-driven)](#921-train-psnr-driven)
+        2. [Validation (PSNR-driven)](#922-validation-psnr-driven)
+        3. [Train (GAN-based)](#923-train-gan-based)
+        4. [Validation (GAN-based)](#924-validation-gan-based)
      3. [Model Results](#93-model-results)     
-     4. [Torch models trained](#94-torch-models-pre-trained)
+     4. [Torch models pre-trained](#94-torch-models-pre-trained)
      5. [Comparison metrics](#95-comparison-metrics)
 10. [Conclusions](#10-conclusions)
 11. [References](#11-references)
@@ -173,7 +185,7 @@ By default, all model checkpoints and state dictionaries will be stored to `save
 python train.py --config-json configs/esrgan_192_cr_23_rrdb_div2k.json --load-model-path saved_models/1657192860_RRDB_PSNR_x4_best_model.pth --autocast --best-checkpoint-warmup 2000 --store-model-interval 20 --checkpoint-interval 50
 ```
 
-### 3.2 ESRGAN model test
+### 3.3 ESRGAN model test
 
 Model can be tested using the `test.py` script that can be found on the root project directory.
 
@@ -200,7 +212,7 @@ optional arguments:
 python3 test.py --datasets=set5 --out-dir results/192_cr_23_rrdb_div2k/set5 models/192_cr_23_rrdb_div2k/RRDB_ESRGAN_x4.pth
 ```
 
-### 3.3 ESRGAN model inference
+### 3.4 ESRGAN model inference
 
 Model inference can be run using the `inference.py` script that can be found on the root project directory.
 When running inference, super-resolution can be applied to custom user-provided images and store the results.
@@ -228,9 +240,9 @@ To differentiate original from super-resolved images, the `_sr` suffix will be a
 python3 inference.py --model-path models/192_cr_23_rrdb_div2k/RRDB_ESRGAN_x4.pth ~/Pictures/my-fancy-picture.png
 ```
 
-### 3.4 ESRGAN network interpolation
+### 3.5 ESRGAN network interpolation
 
-The script `net_interpolation.py` can be used to perform network interpolation as described in [Network Interpolation](#85-network-interpolation).
+The script `net_interpolation.py` can be used to perform network interpolation as described in [Network Interpolation](#76-network-interpolation).
 
 ```
 usage: net_interpolation.py [-h] --psnr-model-path PSNR_MODEL_PATH --esrgan-model-path ESRGAN_MODEL_PATH --alpha ALPHA out_model_path
@@ -308,7 +320,7 @@ timing constraints that the project has faced.
 * **_Raul Puente's server:_** 
   * **CPU:** Intel(R) Core(TM) i9-10900F CPU @ 2.80GHz
   * **RAM:** 64 GB
-  * **GPU:** GeForce® GTX 3070 - 4 GB RAM
+  * **GPU:** GeForce® RTX 3070 - 4 GB RAM
 * **_Marc Bermejo's server:_**
   * **CPU:** AMD Ryzen™ 9 3900X @ 3.8GHz
   * **RAM:** 32 GB
@@ -456,7 +468,13 @@ This table shows all the available network hyper-parameters that can be used to 
 
 Whe have 3 kind of loss functions on this model.
 
-**Content loss**<a name="content_loss"></a>: ($L_{content}$) Content loss that evaluate the 1-norm distances beween recovered image G($x_i$) and the ground-truth y. Can be configured to use the L1 (mean absolute error) or L2 (mean square error) function. By default we use L1 function.
+#### 7.4.1 Content loss
+
+The **content loss** ($L_{content}$) is used to evaluate the 1-norm distances between recovered image G($x_i$) and the 
+ground-truth image $y_i$. Can be configured to use the L1 (Mean Absolute Error) or L2 (Mean Square Error) function.
+By default, we use L1 function.
+
+Formulas:
 
 $$
 \begin{aligned}
@@ -470,11 +488,19 @@ L2 = MSE = {SSE \over N} = {1 \over N}  \sum_{t = 1}^{N} (y_t - f_t)^2
 \end{aligned}
 $$
 
+#### 7.4.2 Relativistic adversarial loss
 
-**Relativistic adversarial loss**<a name="adversarial_loss"></a>: We use the relativistic GAN which tries to predict the probability that a real image $x_r$ is relatively more realistic than a fake one $x_f$, as shown in Fig.
+We use the **relativistic GAN** which tries to predict the probability that a real image $x_r$ is relatively more realistic
+than a fake one $x_f$, as shown in Fig. 7.
+
 <p align="center">
-  <img src="assets/relativistic_gan.png">
+    <img src="assets/relativistic_gan.png" alt="Difference between standard discriminator and relativistic discriminator">
+    <br>
+    <i><b>
+        Fig 7. Difference between standard discriminator and relativistic discriminator.
+    </b></i>
 </p>
+
 where σ is the sigmoid function and C(x) is the non-transformed discriminator output and E$x_f$[·] represents the operation of taking average for all fake data in the mini-batch.
 The discriminator loss is then defined as: 
 <br /> 
@@ -495,22 +521,30 @@ $$
 
 where $x_f = G(x_i)$ and $x_i$ stands for the input LR image.
 
-<br />
+#### 7.4.3 Perceptual loss
 
-**Perceptual loss** ($L_{percep}$)<a name="perceptual_loss"></a>: Type of content loss introduced in the
+The **perceptual loss** ($L_{percep}$)<a name="perceptual_loss"></a>: Type of content loss introduced in the
 [Perceptual Losses for Real-Time Style Transfer and Super-Resolution](https://arxiv.org/abs/1603.08155v1) 
 framework. Also known as VGG loss is based on the ReLU activation layers on the pre-trained 19 layer VGG network.
 
 <p align="center">
-  <img src="assets/vgg_loss.png">
+  <img src="assets/vgg_loss.png" alt="VGG loss function">
 </p>
 
 but with the improvement of using VGG features before activation instead of after activation as in SRGAN. 
 It was empirically found hat the adjusted perceptual loss provides sharper edges and more visually pleasing results.
 
-The **total loss**<a name="total_loss"></a> ($L_G$) is then calculated by:
-$L_G = L_{percep} + λL_{G}^{Ra} + ηL_{content}$ which 
-λ, η are the coefficients to balance different loss terms
+#### 7.4.4 GAN-driven generator loss 
+
+The **total loss of the generator** ($L_G$) during the GAN-driven training stage is then calculated by:
+
+$$
+\begin{aligned}
+L_G = L_{percep} + λL_{G}^{Ra} + ηL_{content}
+\end{aligned}
+$$
+
+where λ, η are the coefficients to balance the different loss terms.
 
 ### 7.5 Quality Metrics
 
@@ -589,21 +623,22 @@ First, in order to retrieve the dataset images, we perform the pipeline describe
 
 As user-defined transforms we define the following ones depending on the augmentation target:
 
-* Spatial transforms (probabilty of each 0.5 probability).
+* Spatial transforms.
     * Applied for images of low resolution and high resolution.
-    * Flip with 0.25 probability.
-    * Transpose with 0.75 probability.
+    * One of with 0.5 probability:
+      * Flip with 0.25 probability.
+      * Transpose with 0.75 probability.
 
 * Hard transforms:
     * Applied only for images of low resolution.
-    * Compresion with 0.25 probability.
+    * Compression with 0.25 probability.
     * Coarse Dropout with 0.25 probability.
 
 ### 8.1 Pre-training step
 
-In this step only the generator is trained using the [Content loss](#content_loss) as the loss function.
+In this step only the generator is trained using the [Content loss](#741-content-loss) as the loss function.
 
-* Only used the [Content loss](#content_loss) function for this step
+* Only used the [Content loss](#741-content-loss) function for this step.
 * Only works with generator (no discriminator used).
 * Adam optimizer with learning rate $2e^{-4}$ by default.
 * Scheduler `StepLR` with step 175000 and gamma 0.5.
@@ -619,16 +654,18 @@ In this step only the generator is trained using the [Content loss](#content_los
 In this step we train with generator and discriminator. For every mini batch we first freeze the discriminator and train
 the generator. When finished the mini batch then we train the discriminator and freeze the generator.
 
-* User data augmentation transforms: spatial transforms.
 * Generator:
-  * The [total loss](#total_loss) ($L_G = L_{percep} + λL_{G}^{Ra} + ηL_{content}$) function is used for this step, which
-    use [perceptual loss](#perceptual_loss), [Relativistic adversarial loss](#adversarial_loss) and [Content loss](#content_loss) with coefficients.
+  * The [total loss](#744-gan-driven-generator-loss) function is used for training the generator in this step,
+    which is a combination of the [perceptual loss](#743-perceptual-loss),
+    [relativistic adversarial loss](#742-relativistic-adversarial-loss) and [content loss](#741-content-loss) with scaling.
   * Adam optimizer with learning rate $1^{e-4}$ by default and betas=(0.9, 0.99).
   * Scheduler `MultiStepLR` with steps [50000, 100000, 175000, 250000] and gamma 0.5.
 * Discriminator:
-  * The total loss is $L_G = L_{D}^{Ra}$ which is [Relativistic adversarial loss](#adversarial_loss) for discriminator
+  * The [relativistic adversarial loss](#742-relativistic-adversarial-loss) function is used for discriminator in this step.
   * Adam optimizer with learning rate $1^{e-4}$ by default and betas=(0.9, 0.99).
   * Scheduler `MultiStepLR` with steps [50000, 100000, 175000, 250000] and gamma 0.5.
+* User data augmentation transforms:
+  * Spatial transforms.
 * Metrics logged:
   * Training: **content_loss**, **perceptual_loss**, **g_adversarial_loss**, **g_total_loss**, **d_adversarial_loss**
   * Validation: **content_loss**, **perceptual_loss**, **PSNR**, **SSIM**
@@ -704,12 +741,12 @@ From these trainings we wanted to confirm the following hypothesis:
 
 These are the metrics obtained from all steps and executed trainings.
 
-#### 9.2.1 Train PSNR-driven content loss
+#### 9.2.1 Train (PSNR-driven)
 <p align="center">
   <img src="assets/graphs/train_PSNR-driven_content-loss.png">
 </p>
 
-#### 9.2.2 Validation PSNR-driven
+#### 9.2.2 Validation (PSNR-driven)
 
 <p align="center">
   <img src="assets/graphs/validation_PSNR-driven_content-loss.png">
@@ -718,7 +755,7 @@ These are the metrics obtained from all steps and executed trainings.
   <img src="assets/graphs/validation_PSNR-driven_perceptual-loss.png">
 </p>
 
-#### 9.2.3 Train GAN-based
+#### 9.2.3 Train (GAN-based)
 <p align="center">
   <img src="assets/graphs/train_GAN-based_content-loss.png">
   <img src="assets/graphs/train_GAN-based_g-adversarial-loss.png">
@@ -727,7 +764,7 @@ These are the metrics obtained from all steps and executed trainings.
   <img src="assets/graphs/train_GAN-based_g-total-loss.png">
 </p>
 
-#### 9.2.4 Validation GAN-based
+#### 9.2.4 Validation (GAN-based)
 <p align="center">
   <img src="assets/graphs/validation_GAN-based_content-loss.png">
   <img src="assets/graphs/validation_GAN-based_SSIM.png">
