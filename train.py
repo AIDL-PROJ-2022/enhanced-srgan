@@ -603,10 +603,10 @@ if __name__ == '__main__':
         action='store_true'
     )
     parser.add_argument(
-        "-i", "--checkpoint-interval", help="Define checkpoint store frequency", type=int, default=1
+        "-i", "--checkpoint-interval", help="Define checkpoint store frequency. Default: 1", type=int, default=1
     )
     parser.add_argument(
-        "-w", "--best-checkpoint-warmup", help="Define a warm-up period until best checkpoint is stored",
+        "-w", "--best-checkpoint-warmup", help="Define a warm-up period until best checkpoint is stored. Default: 0",
         type=int, default=0
     )
     parser.add_argument(

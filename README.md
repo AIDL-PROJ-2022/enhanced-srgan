@@ -102,50 +102,20 @@ could continuously adjust the reconstruction style and smoothness.
 
 ## 2. Motivation
 
-The aim of choosing a project based on Super Resolution was to investigate this set of techniques because of the wide
-range of possible solutions to real challenges that they can provide.
+The aim of choosing a project based on single image super-resolution was to investigate the current existing set of
+deep-learning techniques because of the wide range of possible solutions to real challenges that they can provide.
 
-Following our project advisor’s recommendations, the team decided to follow the GAN model run the implementation,
+Following our project advisor’s recommendations, we decided to follow the Generative Adversarial network-based SR approach,
 which represented a great opportunity to learn more about this kind architectures. Training a GAN network is a nice
-challenge given the complexity of having to train 2 different networks competing with each to outperform and fool the system. 
+challenge given the complexity of having to train two different networks competing with each to outperform and fool the system. 
 
 As mentioned previously, the idea of the project was to target a solution with potential appliance at business level.
 
-<p align="center">
-  <img src="assets/ESRGAN_illustration2.png" alt="">
-</p>
-<p align="center">
-  <img src="assets/ESRGAN_illustration1.png">
-</p>
-
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
-## 3. Theory
+## 3. Execution Instructions
 
-The first methods that targeted an increase the resolution of an image, where based on different possible interpolation methods estimating values of the unknown pixels using the ones at their surroundings. 
-
-Later on, the introduction of Convolutional neural networks using a Classifier and the feature extractor allowed first image-to-image mapping model for Super Resolution, the SRCNN.
-
-Afterwards, the SRCNN inspired the creation of new architectures that included different updates and improved accuracy:
-Resnet: use of skip connections.
-Replacement of simple convolutions by residual blocks
-Learnable Upsampling methods like Sub-Pixel convolution instead of interpolations.
-   
-Some time later, the introduction of the Perceptual loss, which is a mean of all MSE of each pixel (Target Real HR Image VS Output), as Loss function instead of using directly the MSE error proved to be a right choice as it reduced over-smoothing improving the perceptual quality.
-
-And finally the transition to GANs with:
-A Generator based on Resnet and Sub-Pixel Convolution that learns to create SR images and combines Perceptual Loss and Adversarial Loss inside its loss function.
-A Discriminator that learns to identify if an image is real or Fake.   
-
-<p align="center">
-  <img src="assets/example_srgan.png">
-</p>
-
-<p align="right"><a href="#table-of-contents">To top</a></p>
-
-## 4. Execution Instructions
-
-### 4.1 Installation
+### 3.1 Installation
 
 You can install ``torch-sr`` via `pip <pip_>`_ or directly from source.
 
@@ -167,21 +137,129 @@ cd enhanced-srgan
 pip3 install -r requirements.txt
 ```
 
-### 4.2 Pretraining process execution
+### 3.2 ESRGAN model training
+
+Model can be trained using the `train.py` script that can be found on the root project directory.
+
+```
+usage: train.py [-h] [-l LOAD_CHECKPOINT] [-a] [--no-data-parallel] [-i CHECKPOINT_INTERVAL] [-w BEST_CHECKPOINT_WARMUP] [-s STORE_MODEL_INTERVAL] config_file
+
+positional arguments:
+  config_file           JSON training configuration hyper-parameters
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -l LOAD_CHECKPOINT, --load-checkpoint LOAD_CHECKPOINT
+                        Path to the training checkpoint used as the start point
+  -a, --autocast        Use PyTorch autocast when running on GPU with CUDA support
+  --no-data-parallel    Disable parallelization if more than one GPU is detected on the system
+  -i CHECKPOINT_INTERVAL, --checkpoint-interval CHECKPOINT_INTERVAL
+                        Define checkpoint store frequency. Default: 1
+  -w BEST_CHECKPOINT_WARMUP, --best-checkpoint-warmup BEST_CHECKPOINT_WARMUP
+                        Define a warm-up period until best checkpoint is stored. Default: 0
+  -s STORE_MODEL_INTERVAL, --store-model-interval STORE_MODEL_INTERVAL
+                        Define model store frequency. If not specified, model won't be stored during training.
+```
+
+By default, all model checkpoints and state dictionaries will be stored to `saved_models/` directory relative to the working directory.
+
+#### Example
 
 ```bash
-python train.py
+python train.py --config-json configs/esrgan_192_cr_23_rrdb_div2k.json --load-model-path saved_models/1657192860_RRDB_PSNR_x4_best_model.pth --autocast --best-checkpoint-warmup 2000 --store-model-interval 20 --checkpoint-interval 50
+```
+
+### 3.2 ESRGAN model test
+
+Model can be tested using the `test.py` script that can be found on the root project directory.
+
+```
+usage: test.py [-h] [-d DATASETS] [-s SHOW_RESULTS] [-o OUT_DIR] model_path
+
+positional arguments:
+  model_path            ESRGAN model path to test
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d DATASETS, --datasets DATASETS
+                        Datasets to use to test the specified model. Datasets need to be specified sepparated by a coma.
+                        Example: --datasets=set5,set14. Available values are: 'div2k', 'bsds500', 'set5', and 'set14'.
+  -s SHOW_RESULTS, --show-results SHOW_RESULTS
+                        Show N best PSNR of all tested images. If not specified, only metrics will be plotted to terminal.
+  -o OUT_DIR, --out-dir OUT_DIR
+                        Specify output directory where all results will be stored. If not specified, results won't be stored.
+```
+
+#### Example
+
+```bash
+python3 test.py --datasets=set5 --out-dir results/192_cr_23_rrdb_div2k/set5 models/192_cr_23_rrdb_div2k/RRDB_ESRGAN_x4.pth
+```
+
+### 3.3 ESRGAN model inference
+
+Model inference can be run using the `inference.py` script that can be found on the root project directory.
+When running inference, super-resolution can be applied to custom user-provided images and store the results.
+
+```
+usage: inference.py [-h] -m MODEL_PATH [-o OUT_DIR] images [images ...]
+
+positional arguments:
+  images
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -m MODEL_PATH, --model-path MODEL_PATH
+                        Input generator model path. Can be a checkpoint or a final model.
+  -o OUT_DIR, --out-dir OUT_DIR
+                        Output directory where inferred images will be stored. If not specified, resultant images will 
+                        be stored to the same directory from where they were found.
+```
+
+To differentiate original from super-resolved images, the `_sr` suffix will be appended to each input image name.
+
+#### Example
+
+```bash
+python3 inference.py --model-path models/192_cr_23_rrdb_div2k/RRDB_ESRGAN_x4.pth ~/Pictures/my-fancy-picture.png
+```
+
+### 3.4 ESRGAN network interpolation
+
+The script `net_interpolation.py` can be used to perform network interpolation as described in [Network Interpolation](#85-network-interpolation).
+
+```
+usage: net_interpolation.py [-h] --psnr-model-path PSNR_MODEL_PATH --esrgan-model-path ESRGAN_MODEL_PATH --alpha ALPHA out_model_path
+
+positional arguments:
+  out_model_path        Output interpolated model
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --psnr-model-path PSNR_MODEL_PATH
+                        PSNR-based (pre-training) input model path.
+  --esrgan-model-path ESRGAN_MODEL_PATH
+                        ESRGAN-based (training) input model path.
+  --alpha ALPHA         Network interpolation alpha.
+```
+
+#### Example
+
+```bash
+python3 net_interpolation.py --psnr-model-path models/128_cr_23_rrdb_div2k/RRDB_PSNR_x4.pth  models/128_cr_23_rrdb_div2k/RRDB_ESRGAN_x4.pth  --alpha 0.9 models/128_cr_23_rrdb_div2k/RRDB_ESRGAN_x4_0.9_interp.pth
 ```
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 5. Milestones
+
 The main milestones throughout this project were:
-- Project preparation
-- Dataset Preparation & Loading
-- First Model Training
-- First metrics and model training
-- Project Review and conclusions
+
+- Project preparation.
+- Dataset Preparation & Loading.
+- First Model Training.
+- First metrics and model training.
+- Project Review and conclusions.
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
@@ -195,6 +273,7 @@ We are using two types of datasets
         * 200 images for training.
         * 100 images for validation.
         * 200 images for testing.
+
 - [DIV2K](https://data.vision.ee.ethz.ch/cvl/DIV2K)
     * Recommended for SR given the different types of degradations contained in this dataset.
     * Different upscaling and downscaling steps applied to obtain those degradations.
@@ -203,41 +282,55 @@ We are using two types of datasets
         * 800 images for training.
         * 100 images for validation.
         * 100 images for testing.
+
 - [SET5](https://deepai.org/dataset/set5-super-resolution)
-    * The Set5 dataset is a dataset consisting of 5 images (“baby”, “bird”, “butterfly”, “head”, “woman”) commonly used for testing performance of Image Super-Resolution models.
+    * The Set5 dataset is a dataset consisting of 5 images (“baby”, “bird”, “butterfly”, “head”, “woman”) commonly 
+      used for testing performance of Image Super-Resolution models.
+
 - [SET14](https://deepai.org/dataset/set14-super-resolution)
     * The Set14 dataset is a dataset consisting of 14 images commonly used for testing performance of Image Super-Resolution models.
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
-## 7. Environment
-The project has been fully implemented using Pytorch Framework. Additionally, the Albumentations library has been included in order to perform the crops and different transformations to the images from the Dataset.
 
-Most of the trials have been carried out within local environment because the availability of the equipment and the timing constraints that the project has faced. 
+## 7. Environment
+
+The project has been fully implemented using Pytorch Framework. Additionally, the Albumentations library has been 
+included in order to perform the crops and different transformations to the images from the Dataset.
+
+Most of the trials have been carried out within local environment because the availability of the equipment and the 
+timing constraints that the project has faced. 
 
 * Raul Puente's server: 
   * CPU: Intel(R) Core(TM) i9-10900F CPU @ 2.80GHz
   * RAM: 64 GB
   * GPU: GeForce® GTX 3070 - 4 GB RAM
+
 * Marc Bermejo's server:
   * CPU: AMD Ryzen™ 9 3900X @ 3.8GHz
   * RAM: 32 GB
   * GPU: GeForce® GTX 1080 Ti - 11 GB RAM
 
-Once the project reached an acceptable level of maturity, different trainings have been performed in a Google Cloud environment parallelizing the one running locally.
+Once the project reached an acceptable level of maturity, different trainings have been performed in a Google Cloud 
+environment to improve network training speed and allow more parallel trainings.
 
 * Google cloud environment
   * GPU: NVIDIA V100 GPUs 
   * RAM: 30 GB
   * CPU: 8 VIRTUAL CPU
 
-In terms of data visualization and logging, both Wandb and Tensorboard have been included into the project given that W&B can support Tensorboard and each of them provides additional features. For example: Wandb allows tracking the images created after each epoch and Tensorboard displays the Graph execution.
+In terms of data visualization and logging, both Wandb and Tensorboard have been included into the project given that 
+W&B can support Tensorboard and each of them provides additional features. For example: Wandb allows tracking the images
+created after each epoch and Tensorboard displays the model Graph for each execution.
 
 <p align="center">
-  <img src="assets/Environment project.png">
+    <img src="assets/execution_environment.png" alt="Execution environment diagram">
+    <br>
+    <i><b>Fig 3. Model training execution environment diagram.</b></i>
 </p>
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
+
 
 ## 8. Architecture
 

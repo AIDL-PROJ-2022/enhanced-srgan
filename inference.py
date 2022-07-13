@@ -32,7 +32,9 @@ if __name__ == '__main__':
         type=str, required=True
     )
     parser.add_argument(
-        "-o", "--out-dir", help="Output directory where inferred images will be stored",
+        "-o", "--out-dir",
+        help="Output directory where inferred images will be stored. If not specified, resultant images will be stored "
+             "to the same directory from where they were found.",
         type=str, default=None
     )
     parser.add_argument('images', type=str, nargs='+')
@@ -110,7 +112,7 @@ if __name__ == '__main__':
         out_image = out_image.transpose((1, 2, 0))
         out_image = (out_image * 255.0).round().astype(np.uint8)
         # Generate output image file name
-        out_img_file_name = image_file_path.stem + "_hr" + image_file_path.suffix
+        out_img_file_name = image_file_path.stem + "_sr" + image_file_path.suffix
         # Define output image directory
         if args.out_dir:
             out_image_path = os.path.join(args.out_dir, out_img_file_name)

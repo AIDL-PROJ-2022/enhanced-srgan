@@ -195,11 +195,13 @@ if __name__ == '__main__':
         type=str, default="set5"
     )
     parser.add_argument(
-        "-s", "--show-results", help="Show N best PSNR of all tested images",
+        "-s", "--show-results",
+        help="Show N best PSNR of all tested images. If not specified, only metrics will be plotted to terminal.",
         type=int, default=0
     )
     parser.add_argument(
-        "-o", "--out-dir", help="Specify output directory where all results will be stored",
+        "-o", "--out-dir",
+        help="Specify output directory where all results will be stored. If not specified, results won't be stored.",
         type=pathlib.Path, default=None
     )
     parser.add_argument("model_path", help="ESRGAN model path to test", type=str)
