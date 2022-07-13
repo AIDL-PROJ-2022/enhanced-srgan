@@ -793,6 +793,7 @@ After observing the obtained results we can extract the following conclusions:
 * Using network interpolation we can reduce unpleasant noise from GAN-driven training while maintaining a good perceptual performance.
 * A deeper model can further improve recovered textures and reduce unpleasant noises.
 * Using broader data with different scene types and sizes can help the generator to generalize more but at the cost of reducing overall performance.
+* Using more data for each epoch will produce overfitting faster than expected during the pre-training stage. 
 * To achieve good performance on a scene type first the model needs to be trained from images with a similar scene type.
 * Using a dataset with sharper edges (like BSDS500) can help the network to perform better on images with less initial 
   information and reduce generated images artifacts at the cost of reducing overall performance for easier images.
