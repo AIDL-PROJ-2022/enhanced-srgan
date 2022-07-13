@@ -301,23 +301,23 @@ included in order to perform the crops and different transformations to the imag
 Most of the trials have been carried out within local environment because the availability of the equipment and the 
 timing constraints that the project has faced. 
 
-* Raul Puente's server: 
-  * CPU: Intel(R) Core(TM) i9-10900F CPU @ 2.80GHz
-  * RAM: 64 GB
-  * GPU: GeForce® GTX 3070 - 4 GB RAM
+* **_Raul Puente's server:**_ 
+  * **CPU:** Intel(R) Core(TM) i9-10900F CPU @ 2.80GHz
+  * **RAM:** 64 GB
+  * **GPU:** GeForce® GTX 3070 - 4 GB RAM
 
-* Marc Bermejo's server:
-  * CPU: AMD Ryzen™ 9 3900X @ 3.8GHz
-  * RAM: 32 GB
-  * GPU: GeForce® GTX 1080 Ti - 11 GB RAM
+* **_Marc Bermejo's server:_**
+  * **CPU:** AMD Ryzen™ 9 3900X @ 3.8GHz
+  * **RAM:** 32 GB
+  * **GPU:** GeForce® GTX 1080 Ti - 11 GB RAM
 
 Once the project reached an acceptable level of maturity, different trainings have been performed in a Google Cloud 
 environment to improve network training speed and allow more parallel trainings.
 
-* Google cloud environment
-  * GPU: NVIDIA V100 GPUs 
-  * RAM: 30 GB
-  * CPU: 8 VIRTUAL CPU
+* **_Google cloud environment:_**
+  * **GPU:** NVIDIA V100 GPUs 
+  * **RAM:** 30 GB
+  * **CPU:** 8 VIRTUAL CPU
 
 In terms of data visualization and logging, both Wandb and Tensorboard have been included into the project given that 
 W&B can support Tensorboard and each of them provides additional features. For example: Wandb allows tracking the images
