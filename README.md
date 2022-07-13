@@ -301,11 +301,10 @@ included in order to perform the crops and different transformations to the imag
 Most of the trials have been carried out within local environment because the availability of the equipment and the 
 timing constraints that the project has faced. 
 
-* **_Raul Puente's server:**_ 
+* **_Raul Puente's server:_** 
   * **CPU:** Intel(R) Core(TM) i9-10900F CPU @ 2.80GHz
   * **RAM:** 64 GB
   * **GPU:** GeForce® GTX 3070 - 4 GB RAM
-
 * **_Marc Bermejo's server:_**
   * **CPU:** AMD Ryzen™ 9 3900X @ 3.8GHz
   * **RAM:** 32 GB
