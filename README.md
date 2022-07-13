@@ -823,32 +823,8 @@ These are the results from some images of the SET5 and SET14 test datasets.
 
 |           Pre-CR: 192 / CR: 128 / 16 RRDBs / DIV2K+BSDS500                  |             Pre-CR: 192 / CR: 128 / 23 RRDBs / DIV2K+BSDS500              |
 |:---------------------------------------------------------------------------:|:-------------------------------------------------------------------------:|
-| <img src="assets/superresolved_p192_t128_cr_16_rrdb_div2k+bsds500_runners.png"> | <img src="superresolved_p192_t128_cr_23_rrdb_div2k+bsds500_runners.png"> |
+| <img src="assets/superresolved_p192_t128_cr_16_rrdb_div2k+bsds500_runners.png"> | <img src="assets/superresolved_p192_t128_cr_23_rrdb_div2k+bsds500_runners.png"> |
 |              PSNR: 20.12db / SSIM: 0.66                                     |             PSNR- 70 27d / SSIM. 0.67                                     |
-
-* [Pre-CR: 128 / CR: 128 / 23 RRDBs / DIV2K]
-<p align="center">
-  <img src="assets/results/128_cr_23_rrdb_div2k_butterfly.png">
-  <img src="assets/results/128_cr_23_rrdb_div2k_parrot.png">
-</p>
-
-* [Pre-CR: 192 / CR: 192 / 23 RRDBs / DIV2K]
-<p align="center">
-  <img src="assets/results/192_cr_23_rrdb_div2k_butterfly.png">
-  <img src="assets/results/192_cr_23_rrdb_div2k_parrot.png">
-</p>
-
-* [Pre-CR: 192 / CR: 128 / 23 RRDBs / DIV2K+BSDS500]
-<p align="center">
-  <img src="assets/results/p192_t128_cr_23_rrdb_div2k+bsds500_butterfly.png">
-  <img src="assets/results/p192_t128_cr_23_rrdb_div2k+bsds500_parrot.png">
-</p>
-
-* [Pre-CR: 192 / CR: 128 / 16 RRDBs / DIV2K+BSDS500]
-<p align="center">
-  <img src="assets/results/p192_t128_cr_16_rrdb_div2k+bsds500_butterfly.png">
-  <img src="assets/results/p192_t128_cr_16_rrdb_div2k+bsds500_parrot.png">
-</p>  
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
