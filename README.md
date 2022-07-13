@@ -70,10 +70,12 @@ pleasing results is [SRGAN](https://arxiv.org/pdf/1609.04802v5.pdf). The basic m
 optimized using perceptual loss in a GAN framework. With all these techniques, SRGAN significantly improves the overall
 visual quality of reconstruction over PSNR-oriented methods.
 
-<figure>
-    <img src="assets/example_srgan.png" alt="Image super-resolution techniques quality evolution">
-    <figcaption>Fig 1. Image super-resolution techniques visual quality evolution.</figcaption>
-</figure>
+<p align="center">
+    <figure>
+        <img src="assets/example_srgan.png" alt="Image super-resolution techniques quality evolution"/>
+        <figcaption>Fig 1. Image super-resolution techniques visual quality evolution.</figcaption>
+    </figure>
+</p>
 
 To further enhance the visual quality of the images, [ESRGAN](https://arxiv.org/abs/1809.00219) architecture was introduced.
 The aim of this implementation was to reduce the often generated unpleasant artifacts from the hallucinated
