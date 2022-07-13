@@ -784,19 +784,17 @@ These are the results from some images of the SET5 and SET14 test datasets.
   <img src="assets/ground_truth.png">
 </p> -->
 
-Low resolution             |  Ground Thruth
-:-------------------------:|:-------------------------:
-<img src="assets/low_resolution.png" >  | <img src="assets/ground_truth.png">
+|             Low resolution             |            Ground Thruth            |
+|:--------------------------------------:|:-----------------------------------:|
+| <img src="assets/low_resolution.png" > | <img src="assets/ground_truth.png"> |
 
-Pre-CR: 128 / CR: 128 / 23 RRDBs / DIV2K             |  Pre-CR: 192 / CR: 192 / 23 RRDBs / DIV2K
-:-------------------------:|:-------------------------:
-<img src="assets/128_cr_23_rrdb_div2k_butterfly_small.png"> >  | <img src="assets/192_cr_23_rrdb_div2k_butterfly_small.png">
+|           Pre-CR: 128 / CR: 128 / 23 RRDBs / DIV2K            |          Pre-CR: 192 / CR: 192 / 23 RRDBs / DIV2K           |
+|:-------------------------------------------------------------:|:-----------------------------------------------------------:|
+| <img src="assets/128_cr_23_rrdb_div2k_butterfly_small.png"> > | <img src="assets/192_cr_23_rrdb_div2k_butterfly_small.png"> |
 
-Pre-CR: 192 / CR: 128 / 23 RRDBs / DIV2K+BSDS500             |  Pre-CR: 192 / CR: 128 / 16 RRDBs / DIV2K+BSDS500
-:-------------------------:|:-------------------------:
-<img src="assets/p192_t128_cr_16_rrdb_div2k+bsds500_butterfly_small.png"> >  | <img src="assets/p192_t128_cr_23_rrdb_div2k+bsds500_butterfly_small.png">
-
-
+|              Pre-CR: 192 / CR: 128 / 23 RRDBs / DIV2K+BSDS500               |             Pre-CR: 192 / CR: 128 / 16 RRDBs / DIV2K+BSDS500              |
+|:---------------------------------------------------------------------------:|:-------------------------------------------------------------------------:|
+| <img src="assets/p192_t128_cr_16_rrdb_div2k+bsds500_butterfly_small.png"> > | <img src="assets/p192_t128_cr_23_rrdb_div2k+bsds500_butterfly_small.png"> |
 
 * [Pre-CR: 128 / CR: 128 / 23 RRDBs / DIV2K]
 <p align="center">
