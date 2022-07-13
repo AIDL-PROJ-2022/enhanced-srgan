@@ -95,7 +95,7 @@ could continuously adjust the reconstruction style and smoothness.
 <p align="center">
     <img src="assets/srgan_esrgan_comparison.png" alt="Image super-resolution techniques quality evolution">
     <br>
-    <i><b>Fig 1. Image super-resolution techniques visual quality evolution.</b></i>
+    <i><b>Fig 2. Comparison of single image super-resolution between SRGAN and ESRGAN implementations.</b></i>
 </p>
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
