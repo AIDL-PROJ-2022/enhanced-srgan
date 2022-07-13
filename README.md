@@ -820,12 +820,12 @@ These are the results from some images of the SET5 and SET14 test datasets.
 |           Pre-CR: 128 / CR: 128 / 23 RRDBs / DIV2K            |          Pre-CR: 192 / CR: 192 / 23 RRDBs / DIV2K           |
 |:-------------------------------------------------------------:|:-----------------------------------------------------------:|
 | ![](assets/results/by_target/runners/128_cr_23_rrdb_div2k.png) | ![](assets/results/by_target/runners/192_cr_23_rrdb_div2k.png) |
-|              PSNR: 16.18db / SSIM: 0.11                                     |             PSNR: 16.44db / SSIM: 0.45                                     |
+|              PSNR: 16.18db / SSIM: 0.44                                     |             PSNR: 16.44db / SSIM: 0.45                                     |
 
 |           Pre-CR: 192 / CR: 128 / 16 RRDBs / DIV2K+BSDS500                  |             Pre-CR: 192 / CR: 128 / 23 RRDBs / DIV2K+BSDS500              |
 |:---------------------------------------------------------------------------:|:-------------------------------------------------------------------------:|
 | ![](assets/results/by_target/runners/p192_t128_cr_16_rrdb_div2k+bsds500.png) | ![](assets/results/by_target/runners/p192_t128_cr_23_rrdb_div2k+bsds500.png) |
-|              PSNR: 20.12db / SSIM: 0.66                                     |             PSNR: 70.27db / SSIM. 0.67                                     |
+|              PSNR: 20.12db / SSIM: 0.66                                     |             PSNR: 20.37db / SSIM. 0.67                                     |
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
