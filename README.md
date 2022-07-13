@@ -134,7 +134,7 @@ asdf
 
 ### 3.1 Installation
 
-You can install ``torch-sr`` via `pip <pip_>`_ or directly from source.
+You can install ``torch-sr`` via [pip](https://pip.pypa.io/en/stable/) or directly from source.
 
 #### Install from GitHub
 
@@ -781,35 +781,35 @@ These are the results from some images of the SET5 and SET14 test datasets.
 
 #### 9.3.1 Butterfly
 
-|             Low resolution             |            Ground Thruth            |
-|:--------------------------------------:|:-----------------------------------:|
-| <img src="assets/low_resolution.png" > | <img src="assets/ground_truth.png"> |
+|                    Low resolution                    |                     Ground Truth                     |
+|:----------------------------------------------------:|:----------------------------------------------------:|
+| ![](assets/results/by_target/butterfly_small/lr.png) | ![](assets/results/by_target/butterfly_small/gt.png) |
 
-|           Pre-CR: 128 / CR: 128 / 23 RRDBs / DIV2K            |          Pre-CR: 192 / CR: 192 / 23 RRDBs / DIV2K           |
-|:-------------------------------------------------------------:|:-----------------------------------------------------------:|
-| <img src="assets/128_cr_23_rrdb_div2k_butterfly_small.png"> | <img src="assets/192_cr_23_rrdb_div2k_butterfly_small.png"> |
-|              PSNR: 25.97db / SSIM: 0,87                                     |             PSNR: 26.4ldb / SSIM: 0,88                                     |
+|                Pre-CR: 128 / CR: 128 / 23 RRDBs / DIV2K                |                Pre-CR: 192 / CR: 192 / 23 RRDBs / DIV2K                |
+|:----------------------------------------------------------------------:|:----------------------------------------------------------------------:|
+| ![](assets/results/by_target/butterfly_small/128_cr_23_rrdb_div2k.png) | ![](assets/results/by_target/butterfly_small/192_cr_23_rrdb_div2k.png) |
+|                       PSNR: 25.97db / SSIM: 0.87                       |                       PSNR: 26.4ldb / SSIM: 0.88                       |
 
-|              Pre-CR: 192 / CR: 128 / 16 RRDBs / DIV2K+BSDS500               |            Pre-CR: 192 / CR: 128 / 23 RRDBs / DIV2K+BSDS500               |
-|:---------------------------------------------------------------------------:|:-------------------------------------------------------------------------:|
-| <img src="assets/p192_t128_cr_16_rrdb_div2k+bsds500_butterfly_small.png"> | <img src="assets/p192_t128_cr_23_rrdb_div2k+bsds500_butterfly_small.png"> |
-|              PSNR: 25.96db / SSIM: 0,88                                   |             PSNR: 26.1ldb / SSIM: 0.88                                    |
+|                   Pre-CR: 192 / CR: 128 / 16 RRDBs / DIV2K+BSDS500                   |                   Pre-CR: 192 / CR: 128 / 23 RRDBs / DIV2K+BSDS500                   |
+|:------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------:|
+| ![](assets/results/by_target/butterfly_small/p192_t128_cr_16_rrdb_div2k+bsds500.png) | ![](assets/results/by_target/butterfly_small/p192_t128_cr_23_rrdb_div2k+bsds500.png) |
+|                              PSNR: 25.96db / SSIM: 0.88                              |                              PSNR: 26.1ldb / SSIM: 0.88                              |
 
 #### 9.3.2 Parrot
 
-|             Low resolution             |            Ground Thruth            |
-|:--------------------------------------:|:-----------------------------------:|
-| <img src="assets/parrot_low_resolution.png" > | <img src="assets/parrot_ground_truth.png"> |
+|               Low resolution                |                Ground Thruth                |
+|:-------------------------------------------:|:-------------------------------------------:|
+| ![](assets/results/by_target/parrot/lr.png) | ![](assets/results/by_target/parrot/gt.png) |
 
-|           Pre-CR: 128 / CR: 128 / 23 RRDBs / DIV2K            |          Pre-CR: 192 / CR: 192 / 23 RRDBs / DIV2K           |
-|:-------------------------------------------------------------:|:-----------------------------------------------------------:|
-| <img src="assets/superresolved_128_cr_23_rrdb_div2k_parrot.png"> | <img src="assets/superresolved_192_cr_23_rrdb_div2k_parrot.png"> |
-|              PSNR: 32.47db / SSIM: 0.9                                     |             PSNR: 32.3db / SSIM: 0.9                                     |
+|           Pre-CR: 128 / CR: 128 / 23 RRDBs / DIV2K            |           Pre-CR: 192 / CR: 192 / 23 RRDBs / DIV2K            |
+|:-------------------------------------------------------------:|:-------------------------------------------------------------:|
+| ![](assets/results/by_target/parrot/128_cr_23_rrdb_div2k.png) | ![](assets/results/by_target/parrot/192_cr_23_rrdb_div2k.png) |
+|                   PSNR: 32.47db / SSIM: 0.9                   |                   PSNR: 32.3db / SSIM: 0.9                    |
 
-|           Pre-CR: 192 / CR: 128 / 16 RRDBs / DIV2K+BSDS500                  |             Pre-CR: 192 / CR: 128 / 23 RRDBs / DIV2K+BSDS500              |
-|:---------------------------------------------------------------------------:|:-------------------------------------------------------------------------:|
-| <img src="assets/superresolved_p192_t128_cr_16_rrdb_div2k+bsds500_parrot.png"> | <img src="assets/superresolved_p192_t128_cr_23_rrdb_div2k+bsds500_parrot.png"> |
-|              PSNR: 32.02db / SSIM: 0.9                                     |             PSNR: 31.93db / SSIM: 0.9                                     |
+|              Pre-CR: 192 / CR: 128 / 16 RRDBs / DIV2K+BSDS500               |              Pre-CR: 192 / CR: 128 / 23 RRDBs / DIV2K+BSDS500               |
+|:---------------------------------------------------------------------------:|:---------------------------------------------------------------------------:|
+| ![](assets/results/by_target/parrot/p192_t128_cr_16_rrdb_div2k+bsds500.png) | ![](assets/results/by_target/parrot/p192_t128_cr_23_rrdb_div2k+bsds500.png) |
+|                          PSNR: 32.02db / SSIM: 0.9                          |                          PSNR: 31.93db / SSIM: 0.9                          |
 
 #### 9.3.3 Runners                                                                       
 
