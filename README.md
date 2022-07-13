@@ -3,14 +3,14 @@
 ### Abstract
 
 Image super-resolution (SR) is the process of recovering high-resolution (HR) images from low-resolution (LR) images.
-It is an essential class of image processing techniques in computer vision and image processing. It has a wide range
+It is an important class of image processing techniques in computer vision and image processing with a wide range
 of real-world applications, such as medical imaging, satellite imaging, surveillance and security, and astronomical 
-imaging, amongst others.
+imaging.
 
 With the fast progress in deep learning techniques in recent years, deep learning-based SR models have been actively
 explored and often achieve state-of-the-art performance on various benchmarks of super-resolution tasks. Several 
 deep learning methods have been applied to solve SR tasks, ranging from the early Convolutional Neural Networks (CNN)
-based models, to recent promising Generative Adversarial network-based SR approaches.
+based models to recent promising Generative Adversarial network-based SR approaches.
 
 In this project, we implement the Enhanced Super-Resolution Generative Adversarial Network (ESRGAN), capable of 
 generating realistic textures when performing single image super-resolution (SISR). This implementation was introduced 
