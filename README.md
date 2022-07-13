@@ -778,11 +778,7 @@ These are the metrics obtained from all steps and executed trainings.
 
 These are the results from some images of the SET5 and SET14 test datasets.
 
-
-<!-- <p align="center">
-  <img src="assets/low_resolution.png" >
-  <img src="assets/ground_truth.png">
-</p> -->
+#### 9.3.1 Butterfly
 
 |             Low resolution             |            Ground Thruth            |
 |:--------------------------------------:|:-----------------------------------:|
@@ -791,10 +787,44 @@ These are the results from some images of the SET5 and SET14 test datasets.
 |           Pre-CR: 128 / CR: 128 / 23 RRDBs / DIV2K            |          Pre-CR: 192 / CR: 192 / 23 RRDBs / DIV2K           |
 |:-------------------------------------------------------------:|:-----------------------------------------------------------:|
 | <img src="assets/128_cr_23_rrdb_div2k_butterfly_small.png"> | <img src="assets/192_cr_23_rrdb_div2k_butterfly_small.png"> |
+|              PSNR: 25.97db / SSIM: 0,87                                     |             PSNR: 26.4ldb / SSIM: 0,88                                     |
 
-|              Pre-CR: 192 / CR: 128 / 23 RRDBs / DIV2K+BSDS500               |             Pre-CR: 192 / CR: 128 / 16 RRDBs / DIV2K+BSDS500              |
+|              Pre-CR: 192 / CR: 128 / 16 RRDBs / DIV2K+BSDS500               |            Pre-CR: 192 / CR: 128 / 23 RRDBs / DIV2K+BSDS500               |
 |:---------------------------------------------------------------------------:|:-------------------------------------------------------------------------:|
 | <img src="assets/p192_t128_cr_16_rrdb_div2k+bsds500_butterfly_small.png"> | <img src="assets/p192_t128_cr_23_rrdb_div2k+bsds500_butterfly_small.png"> |
+|              PSNR: 25.96db / SSIM: 0,88                                   |             PSNR: 26.1ldb / SSIM: 0.88                                    |
+
+#### 9.3.2 Parrot
+
+|             Low resolution             |            Ground Thruth            |
+|:--------------------------------------:|:-----------------------------------:|
+| <img src="assets/parrot_low_resolution.png" > | <img src="assets/parrot_ground_truth.png"> |
+
+|           Pre-CR: 128 / CR: 128 / 23 RRDBs / DIV2K            |          Pre-CR: 192 / CR: 192 / 23 RRDBs / DIV2K           |
+|:-------------------------------------------------------------:|:-----------------------------------------------------------:|
+| <img src="assets/superresolved_128_cr_23_rrdb_div2k_parrot.png"> | <img src="assets/superresolved_192_cr_23_rrdb_div2k_parrot.png"> |
+|              PSNR: 32.47db / SSIM: 0.9                                     |             PSNR: 32.3db / SSIM: 0.9                                     |
+
+|           Pre-CR: 192 / CR: 128 / 16 RRDBs / DIV2K+BSDS500                  |             Pre-CR: 192 / CR: 128 / 23 RRDBs / DIV2K+BSDS500              |
+|:---------------------------------------------------------------------------:|:-------------------------------------------------------------------------:|
+| <img src="assets/superresolved_p192_t128_cr_16_rrdb_div2k+bsds500_parrot.png"> | <img src="assets/superresolved_p192_t128_cr_23_rrdb_div2k+bsds500_parrot.png"> |
+|              PSNR: 32.02db / SSIM: 0.9                                     |             PSNR: 31.93db / SSIM: 0.9                                     |
+
+#### 9.3.3 Runners                                                                       
+
+|             Low resolution             |            Ground Thruth            |
+|:--------------------------------------:|:-----------------------------------:|
+| <img src="assets/runners_low_resolution.png" > | <img src="assets/runners_ground_truth.png"> |
+
+|           Pre-CR: 128 / CR: 128 / 23 RRDBs / DIV2K            |          Pre-CR: 192 / CR: 192 / 23 RRDBs / DIV2K           |
+|:-------------------------------------------------------------:|:-----------------------------------------------------------:|
+| <img src="assets/superresolved_128_cr_23_rrdb_div2k_runners.png"> | <img src="assets/superresolved_192_cr_23_rrdb_div2k_runners.png"> |
+|              PSNR- 16 18dh / SSIM. 0.11                                     |             PSNR. 16 44db / SSIM. 0.45                                     |
+
+|           Pre-CR: 192 / CR: 128 / 16 RRDBs / DIV2K+BSDS500                  |             Pre-CR: 192 / CR: 128 / 23 RRDBs / DIV2K+BSDS500              |
+|:---------------------------------------------------------------------------:|:-------------------------------------------------------------------------:|
+| <img src="assets/superresolved_p192_t128_cr_16_rrdb_div2k+bsds500_runners.png"> | <img src="superresolved_p192_t128_cr_23_rrdb_div2k+bsds500_runners.png"> |
+|              PSNR: 20.12db / SSIM: 0.66                                     |             PSNR- 70 27d / SSIM. 0.67                                     |
 
 * [Pre-CR: 128 / CR: 128 / 23 RRDBs / DIV2K]
 <p align="center">
