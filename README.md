@@ -916,4 +916,8 @@ After observing the obtained results we can extract the following conclusions:
 
 ## 12. Presentation
 
+[Presentation (PPTX)](assets/presentation/GAN_FINAL_PROJECT_MBERMEJO_RPUENTE_FTORRES.pptx)
+
+[Presentation (PDF)](assets/presentation/GAN_FINAL_PROJECT_MBERMEJO_RPUENTE_FTORRES.pdf)
+
 <p align="right"><a href="#table-of-contents">To top</a></p>
