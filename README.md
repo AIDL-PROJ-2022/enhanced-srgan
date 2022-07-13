@@ -72,7 +72,7 @@ visual quality of reconstruction over PSNR-oriented methods.
 
 <p align="center">
     <img src="assets/example_srgan.png" alt="Image super-resolution techniques quality evolution"/>
-    <tr align="center">Fig 1. Image super-resolution techniques visual quality evolution.</tr>
+    <span style="font-weight:bold;font-style:italic;">Fig 1. Image super-resolution techniques visual quality evolution.</span>
 </p>
 
 To further enhance the visual quality of the images, [ESRGAN](https://arxiv.org/abs/1809.00219) architecture was introduced.
