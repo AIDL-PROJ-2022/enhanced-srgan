@@ -1,6 +1,20 @@
 # enhanced-srgan
 
-Enhanced Super resolution using a GAN model with a residual-on-residual generator.
+Image super-resolution (SR) is the process of recovering high-resolution (HR) images from low-resolution (LR) images.
+It is an important class of image processing techniques in computer vision and image processing and has a wide range
+of real-world applications, such as medical imaging, satellite imaging, surveillance and security, astronomical imaging, amongst others.
+
+With the fast progress in deep learning techniques of the recent years, deep learning-based SR models have been actively
+explored and often achieve state-of-the-art performance on various benchmarks of super-resolution tasks. A variety of 
+deep learning methods have been applied to solve SR tasks, ranging from the early Convolutional Neural Networks (CNN)
+based method to recent promising Generative Adversarial network-based SR approaches.
+
+In this project we implement the Enhanced Super-Resolution Generative Adversarial Network (ESRGAN), which is capable of 
+generating realistic textures when performing single image super-resolution (SISR). This implementation was introduced 
+by Xintao et al. in 2018 on the paper [ESRGAN: Enhanced Super-Resolution Generative Adversarial Networks](https://arxiv.org/abs/1809.00219), 
+based on the original work shown on the paper [Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network](https://arxiv.org/pdf/1609.04802v5.pdf),
+from which it implements a series of improvements to the three key components of the deep learning model: 
+the network architecture, adversarial loss and perceptual loss.
 
 ### Authors: Marc Bermejo, Ferran Torres, Raul Puente
 
@@ -8,7 +22,7 @@ Enhanced Super resolution using a GAN model with a residual-on-residual generato
 
 ## Table of Contents
 
-1. [Introduction](#1-introduction)
+1. [Introduction](#1-abstract)
 2. [Motivation](#2-motivation)
 3. [Theory](#3-theory)
 4. [Execution Instructions](#4-execution-instructions)
@@ -37,26 +51,69 @@ Enhanced Super resolution using a GAN model with a residual-on-residual generato
 
 ## 1. Introduction
 
-In this project we will implement the Super-Resolution Generative Adversarial Network (SRGAN) which is a seminal work that is capable of generating realistic textures during single image super-resolution. This implementation where introduced by Xintao Wang, Ke Yu, Shixiang Wu, Jinjin Gu, Yihao Liu, Chao Dong, Chen Change Loy, Yu Qiao, Xiaoou Tang in 2018 by the paper [ESRGAN: Enhanced Super-Resolution Generative Adversarial Networks](https://arxiv.org/abs/1809.00219)
+Single image super-resolution (SISR), as a fundamental low-level vision problem, has attracted increasing attention in 
+the research community and AI companies. SISR aims at recovering a high-resolution (HR) image from a single
+low-resolution (LR) one. Since the pioneer work of [SRCNN](https://arxiv.org/pdf/1501.00092.pdf) proposed by Dong et al.,
+deep convolution neural network (CNN) approaches have brought prosperous development. Various network architecture
+designs and training strategies have continuously improved the SR performance, especially the Peak Signal-to-Noise Ratio (PSNR) value.
+However, these PSNR-oriented approaches tend to output over-smoothed results without sufficient high-frequency details,
+since the PSNR metric fundamentally disagrees with the subjective evaluation of human observers.
 
-<div style="text-align: right"><a href="#table-of-contents">To top</a></div>
+Several perceptual-driven methods have been proposed to improve the visual quality of SR results. For instance,
+[perceptual loss](https://arxiv.org/pdf/1603.08155.pdf) is proposed to optimize super-resolution model in a feature
+space instead of pixel space. In a later stage, generative adversarial networks are introduced to deep learning SR models
+to give the generator the ability to produce more realistic images. One of the milestones in the way to pursue more visually
+pleasing results is [SRGAN](https://arxiv.org/pdf/1609.04802v5.pdf). The basic model is built with residual blocks and
+optimized using perceptual loss in a GAN framework. With all these techniques, SRGAN significantly improves the overall
+visual quality of reconstruction over PSNR-oriented methods.
+
+<figure>
+    <img src="assets/example_srgan.png" alt="Image super-resolution techniques quality evolution">
+    <figcaption>Fig 1. Image super-resolution techniques visual quality evolution.</figcaption>
+</figure>
+
+To further enhance the visual quality of the images, [ESRGAN](https://arxiv.org/abs/1809.00219) architecture was introduced.
+The aim of this implementation was to reduce the often generated unpleasant artifacts from the hallucinated
+details created by the network. To further enhance the visual quality, Xintao et al. revisited the three key components
+of SRGAN: the network architecture, adversarial loss and perceptual loss; and improved each of them to derive to an
+Enhanced SRGAN (ESRGAN) network implementation.
+
+First, they improved the network structure by introducing the novel 
+Residual-in-Residual Dense Block (RRDB), which has higher capacity and is easier to train. They also removed the 
+Batch Normalization (BN) layers as in [EDSR](https://arxiv.org/pdf/1707.02921.pdf), as they tend to bring artifacts 
+to generated images. Another improvement to the network was to use residual scaling and smaller initialization to
+facilitate training a very deep neural network. Second, they improved the discriminator by using a Relativistic average GAN ([RaGAN](https://arxiv.org/pdf/1807.00734.pdf))
+model, which learns to judge “whether one image is more realistic than the other” rather than “whether one image is real or fake”.
+Third, they propose an improved perceptual loss by using the VGG features before activation instead of after activation as in SRGAN.
+Furthermore, in order to balance the visual quality and RMSE/PSNR, a network interpolation strategy is suggested, which
+could continuously adjust the reconstruction style and smoothness.
+
+<figure>
+    <img src="assets/srgan_esrgan_comparison.png" alt="Image super-resolution techniques quality evolution">
+    <figcaption>Fig 2. Comparison of single image super-resolution between SRGAN and ESRGAN implementations.</figcaption>
+</figure>
+
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 2. Motivation
 
-The aim of choosing a project based on Super Resolution was to investigate this set of techniques because of the wide range of possible solutions to real challenges that they can provide. Some examples could be the resolution improvement of images coming from satellites for future analysis or the enhancement of optical inspection processes used in many sectors like Aerospace, Electronics or FMCG. 
+The aim of choosing a project based on Super Resolution was to investigate this set of techniques because of the wide
+range of possible solutions to real challenges that they can provide.
 
-Following our project advisor’s recommendations, the team decided to follow the GAN model run the implementation, which represented a great opportunity to learn more about this kind architectures. Training a GAN network is a nice challenge given the complexity of having to train 2 different networks competing with each to outperform and fool the system. 
+Following our project advisor’s recommendations, the team decided to follow the GAN model run the implementation,
+which represented a great opportunity to learn more about this kind architectures. Training a GAN network is a nice
+challenge given the complexity of having to train 2 different networks competing with each to outperform and fool the system. 
 
 As mentioned previously, the idea of the project was to target a solution with potential appliance at business level.
 
 <p align="center">
-  <img src="assets/ESRGAN_illustration2.png">
+  <img src="assets/ESRGAN_illustration2.png" alt="">
 </p>
 <p align="center">
   <img src="assets/ESRGAN_illustration1.png">
 </p>
 
-<div style="text-align: right"><a href="#table-of-contents">To top</a></div>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 3. Theory
 
@@ -79,7 +136,7 @@ A Discriminator that learns to identify if an image is real or Fake.
   <img src="assets/example_srgan.png">
 </p>
 
-<div style="text-align: right"><a href="#table-of-contents">To top</a></div>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 4. Execution Instructions
 
@@ -111,7 +168,7 @@ pip3 install -r requirements.txt
 python train.py
 ```
 
-<div style="text-align: right"><a href="#table-of-contents">To top</a></div>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 5. Milestones
 The main milestones throughout this project were:
@@ -121,7 +178,7 @@ The main milestones throughout this project were:
 - First metrics and model training
 - Project Review and conclusions
 
-<div style="text-align: right"><a href="#table-of-contents">To top</a></div>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 6. Datasets
 We are using two types of datasets
@@ -146,7 +203,7 @@ We are using two types of datasets
 - [SET14](https://deepai.org/dataset/set14-super-resolution)
     * The Set14 dataset is a dataset consisting of 14 images commonly used for testing performance of Image Super-Resolution models.
 
-<div style="text-align: right"><a href="#table-of-contents">To top</a></div>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 7. Environment
 The project has been fully implemented using Pytorch Framework. Additionally, the Albumentations library has been included in order to perform the crops and different transformations to the images from the Dataset.
@@ -175,7 +232,7 @@ In terms of data visualization and logging, both Wandb and Tensorboard have been
   <img src="assets/Environment project.png">
 </p>
 
-<div style="text-align: right"><a href="#table-of-contents">To top</a></div>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 8. Architecture
 
@@ -232,7 +289,7 @@ Default hyper-parameters defined in paper
 | perceptual_loss/normalize_input     | `true`                                   | If set to `True`, normalize the input image before doing inference though the VGG network. The mean and standard deviation values are calculated for an image in the range `[0, 1]`.                      |
 | perceptual_loss/normalize_loss      | `false`                                  | If set to `True`, divide the total perceptual loss by the sum of the specified layers weight.                                                                                                             |
 
-<div style="text-align: right"><a href="#table-of-contents">To top</a></div>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ### 8.3 Loss functions
 
@@ -302,7 +359,7 @@ Metric used to compare different image enhancement algorithms systematically to 
 
 Formula: **$PSNR = 20log_{10}({MAX_f\over\sqrt{MSE}})$** where MSE is the L2 loss and $MAX_f$ is the maximum existing signal value in our original “known to be good” image.
 
-<div style="text-align: right"><a href="#table-of-contents">To top</a></div>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 9. Training process
 
@@ -346,7 +403,7 @@ In this step we train with generator and discriminator. For every mini batch we 
 ### 9.3 Logging
 For logging we use [wandb](https://wandb.ai/) with tensorboard [integrated](https://docs.wandb.ai/guides/integrations/tensorboard) because we can work with both system and share all the logging information automatically to everyone and in real time. Besides we upload images with the result of the image and the ground truth to compare the results visually for every N epochs. 
 
-<div style="text-align: right"><a href="#table-of-contents">To top</a></div>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 10. Results
 
@@ -446,7 +503,7 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
   <img src="assets/results/p192_t128_cr_16_rrdb_div2k+bsds500_parrot.png">
 </p>  
 
-<div style="text-align: right"><a href="#table-of-contents">To top</a></div>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ### 10.4 Torch Models trained
 
@@ -465,7 +522,7 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
 | 128_cr_23_rrdb_div2k               | [ESRGAN.pth](https://drive.google.com/file/d/1UL1DMT2KaHTjNNiN53v0qplliM4zHEOS/view?usp=sharing)         | ESRGAN model                             |
 | 128_cr_23_rrdb_div2k               | [ESRGAN-interp.pth](https://drive.google.com/file/d/1Bj4C8j1mjoCFkjZzaY_te4KjMMIMt4WO/view?usp=sharing)  | ESRGAN Interpolated with alpha 0.8 model |
 
-<div style="text-align: right"><a href="#table-of-contents">To top</a></div>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ### 10.5 Comparison metrics
 
@@ -473,21 +530,17 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
   <img src="assets/metrics_comparison_final.png">
 </p>
 
-<div style="text-align: right"><a href="#table-of-contents">To top</a></div>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 11. Conclusions
 
-It has been a very challenging project and we have learned a lot. One of the first issues we faced is the hardware limitation. It took a lot of time to train the models, and the batch size was also limited to the hardware compute power.
+It has been a very challenging project, and we have learned a lot. One of the first issues we faced is the hardware limitation.
+It took a lot of time to train the models, and the batch and crop sizes were limited directly by the available GPU memory.
 
-We have observed that in PPO with A2C the models were training successfully in simple environments, but when complexity was increased (Atari) we needed more episodes and we didn't get a model avble to solve the environments. This was solved using the environments frames (images) instead of the RAM as input data. Using this approach we observed that training finishes for less episodes in Pong and Space Invaders, but for Breakout the model is not able to finish the game. We suspect that this could be overfitting, and a way to solve that could be increasing the batch size, but this takes us back to the hardware limitation.
+Another major issue we faced during 
 
-We have seen that it is very important to monitor the performance of the models with tools like TensorBoard. All the tests we made took us to other monitoring techniques like observing how each hyperparameter affected the result. Both monitoring and testing different techniques led us to the final algorithm, with which we would be able to train models able to solve Atari environments.
 
-During this project we have had the opportunity of learning how to implement Reinforcement Learning algorithms gradually, starting with Vanilla Policy Gradients, then Advantage Actor Critic and finallty PPO, being able to train models that are able to solve different Atari games. It has been very challenging, specially with PPO, as there are a lot of factors that have to be taken into account :hyperparameters, different architectures, read different papers in order to learn techniques that could improve the performance of our model...
-
-Deep learning has a huge community behind it, which makes it easier to find a solution to your problem. However, bulding deep learning models can lead you to a very specific problem to your case and it won't be that easy to solve it.
-
-<div style="text-align: right"><a href="#table-of-contents">To top</a></div>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 12. References
 
@@ -527,8 +580,8 @@ Deep learning has a huge community behind it, which makes it easier to find a so
 
 [Peak Signal-to-Noise Ratio as an Image Quality Metric](https://www.ni.com/es-es/innovations/white-papers/11/peak-signal-to-noise-ratio-as-an-image-quality-metric.html)
 
-<div style="text-align: right"><a href="#table-of-contents">To top</a></div>
+<p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 13. Presentation
 
-<div style="text-align: right"><a href="#table-of-contents">To top</a></div>
+<p align="right"><a href="#table-of-contents">To top</a></p>

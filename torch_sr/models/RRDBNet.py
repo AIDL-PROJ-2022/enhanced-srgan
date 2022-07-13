@@ -1,5 +1,5 @@
 """
-Residual-on-residual dense block generator network model.
+Residual-in-residual dense block generator network model.
 """
 
 __author__ = "Marc Bermejo"
