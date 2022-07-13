@@ -527,9 +527,11 @@ The **perceptual loss** ($L_{percep}$)<a name="perceptual_loss"></a>: Type of co
 [Perceptual Losses for Real-Time Style Transfer and Super-Resolution](https://arxiv.org/abs/1603.08155v1) 
 framework. Also known as VGG loss is based on the ReLU activation layers on the pre-trained 19 layer VGG network.
 
-<p align="center">
-  <img src="assets/vgg_loss.png" alt="VGG loss function">
-</p>
+$$
+\begin{aligned}
+l_{VGG/i,j} = {1 \over W_{i,j}H_{i,j}} \sum_{x = 1}^{W_{i,j}} \sum_{y = 1}^{H_{i,j}} (\Phi_{i,j}(I^{HR})_{x,y} - \Phi_{i,j}(G_{\Phi_G}(I^{LR}))_{x,y})^2
+\end{aligned}
+$$
 
 but with the improvement of using VGG features before activation instead of after activation as in SRGAN. 
 It was empirically found hat the adjusted perceptual loss provides sharper edges and more visually pleasing results.
@@ -775,6 +777,26 @@ These are the metrics obtained from all steps and executed trainings.
 ### 9.3 Model Results
 
 These are the results from some images of the SET5 and SET14 test datasets.
+
+
+<!-- <p align="center">
+  <img src="assets/low_resolution.png" >
+  <img src="assets/ground_truth.png">
+</p> -->
+
+Low resolution             |  Ground Thruth
+:-------------------------:|:-------------------------:
+<img src="assets/low_resolution.png" >  | <img src="assets/ground_truth.png">
+
+Pre-CR: 128 / CR: 128 / 23 RRDBs / DIV2K             |  Pre-CR: 192 / CR: 192 / 23 RRDBs / DIV2K
+:-------------------------:|:-------------------------:
+<img src="assets/128_cr_23_rrdb_div2k_butterfly_small.png"> >  | <img src="assets/192_cr_23_rrdb_div2k_butterfly_small.png">
+
+Pre-CR: 192 / CR: 128 / 23 RRDBs / DIV2K+BSDS500             |  Pre-CR: 192 / CR: 128 / 16 RRDBs / DIV2K+BSDS500
+:-------------------------:|:-------------------------:
+<img src="assets/p192_t128_cr_16_rrdb_div2k+bsds500_butterfly_small.png"> >  | <img src="assets/p192_t128_cr_23_rrdb_div2k+bsds500_butterfly_small.png">
+
+
 
 * [Pre-CR: 128 / CR: 128 / 23 RRDBs / DIV2K]
 <p align="center">
