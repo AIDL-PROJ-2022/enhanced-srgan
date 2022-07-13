@@ -815,17 +815,17 @@ These are the results from some images of the SET5 and SET14 test datasets.
 
 |             Low resolution             |            Ground Thruth            |
 |:--------------------------------------:|:-----------------------------------:|
-| <img src="assets/runners_low_resolution.png" > | <img src="assets/runners_ground_truth.png"> |
+| ![](assets/results/by_target/runners/lr.png) | ![](assets/results/by_target/runners/gt.png) |
 
 |           Pre-CR: 128 / CR: 128 / 23 RRDBs / DIV2K            |          Pre-CR: 192 / CR: 192 / 23 RRDBs / DIV2K           |
 |:-------------------------------------------------------------:|:-----------------------------------------------------------:|
-| <img src="assets/superresolved_128_cr_23_rrdb_div2k_runners.png"> | <img src="assets/superresolved_192_cr_23_rrdb_div2k_runners.png"> |
-|              PSNR- 16 18dh / SSIM. 0.11                                     |             PSNR. 16 44db / SSIM. 0.45                                     |
+| ![](assets/results/by_target/runners/128_cr_23_rrdb_div2k.png) | ![](assets/results/by_target/runners/192_cr_23_rrdb_div2k.png) |
+|              PSNR: 16.18db / SSIM: 0.11                                     |             PSNR: 16.44db / SSIM: 0.45                                     |
 
 |           Pre-CR: 192 / CR: 128 / 16 RRDBs / DIV2K+BSDS500                  |             Pre-CR: 192 / CR: 128 / 23 RRDBs / DIV2K+BSDS500              |
 |:---------------------------------------------------------------------------:|:-------------------------------------------------------------------------:|
-| <img src="assets/superresolved_p192_t128_cr_16_rrdb_div2k+bsds500_runners.png"> | <img src="assets/superresolved_p192_t128_cr_23_rrdb_div2k+bsds500_runners.png"> |
-|              PSNR: 20.12db / SSIM: 0.66                                     |             PSNR- 70 27d / SSIM. 0.67                                     |
+| ![](assets/results/by_target/runners/p192_t128_cr_16_rrdb_div2k+bsds500.png) | ![](assets/results/by_target/runners/p192_t128_cr_23_rrdb_div2k+bsds500.png) |
+|              PSNR: 20.12db / SSIM: 0.66                                     |             PSNR: 70.27db / SSIM. 0.67                                     |
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
