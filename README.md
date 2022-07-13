@@ -24,33 +24,33 @@ the network architecture, adversarial loss and perceptual loss.
 
 ## Table of Contents
 
-1. [Introduction](#1-abstract)
+1. [Introduction](#1-introduction)
 2. [Motivation](#2-motivation)
-3. [Theory](#3-theory)
-4. [Execution Instructions](#4-execution-instructions)
-   1. [Installation](#41-installation)
-5. [Milestones](#5-milestones)
-6. [Datasets](#6-datasets)
-7. [Environment](#7-environment)
-8. [Architecture](#8-architecture)
-    1. [Model definitions](#81-model-definitions)
-    2. [Hyper-parameters](#82-hyper-parameters)
-    3. [Loss functions](#83-loss-functions)
-    4. [Quality Metrics](#84-quality-metrics)
-    5. [Network Interpolation](#85-network-interpolation)
-9. [Training process](#9-training-process)
-    1. [Pre-training](#91-pre-training-step)
-    2. [Training](#92-training-step)
-    3. [Logging](#93-logging)
-10. [Results](#10-results)
-     1. [Executions](#101-executions)
-     2. [Metrics](#102-metrics)
-     3. [Model Results](#103-model-results)
-     4. [Torch models trained](#104-torch-models-trained)
-     5. [Comparison metrics](#105-comparison-metrics)
-11. [Conclusions](#11-conclusions)
-12. [References](#12-references)
-13. [Presentation](#13-presentation)
+3. [Execution Instructions](#3-execution-instructions)
+   1. [Installation](#31-installation)
+4. [Milestones](#4-milestones)
+5. [Datasets](#5-datasets)
+6. [Environment](#6-environment)
+7. [Architecture](#7-architecture)
+    1. [Generator model](#71-generator-model)
+    2. [Discriminator model](#72-discriminator-model)
+    3. [Hyper-parameters](#73-hyper-parameters)
+    3. [Loss functions](#74-loss-functions)
+    4. [Quality Metrics](#75-quality-metrics)
+    5. [Network Interpolation](#76-network-interpolation)
+8. [Training process](#8-training-process)
+    1. [Pre-training](#81-pre-training-step)
+    2. [Training](#82-training-step)
+    3. [Logging](#83-logging)
+9. [Results](#9-results)
+     1. [Executions](#91-executions)
+     2. [Metrics](#92-metrics)
+     3. [Model Results](#93-model-results)     
+     4. [Torch models trained](#94-torch-models-pre-trained)
+     5. [Comparison metrics](#95-comparison-metrics)
+10. [Conclusions](#10-conclusions)
+11. [References](#11-references)
+12. [Presentation](#12-presentation)
 
 ## 1. Introduction
 
@@ -113,7 +113,11 @@ As mentioned previously, the idea of the project was to target a solution with p
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
-## 3. Execution Instructions
+## 3. Execution instructions
+
+asdf
+asdf
+
 
 ### 3.1 Installation
 
@@ -251,7 +255,7 @@ python3 net_interpolation.py --psnr-model-path models/128_cr_23_rrdb_div2k/RRDB_
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
-## 5. Milestones
+## 4. Milestones
 
 The main milestones throughout this project were:
 
@@ -263,7 +267,7 @@ The main milestones throughout this project were:
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
-## 6. Datasets
+## 5. Datasets
 We are using two types of datasets
 
 - [BSDS500](https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/resources.html#bsds500)
@@ -293,7 +297,7 @@ We are using two types of datasets
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
 
-## 7. Environment
+## 6. Environment
 
 The project has been fully implemented using Pytorch Framework. Additionally, the Albumentations library has been 
 included in order to perform the crops and different transformations to the images from the Dataset.
@@ -331,7 +335,7 @@ created after each epoch and Tensorboard displays the model Graph for each execu
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
 
-## 8. Architecture
+## 7. Architecture
 
 We've implemented a ESRGAN model using [PyTorch](https://pytorch.org/)
 
@@ -341,7 +345,7 @@ can be tuned to improve or modify the training process. After, we define the los
 train and measure the model performance. At last, we describe the network interpolation process as described in the 
 original paper.
 
-### 8.1 Generator model
+### 7.1 Generator model
 
 In order to further improve the recovered image quality of SRGAN, two modifications are made to the structure of generator
 in respect to the SRGAN implementation G:
@@ -386,7 +390,7 @@ very deep network:
     </b></i>
 </p>
 
-### 8.2 Discriminator model
+### 7.2 Discriminator model
 
 The discriminator model is a VGG-style network that will be trained and responsible of classifying the images between
 real and fake ones. It contains eight convolutional layers with an increasing number of 3x3 filter kernels, increasing 
@@ -402,7 +406,7 @@ and a final perceptron that will act as the network binary classification output
     </b></i>
 </p>
 
-### 8.3 Hyper-parameters
+### 7.3 Hyper-parameters
 
 This table shows all the available network hyper-parameters that can be used to define a training process and network properties.
 
@@ -448,7 +452,7 @@ This table shows all the available network hyper-parameters that can be used to 
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
-### 8.4 Loss functions
+### 7.4 Loss functions
 
 Whe have 3 kind of loss functions on this model.
 
@@ -508,9 +512,9 @@ The **total loss**<a name="total_loss"></a> ($L_G$) is then calculated by:
 $L_G = L_{percep} + λL_{G}^{Ra} + ηL_{content}$ which 
 λ, η are the coefficients to balance different loss terms
 
-### 8.5 Quality Metrics
+### 7.5 Quality Metrics
 
-#### 8.5.1 Structural Similarity Index (SSIM)
+#### 7.5.1 Structural Similarity Index (SSIM)
 
 Given 2 images, SSIM is an index with values in the range (-1,1) which estimates the level of similarity between those two images.
 The value range will show the following behaviour:
@@ -535,7 +539,7 @@ $$
 Where α, β, γ are the weights assigned to each feature.
 
 
-#### 8.4.2 Peak Signal-to-Noise (PSNR)
+#### 7.5.2 Peak Signal-to-Noise (PSNR)
 
 Ratio between maximum possible value (power) of a signal and power of distorting noise that affects the quality of its representation.
 
@@ -551,7 +555,7 @@ $$
 
 Where MSE is the L2 loss and $MAX_f$ is the maximum existing signal value in our original “known to be good” image.
 
-### 8.5 Network Interpolation
+### 7.6 Network Interpolation
 
 To remove unpleasant noise in GAN-based methods while maintain a good perceltual quality, we use Network Interpolation.
 That means that we first train a PSNR-oriented network $G_{PSNR}$ and then obtain a GAN-based network $G_{GAN}$. 
@@ -569,7 +573,7 @@ and α ∈ [0, 1] is the interpolation parameter.
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
-## 9. Training process
+## 8. Training process
 
 Training process is composed in two main steps, pre-traing (warm-up) and training.
 
@@ -595,7 +599,7 @@ As user-defined transforms we define the following ones depending on the augment
     * Compresion with 0.25 probability.
     * Coarse Dropout with 0.25 probability.
 
-### 9.1 Pre-training step
+### 8.1 Pre-training step
 
 In this step only the generator is trained using the [Content loss](#content_loss) as the loss function.
 
@@ -610,7 +614,7 @@ In this step only the generator is trained using the [Content loss](#content_los
   * Training: **content_loss**
   * Validation: **content_loss**, **perceptual_loss**, **PSNR**, **SSIM**
 
-### 9.2 Training step
+### 8.2 Training step
 
 In this step we train with generator and discriminator. For every mini batch we first freeze the discriminator and train
 the generator. When finished the mini batch then we train the discriminator and freeze the generator.
@@ -629,7 +633,7 @@ the generator. When finished the mini batch then we train the discriminator and 
   * Training: **content_loss**, **perceptual_loss**, **g_adversarial_loss**, **g_total_loss**, **d_adversarial_loss**
   * Validation: **content_loss**, **perceptual_loss**, **PSNR**, **SSIM**
   
-### 9.3 Logging
+### 8.3 Logging
 
 For logging we use [wandb](https://wandb.ai/) with Tensorboard [integrated](https://docs.wandb.ai/guides/integrations/tensorboard)
 because we can work with both system and share all the logging information automatically to everyone and in real time.
@@ -637,9 +641,9 @@ Besides, we upload images with the result of the image and the ground truth to c
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
-## 10. Results
+## 9. Results
 
-### 10.1 Executions
+### 9.1 Executions
 
 We have successfully completed [4 different executions](https://wandb.ai/markbeta/Torch-SR) with different hyper-parameters:
 
@@ -696,16 +700,16 @@ From these trainings we wanted to confirm the following hypothesis:
 * The network will achieve more generalization by using dataset with different semantics.
 * The network will be able to capture more spatial data from having a bigger crop.
 
-### 10.2 Metrics
+### 9.2 Metrics
 
 These are the metrics obtained from all steps and executed trainings.
 
-#### 10.2.1 Train PSNR-driven content loss
+#### 9.2.1 Train PSNR-driven content loss
 <p align="center">
   <img src="assets/graphs/train_PSNR-driven_content-loss.png">
 </p>
 
-#### 10.2.2 Validation PSNR-driven
+#### 9.2.2 Validation PSNR-driven
 
 <p align="center">
   <img src="assets/graphs/validation_PSNR-driven_content-loss.png">
@@ -714,7 +718,7 @@ These are the metrics obtained from all steps and executed trainings.
   <img src="assets/graphs/validation_PSNR-driven_perceptual-loss.png">
 </p>
 
-#### 10.2.3 Train GAN-based
+#### 9.2.3 Train GAN-based
 <p align="center">
   <img src="assets/graphs/train_GAN-based_content-loss.png">
   <img src="assets/graphs/train_GAN-based_g-adversarial-loss.png">
@@ -723,7 +727,7 @@ These are the metrics obtained from all steps and executed trainings.
   <img src="assets/graphs/train_GAN-based_g-total-loss.png">
 </p>
 
-#### 10.2.4 Validation GAN-based
+#### 9.2.4 Validation GAN-based
 <p align="center">
   <img src="assets/graphs/validation_GAN-based_content-loss.png">
   <img src="assets/graphs/validation_GAN-based_SSIM.png">
@@ -731,7 +735,7 @@ These are the metrics obtained from all steps and executed trainings.
   <img src="assets/graphs/validation_GAN-based_perceptual-loss.png">
 </p>
 
-### 10.3 Model Results
+### 9.3 Model Results
 
 These are the results from some images of the SET5 and SET14 test datasets.
 
@@ -761,7 +765,7 @@ These are the results from some images of the SET5 and SET14 test datasets.
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
-### 10.4 Torch Models pre-trained
+### 9.4 Torch Models pre-trained
 
 | Model                              | Download                                                                                                 | Comments                                 |
 |------------------------------------|----------------------------------------------------------------------------------------------------------|------------------------------------------|
@@ -780,7 +784,7 @@ These are the results from some images of the SET5 and SET14 test datasets.
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
-### 10.5 Comparison metrics
+### 9.5 Comparison metrics
 
 <p align="center">
   <img src="assets/metrics_comparison_final.png">
@@ -788,7 +792,7 @@ These are the results from some images of the SET5 and SET14 test datasets.
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
-## 11. Conclusions
+## 10. Conclusions
 
 It has been a very challenging project, and we have learned a lot. One of the first issues we faced is the hardware limitation.
 It took a lot of time to train the models, and the batch and crop sizes were limited directly by the available GPU memory.
@@ -806,7 +810,7 @@ After observing the obtained results we can extract the following conclusions:
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
-## 12. References
+## 11. References
 
 [Automated visual quality inspection using AI/ML in manufacturing industries that reduces scrap/rework costs](https://industry40.co.in/automated-visual-quality-inspection-using-ai-ml-in-manufacturing/)
 
@@ -846,6 +850,6 @@ After observing the obtained results we can extract the following conclusions:
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
-## 13. Presentation
+## 12. Presentation
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
