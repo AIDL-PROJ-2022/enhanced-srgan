@@ -512,10 +512,11 @@ $L_G = L_{percep} + λL_{G}^{Ra} + ηL_{content}$ which
 
 #### 8.5.1 Structural Similarity Index (SSIM)
 
-Given 2 images, SSIM is an index with values in the range (-1,1) which estimates the level of similarity between thos two images.
+Given 2 images, SSIM is an index with values in the range (-1,1) which estimates the level of similarity between those two images.
+The value range will show the following behaviour:
 
-* +1 = very similar or the same.
-* -1 = very different.
+* **+1** -> very similar or the same.
+* **-1** -> very different.
 
 It combines different comparison functions:
 
@@ -523,14 +524,24 @@ It combines different comparison functions:
 * Contrast **c(x,y)**
 * Structure **s(x,y)**
 
-Formula: **$SSIM(x,y) = [l(x,y)]^α * [c(x,y)]^β * [s(x,y)]^γ$**, where α,β,γ are the weights assigned to each feature
+Formula:
+
+$$
+\begin{aligned}
+SSIM(x,y) = [l(x,y)]^α * [c(x,y)]^β * [s(x,y)]^γ
+\end{aligned}
+$$
+
+Where α, β, γ are the weights assigned to each feature.
 
 
 #### 8.4.2 Peak Signal-to-Noise (PSNR)
 
 Ratio between maximum possible value (power) of a signal and power of distorting noise that affects the quality of its representation.
 
-Metric used to compare different image enhancement algorithms systematically to evaluate which produces better results using the same dataset, with the Formula
+Metric used to compare different image enhancement algorithms systematically to evaluate which produces better results using the same dataset.
+
+Formula:
 
 $$
 \begin{aligned}
@@ -538,7 +549,7 @@ PSNR = 20log_{10}({MAX_f\over\sqrt{MSE}})
 \end{aligned}
 $$
 
-where MSE is the L2 loss and $MAX_f$ is the maximum existing signal value in our original “known to be good” image.
+Where MSE is the L2 loss and $MAX_f$ is the maximum existing signal value in our original “known to be good” image.
 
 ### 8.5 Network Interpolation
 
