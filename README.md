@@ -634,7 +634,17 @@ Besides, we upload images with the result of the image and the ground truth to c
 ## 10. Results
 
 ### 10.1 Executions
-We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) with differents hyperparameters
+
+We have successfully completed [4 different executions](https://wandb.ai/markbeta/Torch-SR) with different hyper-parameters:
+
+The trainings are described using the following structure:
+
+* **PRE CR:** Crop size used during the pre-training step.
+* **CR:** Crop size used during the training step.
+* **RRDBs:** Number of Residual-in-Residual dense block defined in the generator.
+* **DIV2K / DIV2K+BSDS500:** Datasets used during for training the model.
+
+These are the hyper-parameters defined for each training:
 
 * ESRGAN (PRE CR: 128 / CR: 128 / 23 RRDBs / DIV2K)
   * [Wandb information pretraining and training](https://wandb.ai/markbeta/Torch-SR/runs/1cxsyrdf)
@@ -665,6 +675,8 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
     * pretraining/train_datasets: ["div2k"]
     * training/train_datasets: ["div2k"]
 * ESRGAN (PRE CR: 192 / CR: 128 / 16 RRDBs / DIV2K+BSDS500)
+  * Wandb:
+    * _No data available for this training_.
   * Hyperparameters:
     * pretraining/cr_patch_size: [192, 192]
     * training/cr_patch_size: [128, 128]
@@ -672,7 +684,15 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
     * pretraining/train_datasets: ["div2k", "bsds500"]
     * training/train_datasets: ["div2k", "bsds500"]
 
+From these trainings we wanted to confirm the following hypothesis:
+
+* The network will benefit from having a deeper structure and will achieve better results.
+* The network will achieve more generalization by using dataset with different semantics.
+* The network will be able to capture more spatial data from having a bigger crop.
+
 ### 10.2 Metrics
+
+These are the metrics obtained from all steps and executed trainings.
 
 #### 10.2.1 Train PSNR-driven content loss
 <p align="center">
@@ -706,6 +726,9 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
 </p>
 
 ### 10.3 Model Results
+
+These are the results from some images of the SET5 and SET14 test datasets.
+
 * [Pre-CR: 128 / CR: 128 / 23 RRDBs / DIV2K]
 <p align="center">
   <img src="assets/results/128_cr_23_rrdb_div2k_butterfly.png">
@@ -732,22 +755,22 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
-### 10.4 Torch Models trained
+### 10.4 Torch Models pre-trained
 
 | Model                              | Download                                                                                                 | Comments                                 |
 |------------------------------------|----------------------------------------------------------------------------------------------------------|------------------------------------------|
 | p192_t128_cr_23_rrdb_div2k+bsds500 | [PSNR.pth](https://drive.google.com/file/d/1mzCvgD33wvXu__ZRio4i5Jh9bJCSW658/view?usp=sharing)           | PSNR model                               |
 | p192_t128_cr_23_rrdb_div2k+bsds500 | [ESRGAN.pth](https://drive.google.com/file/d/1Is_CWrG1GB7Gp7mj68V5ashiVBiK9OOw/view?usp=sharing)         | ESRGAN model                             |
-| p192_t128_cr_23_rrdb_div2k+bsds500 | [ESRGAN-interp.pth](https://drive.google.com/file/d/14PtG4mM0YdeA7cS3nbaMxmcXe2_Fxc3Q/view?usp=sharing)  | ESRGAN Interpolated with alpha 0.8 model |
+| p192_t128_cr_23_rrdb_div2k+bsds500 | [ESRGAN-interp.pth](https://drive.google.com/file/d/14PtG4mM0YdeA7cS3nbaMxmcXe2_Fxc3Q/view?usp=sharing)  | ESRGAN model interpolated with alpha=0.8 |
 | p192_t128_cr_16_rrdb_div2k+bsds500 | [PSNR.pth](https://drive.google.com/file/d/1cyPHrQy7tiuwB5-k1se7PI9sdWw3yrz8/view?usp=sharing)           | PSNR model                               |
 | p192_t128_cr_16_rrdb_div2k+bsds500 | [ESRGAN.pth](https://drive.google.com/file/d/1cCxkpeeP-USsNbYEDKkRXNdKY1hN8CCJ/view?usp=sharing)         | ESRGAN model                             |
-| p192_t128_cr_16_rrdb_div2k+bsds500 | [ESRGAN-interp.pth](https://drive.google.com/file/d/1cJgd9c6EmkKo68Dg1tD_PdZBNbQ-rfvM/view?usp=sharing)  | ESRGAN Interpolated with alpha 0.8 model |
+| p192_t128_cr_16_rrdb_div2k+bsds500 | [ESRGAN-interp.pth](https://drive.google.com/file/d/1cJgd9c6EmkKo68Dg1tD_PdZBNbQ-rfvM/view?usp=sharing)  | ESRGAN model interpolated with alpha=0.8 |
 | p192_cr_23_rrdb_div2k              | [PSNR.pth](https://drive.google.com/file/d/1o5FwomoEGLIHBIMAVXiIOlEeGQTmPI09/view?usp=sharing)           | PSNR model                               |
 | p192_cr_23_rrdb_div2k              | [ESRGAN.pth](https://drive.google.com/file/d/1zZwGch8f3dIE5OVU1na1pqHRlOj-61xN/view?usp=sharing)         | ESRGAN model                             |
-| p192_cr_23_rrdb_div2k              | [ESRGAN-interp.pth](https://drive.google.com/file/d/1Z3xTC4DimXQlgw2SvvXBorPzfkozCnRa/view?usp=sharing)  | ESRGAN Interpolated with alpha 0.8 model |
+| p192_cr_23_rrdb_div2k              | [ESRGAN-interp.pth](https://drive.google.com/file/d/1Z3xTC4DimXQlgw2SvvXBorPzfkozCnRa/view?usp=sharing)  | ESRGAN model interpolated with alpha=0.8 |
 | 128_cr_23_rrdb_div2k               | [PSNR.pth](https://drive.google.com/file/d/13orzB4WP9uK0OBG52Ht9nsnUAwi73yKX/view?usp=sharing)           | PSNR model                               |
 | 128_cr_23_rrdb_div2k               | [ESRGAN.pth](https://drive.google.com/file/d/1UL1DMT2KaHTjNNiN53v0qplliM4zHEOS/view?usp=sharing)         | ESRGAN model                             |
-| 128_cr_23_rrdb_div2k               | [ESRGAN-interp.pth](https://drive.google.com/file/d/1Bj4C8j1mjoCFkjZzaY_te4KjMMIMt4WO/view?usp=sharing)  | ESRGAN Interpolated with alpha 0.8 model |
+| 128_cr_23_rrdb_div2k               | [ESRGAN-interp.pth](https://drive.google.com/file/d/1Bj4C8j1mjoCFkjZzaY_te4KjMMIMt4WO/view?usp=sharing)  | ESRGAN model interpolated with alpha=0.8 |
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
@@ -764,7 +787,16 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
 It has been a very challenging project, and we have learned a lot. One of the first issues we faced is the hardware limitation.
 It took a lot of time to train the models, and the batch and crop sizes were limited directly by the available GPU memory.
 
-Another major issue we faced during 
+After observing the obtained results we can extract the following conclusions:
+
+* During the GAN-based training is really important and difficult to maintain the balance between the generator and the discriminator training.
+* Using network interpolation we can reduce unpleasant noise from GAN-driven training while maintaining a good perceptual performance.
+* A deeper model can further improve recovered textures and reduce unpleasant noises.
+* Using broader data with different scene types and sizes can help the generator to generalize more but at the cost of reducing overall performance.
+* To achieve good performance on a scene type first the model needs to be trained from images with a similar scene type.
+* Using a dataset with sharper edges (like BSDS500) can help the network to perform better on images with less initial 
+  information and reduce generated images artifacts at the cost of reducing overall performance for easier images.
+
 
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
