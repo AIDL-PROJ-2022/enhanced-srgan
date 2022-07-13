@@ -323,7 +323,7 @@ W&B can support Tensorboard and each of them provides additional features. For e
 created after each epoch and Tensorboard displays the model Graph for each execution.
 
 <p align="center">
-    <img src="assets/execution_environment.png" alt="Execution environment diagram">
+    <img src="assets/execution_environment.png" alt="Execution environment diagram" width="50%">
     <br>
     <i><b>Fig 3. Model training execution environment diagram.</b></i>
 </p>
