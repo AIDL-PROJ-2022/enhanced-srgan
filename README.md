@@ -72,8 +72,7 @@ visual quality of reconstruction over PSNR-oriented methods.
 
 <p align="center">
     <img src="assets/example_srgan.png" alt="Image super-resolution techniques quality evolution"/>
-</p>
-<p align="center">
+    <br>
     <i><b>Fig 1. Image super-resolution techniques visual quality evolution.</b></i>
 </p>
 
@@ -93,10 +92,11 @@ Third, they propose an improved perceptual loss by using the VGG features before
 Furthermore, in order to balance the visual quality and RMSE/PSNR, a network interpolation strategy is suggested, which
 could continuously adjust the reconstruction style and smoothness.
 
-<figure>
+<p align="center">
     <img src="assets/srgan_esrgan_comparison.png" alt="Image super-resolution techniques quality evolution">
-    <figcaption>Fig 2. Comparison of single image super-resolution between SRGAN and ESRGAN implementations.</figcaption>
-</figure>
+    <br>
+    <i><b>Fig 1. Image super-resolution techniques visual quality evolution.</b></i>
+</p>
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
