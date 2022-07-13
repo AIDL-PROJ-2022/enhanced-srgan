@@ -844,7 +844,7 @@ These are the results from some images of the SET5 and SET14 test datasets.
 ### 9.5 Comparison metrics
 
 <p align="center">
-  <img src="assets/metrics_comparison_final.png">
+  <img src="assets/metrics_comparison_final.png" alt="Test metrics comparison between performed trainings">
 </p>
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
