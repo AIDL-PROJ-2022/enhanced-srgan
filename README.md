@@ -335,16 +335,76 @@ created after each epoch and Tensorboard displays the model Graph for each execu
 
 We've implemented a ESRGAN model using [PyTorch](https://pytorch.org/)
 
-### 8.1 Model definitions
+In this section we describe the proposed network architecture by the original ESRGAN implementation.
+This includes both generator and discriminator models definitions. Then we expose the available hyper-parameters that 
+can be tuned to improve or modify the training process. After, we define the loss functions and quality metrics used to
+train and measure the model performance. At last, we describe the network interpolation process as described in the 
+original paper.
+
+### 8.1 Generator model
+
+In order to further improve the recovered image quality of SRGAN, two modifications are made to the structure of generator
+in respect to the SRGAN implementation G:
+
+1. Remove all BN layers.
+2. Replace the original basic block with the proposed Residual-in-Residual Dense Block (RRDB), which combines multi-level
+   residual network and dense connections as depicted in Fig. 4.
 
 <p align="center">
-  <img src="assets/model1.png">
-  <img src="assets/model2.png">
+    <img src="assets/rrdb_and_rb_wo_bn.png" alt="Residual block w/o BN layers and RRDB diagram">
+    <br>
+    <i><b>
+        Fig 4. Left: BN layers were removed from the residual block of SRGAN. 
+        Right: RRDB block is used in our deeper model and β is the residual scaling parameter.
+    </b></i>
 </p>
 
-### 8.2 Hyper-parameters
+Removing BN layers has proven to increase performance and reduce computational complexity in different PSNR-oriented 
+tasks including SR and deblurring. BN layers normalize the features using mean and variance in a batch during training
+and use estimated mean and variance of the whole training dataset during testing. When the statistics of training and 
+testing datasets differ a lot, BN layers tend to introduce unpleasant artifacts and limit the generalization ability. 
 
-Default hyper-parameters defined in paper
+As from the ESRGAN specification, they keep the high-level architecture design of SRGAN (see Fig. 5), and use a novel
+basic block namely RRDB as depicted in Fig. 4. Based on the observation that more layers and connections could always 
+boost performance, the proposed RRDB employs a deeper and more complex structure than the original residual block in SRGAN.
+Specifically, as shown in Fig. 4, the proposed RRDB has a residual-in-residual structure, where residual learning is 
+used in different levels.
+
+In addition to the improved architecture, Xintao et al. also exploit several techniques to facilitate training a 
+very deep network:
+
+1. Residual scaling, i.e., scaling down the residuals by multiplying a constant between 0 and 1 before adding them to 
+   the main path to prevent instability.
+2. Smaller initialization, as they empirically find residual architecture is easier to train when the initial parameter
+   variance becomes smaller.
+
+<p align="center">
+    <img src="assets/generator_model.png" alt="ESRGAN generator model diagram">
+    <br>
+    <i><b>
+        Fig 5. ESRGAN generator model diagram
+    </b></i>
+</p>
+
+### 8.2 Discriminator model
+
+The discriminator model is a VGG-style network that will be trained and responsible of classifying the images between
+real and fake ones. It contains eight convolutional layers with an increasing number of 3x3 filter kernels, increasing 
+by a factor of 2 from 64 to 512 kernels as in the VGG network. Strided convolutions are used to reduce the image resolution
+each time the number of features is doubled. The resulting 512 feature maps are followed by one dense layer of size 100,
+and a final perceptron that will act as the network binary classification output.
+
+<p align="center">
+    <img src="assets/discriminator_model.png" alt="ESRGAN discriminator model diagram">
+    <br>
+    <i><b>
+        Fig 6. ESRGAN discriminator model diagram
+    </b></i>
+</p>
+
+### 8.3 Hyper-parameters
+
+This table shows all the available network hyper-parameters that can be used to define a training process and network properties.
 
 | Hyperparameters                     | Default Values                           | Comments                                                                                                                                                                                                  |
 |-------------------------------------|:-----------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -357,7 +417,7 @@ Default hyper-parameters defined in paper
 | pretraining/sched_step              | `200000`                                 | Learning rate scheduler decay rate for the pre-training step.                                                                                                                                             |
 | pretraining/sched_gamma             | `0.5`                                    | Multiplicative factor of the learning rate scheduler decay for the pre-training step.                                                                                                                     |
 | pretraining/train_datasets          | `["div2k"]`                              | Dataset(s) used during training of the pre-training step. Must be one of ``'div2k'``, ``'bsds500'``.                                                                                                      |
-| pretraining/val_datasets            | `["bsds500"]`                            | Dataset(s) used during validation of the pre-training step. Must be one of ``'div2k'``, ``'bsds500'``.                                                                                                    |
+| pretraining/val_datasets            | `["div2k"]`                              | Dataset(s) used during validation of the pre-training step. Must be one of ``'div2k'``, ``'bsds500'``.                                                                                                    |
 | training/num_epoch                  | `8000`                                   | Number of epoch needed to complete the training step.                                                                                                                                                     |
 | training/cr_patch_size              | `[128, 128]`                             | Number of epoch needed to complete the pre-training (GAN-driven) step.                                                                                                                                    |
 | training/g_lr                       | `1e-4`                                   | Configured generator's learning rate for the training step optimizer. Adam optimizer will be used for this step.                                                                                          |
@@ -369,7 +429,7 @@ Default hyper-parameters defined in paper
 | training/g_adversarial_loss_scaling | `0.005`                                  | Generator adversarial loss scaling factor used to calculate the total generator loss.                                                                                                                     |
 | training/g_content_loss_scaling     | `0.01`                                   | Generator content loss scaling factor used to calculate the total generator loss.                                                                                                                         |
 | training/train_datasets             | `["div2k"]`                              | Dataset(s) used during training of the training step. Must be one of ``'div2k'``, ``'bsds500'``.                                                                                                          |
-| training/val_datasets               | `["bsds500"]`                            | Dataset(s) used during validation of the training step. Must be one of ``'div2k'``, ``'bsds500'``.                                                                                                        |
+| training/val_datasets               | `["div2k"]`                              | Dataset(s) used during validation of the training step. Must be one of ``'div2k'``, ``'bsds500'``.                                                                                                        |
 | generator/rrdb_channels             | `64`                                     | Number of channels in the residual-on-residual dense blocks latent space.                                                                                                                                 |
 | generator/growth_channels           | `32`                                     | Number of channels in the residual dense block latent space.                                                                                                                                              |
 | generator/num_basic_blocks          | `16`                                     | Number of basic (a.k.a residual-on-residual dense blocks) of the generator network.                                                                                                                       |
@@ -379,16 +439,16 @@ Default hyper-parameters defined in paper
 | generator/use_subpixel_conv         | `false`                                  | If set to `True`, a Sub-Pixel convolution block will be used for up-scaling instead of the original interpolation up-scaling block.                                                                       |
 | discriminator/vgg_blk_ch            | `[64, 64, 128, 128, 256, 256, 512, 512]` | Tuple containing the output channels of each convolution of the network. If two consecutive convolutions have the same output channels, a stride of two will be applied to reduce feature map dimensions. |
 | discriminator/fc_features           | `[100]`                                  | Fully connected hidden layers output dimension.                                                                                                                                                           |
-| content_loss/loss_f                 | `"l1"`                                   | Loss function to use to compute pixel-wise distance between images. Must be one of: ``'l1'``, ``'l2'``, ``'mse'``. Default: ``'l1'``                                                                      |
+| content_loss/loss_f                 | `"l1"`                                   | Loss function to use to compute pixel-wise distance between images. Must be one of: ``'l1'``, ``'l2'``, ``'mse'``.                                                                                        |
 | perceptual_loss/layer_weights       | `{"conv5_4": 1.0}`                       | The weight for each layer of the VGG network used for loss calculation.                                                                                                                                   |
-| perceptual_loss/vgg_type            | `"vgg19"`                                | Type of VGG network used as the perceptual loss' feature extractor. Must be one of: ``'vgg11'``, ``'vgg13'``, ``'vgg16'``, ``'vgg19'``. Default: ``'vgg19'``                                              |
-| perceptual_loss/criterion           | `"l1"`                                   | Loss function to compute distance between features. Must be one of: ``'l1'``, ``'l2'``. Default: ``'l1'``                                                                                                 |
+| perceptual_loss/vgg_type            | `"vgg19"`                                | Type of VGG network used as the perceptual loss' feature extractor. Must be one of: ``'vgg11'``, ``'vgg13'``, ``'vgg16'``, ``'vgg19'``.                                                                   |
+| perceptual_loss/criterion           | `"l1"`                                   | Loss function to compute distance between features. Must be one of: ``'l1'``, ``'l2'``.                                                                                                                   |
 | perceptual_loss/normalize_input     | `true`                                   | If set to `True`, normalize the input image before doing inference though the VGG network. The mean and standard deviation values are calculated for an image in the range `[0, 1]`.                      |
 | perceptual_loss/normalize_loss      | `false`                                  | If set to `True`, divide the total perceptual loss by the sum of the specified layers weight.                                                                                                             |
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
-### 8.3 Loss functions
+### 8.4 Loss functions
 
 Whe have 3 kind of loss functions on this model.
 
@@ -433,31 +493,35 @@ where $x_f = G(x_i)$ and $x_i$ stands for the input LR image.
 
 <br />
 
-**Perceptual loss** ($L_{percep}$)<a name="perceptual_loss"></a>: Type of content loss introduced in the [Perceptual Losses for Real-Time Style Transfer and Super-Resolution](https://arxiv.org/abs/1603.08155v1) super-resolution and style transfer framework. Also known as VGG loss is based on the ReLU activation layers on the pre-treained 19 layer VGG netowrk.
+**Perceptual loss** ($L_{percep}$)<a name="perceptual_loss"></a>: Type of content loss introduced in the
+[Perceptual Losses for Real-Time Style Transfer and Super-Resolution](https://arxiv.org/abs/1603.08155v1) 
+framework. Also known as VGG loss is based on the ReLU activation layers on the pre-trained 19 layer VGG network.
 
 <p align="center">
   <img src="assets/vgg_loss.png">
 </p>
 
-but with the improve by using VGG features before activation instead of after activation as in SRGAN. It was empirically found hat the adjusted perceptual loss provides sharper edges and more visually pleasing results.
-
-<br /> 
+but with the improvement of using VGG features before activation instead of after activation as in SRGAN. 
+It was empirically found hat the adjusted perceptual loss provides sharper edges and more visually pleasing results.
 
 The **total loss**<a name="total_loss"></a> ($L_G$) is then calculated by:
 $L_G = L_{percep} + λL_{G}^{Ra} + ηL_{content}$ which 
 λ, η are the coefficients to balance different loss terms
 
-### 8.4 Quality Metrics
+### 8.5 Quality Metrics
 
-#### 8.4.1 Structural Similarity Index (SSIM)
+#### 8.5.1 Structural Similarity Index (SSIM)
+
 Given 2 images, SSIM is an index with values in the range (-1,1) which estimates the level of similarity between thos two images.
+
 * +1 = very similar or the same.
 * -1 = very different.
 
 It combines different comparison functions:
-* Luminance l(x,y).
-* Contrast c(x,y)
-* Structure s(x,y)
+
+* Luminance **l(x,y)**.
+* Contrast **c(x,y)**
+* Structure **s(x,y)**
 
 Formula: **$SSIM(x,y) = [l(x,y)]^α * [c(x,y)]^β * [s(x,y)]^γ$**, where α,β,γ are the weights assigned to each feature
 
@@ -478,7 +542,8 @@ where MSE is the L2 loss and $MAX_f$ is the maximum existing signal value in our
 
 ### 8.5 Network Interpolation
 
-To remove unpleasant noise in GAN-based methods while maintain a good perceltual quality, we use Network Interpolation. That means that we first train a PSNR-oriented network $G_{PSNR}$ and then obtain a GAN-based network $G_{GAN}$. 
+To remove unpleasant noise in GAN-based methods while maintain a good perceltual quality, we use Network Interpolation.
+That means that we first train a PSNR-oriented network $G_{PSNR}$ and then obtain a GAN-based network $G_{GAN}$. 
 
 We interpolate all the corresponding parameters of these two networks to derive an interpolated model $G_{INTERP}$, whose parameters are: 
 
@@ -488,54 +553,72 @@ $$
 \end{aligned}
 $$
 
-where $θ_G^{INTERP}$, $θ_G^{PSNR}$ and $θ_G^{GAN}$ are the parameters of $G_{INTERP}$, $G_{PSNR}$ and $G_{GAN}$ respectively, and α ∈ [0, 1] is the interpolation parameter.
+where $θ_G^{INTERP}$, $θ_G^{PSNR}$ and $θ_G^{GAN}$ are the parameters of $G_{INTERP}$, $G_{PSNR}$ and $G_{GAN}$ respectively,
+and α ∈ [0, 1] is the interpolation parameter.
 
-G are the parameters of GINTERP, GPSNR and
-GGAN, respectively, and α ∈ [0, 1] is the interpolation parameter.
+G are the parameters of $G^{INTERP}$, $G^{PSNR} and $G^{GAN}$, respectively, and α ∈ [0, 1] is the interpolation parameter.
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 9. Training process
 
-Training process is composed in two main steps, pretraing (warm-up) and training.
+Training process is composed in two main steps, pre-traing (warm-up) and training.
 
-First, before any step, we make **Image data augmentation** doing:
+First, in order to retrieve the dataset images, we perform the pipeline described in Fig 6:
 
-* Paired random crop (in train) / Paired center crop (in validation)
-* Spatial transforms (probabilty of each 0.5 probability)
-    * Applied for images of low resolution and high resolution
-    * Flip with 0.25 probability
-    * Transpose with 0.75 probability
+**TODO: ADD FIGURE HERE**
+
+As user-defined transforms we define the following ones depending on the augmentation target:
+
+* Spatial transforms (probabilty of each 0.5 probability).
+    * Applied for images of low resolution and high resolution.
+    * Flip with 0.25 probability.
+    * Transpose with 0.75 probability.
+
 * Hard transforms:
-    * Applied only for images of low resolution
-    * Compresion with 0.25 probability
-    * Coarse Dropout with 0.25 probability
+    * Applied only for images of low resolution.
+    * Compresion with 0.25 probability.
+    * Coarse Dropout with 0.25 probability.
 
 ### 9.1 Pre-training step
+
+In this step only the generator is trained using the [Content loss](#content_loss) as the loss function.
+
 * Only used the [Content loss](#content_loss) function for this step
-* Only works with generator (no discriminator used)
-* Adam optimizer with learning rate $2e^{-4}$ by default
-* Scheduler lr_scheduler.StepLR with step 175000 by default
+* Only works with generator (no discriminator used).
+* Adam optimizer with learning rate $2e^{-4}$ by default.
+* Scheduler `StepLR` with step 175000 and gamma 0.5.
+* User data augmentation transforms: 
+  * Spatial transforms.
+  * Hard transforms.
 * Metrics logged:
-  * for pretrain: content_loss
-  * for validation: content_loss, perceptual_loss, PSNR, SSIM
+  * Training: **content_loss**
+  * Validation: **content_loss**, **perceptual_loss**, **PSNR**, **SSIM**
 
 ### 9.2 Training step
-In this step we train with generator and discriminator. For every mini batch we first freeze the discriminator and train the generator. When finished the mini batch then we train the discrminator and freeze the generator.
+
+In this step we train with generator and discriminator. For every mini batch we first freeze the discriminator and train
+the generator. When finished the mini batch then we train the discriminator and freeze the generator.
+
+* User data augmentation transforms: spatial transforms.
 * Generator:
-  * The [total loss](#total_loss) ($L_G = L_{percep} + λL_{G}^{Ra} + ηL_{content}$) function is used for this step, which use [perceptual loss](#perceptual_loss), [Relativistic adversarial loss](#adversarial_loss) and [Content loss](#content_loss) with coeficients
-  * Adam optimizer with learning rate $1^{e-4}$ by default and betas=(0.9, 0.99)
-  * Scheduler lr_scheduler.MultiStepLR with steps [50000, 100000, 175000, 250000]
+  * The [total loss](#total_loss) ($L_G = L_{percep} + λL_{G}^{Ra} + ηL_{content}$) function is used for this step, which
+    use [perceptual loss](#perceptual_loss), [Relativistic adversarial loss](#adversarial_loss) and [Content loss](#content_loss) with coefficients.
+  * Adam optimizer with learning rate $1^{e-4}$ by default and betas=(0.9, 0.99).
+  * Scheduler `MultiStepLR` with steps [50000, 100000, 175000, 250000] and gamma 0.5.
 * Discriminator:
   * The total loss is $L_G = L_{D}^{Ra}$ which is [Relativistic adversarial loss](#adversarial_loss) for discriminator
-  * Adam optimizer with learning rate $1^{e-4}$ by default and betas=(0.9, 0.99)
-  * Scheduler lr_scheduler.MultiStepLR with steps [50000, 100000, 175000, 250000]
+  * Adam optimizer with learning rate $1^{e-4}$ by default and betas=(0.9, 0.99).
+  * Scheduler `MultiStepLR` with steps [50000, 100000, 175000, 250000] and gamma 0.5.
 * Metrics logged:
-  * for training: content_loss, perceptual_loss,g_adversarial_loss,g_total_loss,d_adversarial_loss
-  * for validation: content_loss, perceptual_loss, PSNR, SSIM
+  * Training: **content_loss**, **perceptual_loss**, **g_adversarial_loss**, **g_total_loss**, **d_adversarial_loss**
+  * Validation: **content_loss**, **perceptual_loss**, **PSNR**, **SSIM**
   
 ### 9.3 Logging
-For logging we use [wandb](https://wandb.ai/) with tensorboard [integrated](https://docs.wandb.ai/guides/integrations/tensorboard) because we can work with both system and share all the logging information automatically to everyone and in real time. Besides we upload images with the result of the image and the ground truth to compare the results visually for every N epochs. 
+
+For logging we use [wandb](https://wandb.ai/) with Tensorboard [integrated](https://docs.wandb.ai/guides/integrations/tensorboard)
+because we can work with both system and share all the logging information automatically to everyone and in real time.
+Besides, we upload images with the result of the image and the ground truth to compare the results visually for every N epochs. 
 
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
@@ -572,7 +655,7 @@ We have finished [4 differents executions](https://wandb.ai/markbeta/Torch-SR) w
     * generator/num_basic_blocks: 23
     * pretraining/train_datasets: ["div2k"]
     * training/train_datasets: ["div2k"]
-* ESRGAN (PRE CR: 192 / CR: 192 / 16 RRDBs /  DIV2K+BSDS500)
+* ESRGAN (PRE CR: 192 / CR: 128 / 16 RRDBs / DIV2K+BSDS500)
   * Hyperparameters:
     * pretraining/cr_patch_size: [192, 192]
     * training/cr_patch_size: [128, 128]
