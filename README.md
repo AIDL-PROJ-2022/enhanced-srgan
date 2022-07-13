@@ -3,20 +3,20 @@
 ### Abstract
 
 Image super-resolution (SR) is the process of recovering high-resolution (HR) images from low-resolution (LR) images.
-It is an important class of image processing techniques in computer vision and image processing and has a wide range
+It is an essential class of image processing techniques in computer vision and image processing. It has a wide range
 of real-world applications, such as medical imaging, satellite imaging, surveillance and security, and astronomical 
 imaging, amongst others.
 
 With the fast progress in deep learning techniques in recent years, deep learning-based SR models have been actively
-explored and often achieve state-of-the-art performance on various benchmarks of super-resolution tasks. A variety of 
+explored and often achieve state-of-the-art performance on various benchmarks of super-resolution tasks. Several 
 deep learning methods have been applied to solve SR tasks, ranging from the early Convolutional Neural Networks (CNN)
-based method to recent promising Generative Adversarial network-based SR approaches.
+based models, to recent promising Generative Adversarial network-based SR approaches.
 
-In this project, we implement the Enhanced Super-Resolution Generative Adversarial Network (ESRGAN), which is capable of 
+In this project, we implement the Enhanced Super-Resolution Generative Adversarial Network (ESRGAN), capable of 
 generating realistic textures when performing single image super-resolution (SISR). This implementation was introduced 
 by Xintao et al. in 2018 in the paper [ESRGAN: Enhanced Super-Resolution Generative Adversarial Networks](https://arxiv.org/abs/1809.00219), 
 based on the original work shown in the paper [Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network](https://arxiv.org/pdf/1609.04802v5.pdf),
-from which it implements a series of improvements to the three key components of the deep learning model: 
+from which it implements a series of improvements to the three principal components of the deep learning model: 
 the network architecture, adversarial loss, and perceptual loss.
 
 ### Authors: Marc Bermejo, Ferran Torres, Raul Puente
