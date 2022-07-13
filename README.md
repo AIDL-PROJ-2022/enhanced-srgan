@@ -71,10 +71,8 @@ optimized using perceptual loss in a GAN framework. With all these techniques, S
 visual quality of reconstruction over PSNR-oriented methods.
 
 <p align="center">
-    <figure>
-        <img src="assets/example_srgan.png" alt="Image super-resolution techniques quality evolution"/>
-        <figcaption>Fig 1. Image super-resolution techniques visual quality evolution.</figcaption>
-    </figure>
+    <img src="assets/example_srgan.png" alt="Image super-resolution techniques quality evolution"/>
+    <tr align="center">Fig 1. Image super-resolution techniques visual quality evolution.</tr>
 </p>
 
 To further enhance the visual quality of the images, [ESRGAN](https://arxiv.org/abs/1809.00219) architecture was introduced.
