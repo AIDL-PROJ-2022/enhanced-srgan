@@ -798,8 +798,6 @@ After observing the obtained results we can extract the following conclusions:
 * Using a dataset with sharper edges (like BSDS500) can help the network to perform better on images with less initial 
   information and reduce generated images artifacts at the cost of reducing overall performance for easier images.
 
-
-
 <p align="right"><a href="#table-of-contents">To top</a></p>
 
 ## 12. References
